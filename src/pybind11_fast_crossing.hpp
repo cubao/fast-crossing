@@ -24,9 +24,13 @@ using rvp = py::return_value_policy;
 CUBAO_INLINE void bind_fast_crossing(py::module &m)
 {
     py::class_<FastCrossing>(m, "FastCrossing", py::module_local())
-        .def(py::init<>())
-        .def("add_polyline", &FastCrossing::add_polyline, "polyline"_a,
-             py::kw_only(), "index"_a = -1,
+        .def(py::init<bool, bool>(), py::kw_only(), "is_wgs84"_a = false,
+             "use_polyline_rulers"_a = true)
+        .def("add_polyline",
+
+             py::overload_cast<const FastCrossing::FlatBush::PolylineType &,
+                               int>(&FastCrossing::add_polyline),
+             "polyline"_a, py::kw_only(), "index"_a = -1,
              "add polyline to tree, you can "
              "provide your own polyline index, "
              "default: -1")
@@ -45,6 +49,11 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                  const Eigen::Ref<const FastCrossing::PolylineType> &, bool>(
                  &FastCrossing::intersections, py::const_),
              "polyline"_a, py::kw_only(), "dedup"_a = true,
+             "crossing intersections with polyline (sorted by t ratio)")
+        .def("intersections",
+             py::overload_cast<const FastCrossing::FlatBush::PolylineType &>(
+                 &FastCrossing::intersections, py::const_),
+             "polyline"_a,
              "crossing intersections with polyline (sorted by t ratio)")
         //
         .def("bush", &FastCrossing::bush, rvp::reference_internal)

@@ -11,7 +11,8 @@ namespace cubao
 struct FastCrossing
 {
     using FlatBush = flatbush::FlatBush<double>;
-    using PolylineType = FlatBush::PolylineType;
+    using PolylineType =
+        Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
     using LabelsType = FlatBush::LabelsType;
     using IntersectionType = std::tuple<
         // intersection point, intersection ratio: t, s
@@ -20,15 +21,32 @@ struct FastCrossing
         Eigen::Vector2i, Eigen::Vector2i //
         >;
 
-    void add_polyline(const Eigen::Ref<const PolylineType> &polyline,
-                      int index = -1)
+    FastCrossing(bool is_wgs84 = false, bool use_polyline_rulers = true)
+        : is_wgs84_(is_wgs84), use_polyline_rulers_(use_polyline_rulers)
+    {
+    }
+
+    int add_polyline(const PolylineType &polyline, int index = -1)
     {
         if (index < 0) {
             index = num_poylines_;
         }
         ++num_poylines_;
-        bush_.Add(polyline, index);
+        bush_.Add(polyline.leftCols(2), index);
+        if (use_polyline_rulers_) {
+            polyline_rulers_.emplace(index, PolylineRuler(polyline, is_wgs84_));
+        }
+        return index;
     }
+
+    int add_polyline(const FlatBush::PolylineType &polyline, int index = -1)
+    {
+        PolylineType Nx3(polyline.rows(), 3);
+        Nx3.leftCols(2) = polyline;
+        Nx3.col(2).setZero();
+        return add_polyline(Nx3, index);
+    }
+
     void finish() { bush_.Finish(); }
     std::vector<IntersectionType> intersections() const
     {
@@ -62,9 +80,11 @@ struct FastCrossing
             }
             const auto &seg1 = boxes.row(pair[0]);
             const auto &seg2 = boxes.row(pair[1]);
-            auto intersect = intersect_segments(
-                (Eigen::Vector2d)seg1.head(2), (Eigen::Vector2d)seg1.tail(2), //
-                (Eigen::Vector2d)seg2.head(2), (Eigen::Vector2d)seg2.tail(2));
+            auto intersect =
+                intersect_segments((Eigen::Vector2d)seg1.head(2), //
+                                   (Eigen::Vector2d)seg1.tail(2), //
+                                   (Eigen::Vector2d)seg2.head(2), //
+                                   (Eigen::Vector2d)seg2.tail(2));
             if (intersect) {
                 auto &xy_st = *intersect;
                 ret.emplace_back(
@@ -93,9 +113,9 @@ struct FastCrossing
         auto labels = bush_.labels();
         for (auto &idx : hits) {
             const auto &seg = boxes.row(idx);
-            auto intersect = intersect_segments(
-                (Eigen::Vector2d)p0, (Eigen::Vector2d)p1,
-                (Eigen::Vector2d)seg.head(2), (Eigen::Vector2d)seg.tail(2));
+            auto intersect = intersect_segments(p0, p1, //
+                                                (Eigen::Vector2d)seg.head(2),
+                                                (Eigen::Vector2d)seg.tail(2));
             if (!intersect) {
                 continue;
             }
@@ -103,8 +123,8 @@ struct FastCrossing
             auto &xy_ts = *intersect;
             ret.emplace_back(
                 std::get<0>(xy_ts),
-                Eigen::Vector2d(std::get<1>(xy_ts), std::get<2>(xy_ts)), label1,
-                label2);
+                Eigen::Vector2d(std::get<1>(xy_ts), std::get<2>(xy_ts)), //
+                label1, label2);
         }
         std::sort(ret.begin(), ret.end(), [](const auto &t1, const auto &t2) {
             return std::get<1>(t1)[0] < std::get<1>(t2)[0];
@@ -127,7 +147,9 @@ struct FastCrossing
         int N = polyline.rows();
         for (int i = 0; i < N - 1; ++i) {
             auto hit =
-                intersections(polyline.row(i), polyline.row(i + 1), dedup);
+                intersections((Eigen::Vector2d)polyline.row(i).head(2),     //
+                              (Eigen::Vector2d)polyline.row(i + 1).head(2), //
+                              dedup);
             if (hit.empty()) {
                 continue;
             }
@@ -148,12 +170,39 @@ struct FastCrossing
         return ret;
     }
 
+    std::vector<IntersectionType>
+    intersections(const FlatBush::PolylineType &polyline) const
+    {
+        PolylineType Nx3(polyline.rows(), 3);
+        Nx3.leftCols(2) = polyline;
+        Nx3.col(2).setZero();
+        return intersections(Nx3, true);
+    }
+
     const FlatBush &bush() const { return bush_; }
+    bool is_wgs84() const { return is_wgs84_; }
+    bool use_polyline_rulers() const { return use_polyline_rulers_; }
     int num_poylines() const { return num_poylines_; }
+    const std::map<int, PolylineRuler> &polyline_rulers() const
+    {
+        return polyline_rulers_;
+    }
+    const PolylineRuler *polyline_ruler(int label) const
+    {
+        auto itr = polyline_rulers_.find(label);
+        if (itr == polyline_rulers_.end()) {
+            return nullptr;
+        }
+        return &itr->second;
+    }
 
   private:
     FlatBush bush_;
+    const bool is_wgs84_{false};
+    const bool use_polyline_rulers_{true};
     int num_poylines_ = 0;
+
+    std::map<int, PolylineRuler> polyline_rulers_;
 };
 } // namespace cubao
 
