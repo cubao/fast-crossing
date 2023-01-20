@@ -35,10 +35,11 @@ python_build:
 	$(PYTHON) setup.py bdist_wheel
 python_sdist:
 	$(PYTHON) setup.py sdist
-	# tar -tvf dist/pybind11_rdp-*.tar.gz
-python_test:
-	$(PYTHON) -c 'from pybind11_rdp import rdp; print(rdp([[1, 1], [2, 2], [3, 3], [4, 4]]))'
-	$(PYTHON) test.py
+	# tar -tvf dist/fast_crossing-*.tar.gz
+python_test: pytest
+pytest:
+	pytest tests
+.PHONY: python_install python_build python_sdist python_test pytest
 
 # conda create -y -n py36 python=3.6
 # conda create -y -n py37 python=3.7
@@ -73,8 +74,8 @@ upload_wheels:
 	twine upload dist/*.whl -r $(pypi_remote)
 
 tar.gz:
-	tar -cvz --exclude .git -f ../pybind11-rdp.tar.gz .
-	ls -alh ../pybind11-rdp.tar.gz
+	tar -cvz --exclude .git -f ../fast_crossing.tar.gz .
+	ls -alh ../fast_crossing.tar.gz
 
 # https://stackoverflow.com/a/25817631
 echo-%  : ; @echo -n $($*)

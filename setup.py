@@ -40,7 +40,7 @@ class CMakeBuild(build_ext):
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
-        # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
+        # FAST_CROSSING_VERSION_INFO shows you how to pass a value into the C++ code
         # from Python.
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
@@ -54,7 +54,9 @@ class CMakeBuild(build_ext):
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
         # In this example, we pass in the version to C++. You might not need to.
-        cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]
+        cmake_args += [
+            f"-DFAST_CROSSING_VERSION_INFO={self.distribution.get_version()}"
+        ]
 
         if self.compiler.compiler_type != "msvc":
             # Using Ninja-build since it a) is available as a wheel and b)
@@ -121,15 +123,15 @@ class CMakeBuild(build_ext):
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="pybind11_rdp",
-    version="0.1.1",
+    name="fast_crossing",
+    version="0.0.1",
     author="tzx",
     author_email="dvorak4tzx@gmail.com",
-    url="https://github.com/cubao/pybind11-rdp",
-    description="C++/pybind11/NumPy implementation of the Ramer-Douglas-Peucker algorithm (Ramer 1972; Douglas and Peucker 1973) for 2D and 3D data.",
+    url="https://github.com/cubao/fast-crossing",
+    description="fast crossing",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
-    ext_modules=[CMakeExtension("pybind11_rdp")],
+    ext_modules=[CMakeExtension("fast_crossing")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     install_requires=["numpy"],
