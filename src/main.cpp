@@ -10,6 +10,8 @@
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 
+#include "fast_crossing.hpp"
+
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
