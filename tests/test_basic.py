@@ -54,7 +54,7 @@ def test_fast_crossing():
     #     array([1, 1], dtype=int32))
     # ]
     ret = fc.intersections()
-    print(ret)
+    # print(ret)
     assert len(ret) == 1
     for xy, ts, label1, label2 in ret:
         # xy 是交点，即图中的 o 点坐标
@@ -65,10 +65,10 @@ def test_fast_crossing():
         #        e.g. (0, 0)，polyline AB 的第一段
         # label2 是另一个条 line seg 的索引
         #        e.g. (1, 1)，polyline CDE 的第二段（DE 段）
-        print(xy)
-        print(ts)
-        print(label1)
-        print(label2)
+        # print(xy)
+        # print(ts)
+        # print(label1)
+        # print(label2)
         assert np.all(xy == [2.5, 0])
         assert np.all(ts == [0.5, 1 / 3.0])
         assert np.all(label1 == [0, 0])
@@ -82,7 +82,7 @@ def test_fast_crossing():
     ts = ret[:, 1]  # 所有分位点
     label1 = ret[:, 2]  # 所有 label1（当前 polyline 的 label）
     label2 = ret[:, 3]  # tree 中 line segs 的 label
-    print(ret, xy, ts, label1, label2)
+    # print(ret, xy, ts, label1, label2)
     assert np.all(xy[0] == [0, 0])
     assert np.all(xy[1] == [2.5, -0.5])
     assert np.all(ts[0] == [0.5, 0])
@@ -128,6 +128,30 @@ def test_fast_crossing_auto_rebuild_flatbush():
 
     fc.add_polyline([[1.5, 0], [3.5, 2]])
     ret = fc.intersections()
-    for row in ret:
-        print(row)
     assert len(ret) == 4  # should dedup to 3?
+
+
+def test_fast_crossing_filter_by_z():
+    fc = FastCrossing()
+    fc.add_polyline([[0, 0, 0], [1, 0, 0]])
+    fc.add_polyline([[0, 0, 10], [1, 0, 10]])
+    fc.add_polyline([[0, 0, 20], [1, 0, 20]])
+    ret = fc.intersections([[0.5, -1], [0.5, 1]])
+    assert len(ret) == 3
+
+    ret = fc.intersections([[0.5, -1], [0.5, 1]], z_min=-1, z_max=1)
+    assert len(ret) == 1
+    assert fc.coordinates(ret[0])[2] == 0
+
+    ret = fc.intersections([[0.5, -1, 10], [0.5, 1, 10]], z_min=-1, z_max=1)
+    assert len(ret) == 1
+    assert fc.coordinates(ret[0])[2] == 10
+
+    ret = fc.intersections([[0.5, -1, 20], [0.5, 1, 20]], z_min=-1, z_max=1)
+    assert len(ret) == 1
+    assert fc.coordinates(ret[0])[2] == 20
+
+    ret = fc.intersections([[0.5, -1, 15], [0.5, 1, 15]], z_min=-6, z_max=6)
+    assert len(ret) == 2
+    assert fc.coordinates(ret[0])[2] == 10
+    assert fc.coordinates(ret[1])[2] == 20

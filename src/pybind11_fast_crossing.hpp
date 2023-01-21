@@ -70,6 +70,20 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                 &FastCrossing::intersections, py::const_),
             "polyline"_a,
             "crossing intersections with polyline (sorted by t ratio)")
+        .def("intersections",
+             py::overload_cast<const FastCrossing::PolylineType &, double,
+                               double, bool>(&FastCrossing::intersections,
+                                             py::const_),
+             "polyline"_a, py::kw_only(), "z_min"_a, "z_max"_a,
+             "dedup"_a = true,
+             "crossing intersections with polyline (sorted by t ratio)")
+        .def(
+            "intersections",
+            py::overload_cast<
+                const Eigen::Ref<const FastCrossing::FlatBush::PolylineType> &,
+                double, double, bool>(&FastCrossing::intersections, py::const_),
+            "polyline"_a, py::kw_only(), "z_min"_a, "z_max"_a, "dedup"_a = true,
+            "crossing intersections with polyline (sorted by t ratio)")
         // coordinates
         .def("coordinates",
              py::overload_cast<int, int, double>(&FastCrossing::coordinates,

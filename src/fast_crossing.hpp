@@ -146,7 +146,17 @@ struct FastCrossing
         if (dedup) {
             auto last = std::unique(
                 ret.begin(), ret.end(), [](const auto &t1, const auto &t2) {
-                    return std::get<0>(t1) == std::get<0>(t2);
+                    // xy, ts, (poly_idx, seg_idx), (poly_idx, seg_idx)
+                    if (std::get<3>(t1)[0] != std::get<3>(t2)[0]) {
+                        return false;
+                    }
+                    return std::get<3>(t1) == std::get<3>(t2) ||
+                           ((std::get<3>(t1)[1] + 1) == std::get<3>(t2)[1] &&
+                            std::get<1>(t1)[1] == 1.0 &&
+                            std::get<1>(t2)[1] == 0.0) ||
+                           ((std::get<3>(t1)[1] - 1) == std::get<3>(t2)[1] &&
+                            std::get<1>(t1)[1] == 0.0 &&
+                            std::get<1>(t2)[1] == 1.0);
                 });
             ret.erase(last, ret.end());
         }
@@ -170,15 +180,24 @@ struct FastCrossing
                 auto &label_of_curr_seg = std::get<2>(h);
                 label_of_curr_seg[1] = i;
             }
+            bool has_dup = false;
             if (dedup && !ret.empty()) {
                 // xy, ts, label1, label2
                 auto &prev = ret.back();
                 auto &curr = hit.front();
-                if (std::get<0>(prev) == std::get<0>(curr)) {
-                    ret.pop_back();
+                auto &prev_label = std::get<3>(prev);
+                auto &curr_label = std::get<3>(curr);
+                if (prev_label[0] == curr_label[0] &&
+                    (((prev_label[1] + 1) == curr_label[1] &&
+                      std::get<2>(prev)[1] == 1.0 &&
+                      std::get<2>(curr)[1] == 0.0) ||
+                     ((prev_label[1] - 1) == curr_label[1] &&
+                      std::get<2>(prev)[1] == 0.0 &&
+                      std::get<2>(curr)[1] == 1.0))) {
+                    has_dup = true;
                 }
             }
-            ret.insert(ret.end(), hit.begin(), hit.end());
+            ret.insert(ret.end(), hit.begin() + (has_dup ? 1 : 0), hit.end());
         }
         return ret;
     }
@@ -223,23 +242,35 @@ struct FastCrossing
                                                 double z_min, double z_max,
                                                 bool dedup = true) const
     {
+        if (z_min > z_max) {
+            return {};
+        }
         auto ret = intersections(polyline, dedup);
         if (ret.empty()) {
             return {};
         }
-        ret.erase(std::remove_if(ret.begin(), ret.end(),
-                                 [&](auto &idx) {
-                                     auto &ts = std::get<1>(idx);
-                                     auto &idx1 = std::get<2>(idx);
-                                     auto &idx2 = std::get<3>(idx);
-                                     double z0 = coordinates(polyline, idx1[1],
-                                                             ts[0])[2];
-                                     double zz =
-                                         coordinates(idx2[0], idx2[1], ts[1])[2];
-                                     return zz < z0 - z_min || zz > z0 + z_max;
-                                 }),
+        ret.erase(std::remove_if(
+                      ret.begin(), ret.end(),
+                      [&](auto &idx) {
+                          auto &ts = std::get<1>(idx);
+                          auto &idx1 = std::get<2>(idx);
+                          auto &idx2 = std::get<3>(idx);
+                          double z0 = coordinates(polyline, idx1[1], ts[0])[2];
+                          double zz = coordinates(idx2[0], idx2[1], ts[1])[2];
+                          return (zz < z0 + z_min) || (zz > z0 + z_max);
+                      }),
                   ret.end());
         return ret;
+    }
+
+    std::vector<IntersectionType>
+    intersections(const Eigen::Ref<const FlatBush::PolylineType> &polyline,
+                  double z_min, double z_max, bool dedup = true) const
+    {
+        if (z_min > z_max) {
+            return {};
+        }
+        return intersections(to_Nx3(polyline), z_min, z_max, dedup);
     }
 
     const FlatBush &bush() const
