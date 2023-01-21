@@ -177,6 +177,29 @@ struct FastCrossing
         return intersections(Nx3, true);
     }
 
+    Eigen::Vector3d coordinates(int polyline_index, int seg_index,
+                                double t) const
+    {
+        auto &ruler = polyline_rulers_.at(polyline_index);
+        auto &xyzs = ruler.polyline();
+        return xyzs.row(seg_index) * (1.0 - t) + xyzs.row(seg_index + 1) * t;
+    }
+    Eigen::Vector3d coordinates(const Eigen::Vector2i &index, double t) const
+    {
+        return coordinates(index[0], index[1], t);
+    }
+    Eigen::Vector3d coordinates(const IntersectionType &idx,
+                                bool second = true) const
+    {
+        auto &ts = std::get<1>(idx);
+        auto &idx1 = std::get<2>(idx);
+        auto &idx2 = std::get<3>(idx);
+        if (second) {
+            return coordinates(idx2, ts[1]);
+        }
+        return coordinates(idx1, ts[0]);
+    }
+
     const FlatBush &bush() const { return bush_; }
     bool is_wgs84() const { return is_wgs84_; }
     int num_poylines() const { return polyline_rulers_.size(); }

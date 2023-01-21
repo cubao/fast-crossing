@@ -70,6 +70,19 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                 &FastCrossing::intersections, py::const_),
             "polyline"_a,
             "crossing intersections with polyline (sorted by t ratio)")
+        // coordinates
+        .def("coordinates",
+             py::overload_cast<int, int, double>(&FastCrossing::coordinates,
+                                                 py::const_),
+             "polyline_index"_a, "segment_index"_a, "ratio"_a)
+        .def("coordinates",
+             py::overload_cast<const Eigen::Vector2i &, double>(
+                 &FastCrossing::coordinates, py::const_),
+             "index"_a, "ratio"_a)
+        .def("coordinates",
+             py::overload_cast<const FastCrossing::IntersectionType &, bool>(
+                 &FastCrossing::coordinates, py::const_),
+             "intersection"_a, "second"_a = true)
         //
         .def("bush", &FastCrossing::bush, rvp::reference_internal)
         .def("is_wgs84", &FastCrossing::is_wgs84)

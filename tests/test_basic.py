@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from fast_crossing import FastCrossing
 
 
@@ -34,8 +35,19 @@ def test_fast_crossing():
     assert ruler1.length() == 4
     assert fc.polyline_ruler(10) is None
 
+    # intersections
+    ret = fc.intersections([1.5, 0], [3.5, 2])
+    assert len(ret) == 2
+    assert np.linalg.norm(fc.coordinates(ret[0]) - [1.5, 0, 0]) < 1e-15
+    assert np.linalg.norm(fc.coordinates(ret[1]) - [2.5, 1, 0]) < 1e-15
+    xyz = fc.coordinates(0, 0, 0.2)
+    assert np.linalg.norm(xyz - [1.0, 0, 0]) < 1e-15
+    with pytest.raises(IndexError) as excinfo:
+        xyz = fc.coordinates(2, 0, 0.5)
+    assert "map::at" in str(excinfo)
+    assert "key not found" in str(excinfo)
+
     # query all line segment intersections
-    ret = fc.intersections()
     # [
     #    (array([2.5, 0. ]),
     #     array([0.5       , 0.33333333]),
@@ -81,3 +93,27 @@ def test_fast_crossing():
     polyline2 = np.column_stack((polyline, np.zeros(len(polyline))))
     ret2 = np.array(fc.intersections(polyline2[:, :2]))
     assert str(ret) == str(ret2)
+
+
+def test_fast_crossing_intersection3d():
+    fc = FastCrossing()
+    """
+                    2 C
+                    |
+                    1 D
+    0               |                  5
+    A---------------o------------------B
+                    |
+                    |
+                    -2 E
+    """
+    fc.add_polyline(np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 100]]))  # AB
+    fc.add_polyline(np.array([[2.5, 2.0, 0.0], [2.5, 1.0, 100], [2.5, -2.0, 0]]))  # CDE
+    fc.finish()
+    ret = fc.intersections()
+    assert len(ret) == 1
+    ret = ret[0]
+    xyz1 = fc.coordinates(ret, second=False)
+    xyz2 = fc.coordinates(ret)
+    assert np.linalg.norm(xyz1 - [2.5, 0, 50]) < 1e-10
+    assert np.linalg.norm(xyz2 - [2.5, 0, 2 / 3 * 100.0]) < 1e-10
