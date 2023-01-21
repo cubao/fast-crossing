@@ -192,12 +192,16 @@ struct FastCrossing
         return intersections(Nx3, true);
     }
 
+    static Eigen::Vector3d coordinates(const RowVectors &xyzs, int seg_index,
+                                       double t)
+    {
+        return xyzs.row(seg_index) * (1.0 - t) + xyzs.row(seg_index + 1) * t;
+    }
     Eigen::Vector3d coordinates(int polyline_index, int seg_index,
                                 double t) const
     {
         auto &ruler = polyline_rulers_.at(polyline_index);
-        auto &xyzs = ruler.polyline();
-        return xyzs.row(seg_index) * (1.0 - t) + xyzs.row(seg_index + 1) * t;
+        return coordinates(ruler.polyline(), seg_index, t);
     }
     Eigen::Vector3d coordinates(const Eigen::Vector2i &index, double t) const
     {
@@ -213,6 +217,29 @@ struct FastCrossing
             return coordinates(idx2, ts[1]);
         }
         return coordinates(idx1, ts[0]);
+    }
+
+    std::vector<IntersectionType> intersections(const PolylineType &polyline,
+                                                double z_min, double z_max,
+                                                bool dedup = true) const
+    {
+        auto ret = intersections(polyline, dedup);
+        if (ret.empty()) {
+            return {};
+        }
+        ret.erase(std::remove_if(ret.begin(), ret.end(),
+                                 [&](auto &idx) {
+                                     auto &ts = std::get<1>(idx);
+                                     auto &idx1 = std::get<2>(idx);
+                                     auto &idx2 = std::get<3>(idx);
+                                     double z0 = coordinates(polyline, idx1[1],
+                                                             ts[0])[2];
+                                     double zz =
+                                         coordinates(idx2[0], idx2[1], ts[1])[2];
+                                     return zz < z0 - z_min || zz > z0 + z_max;
+                                 }),
+                  ret.end());
+        return ret;
     }
 
     const FlatBush &bush() const
