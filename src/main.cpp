@@ -10,6 +10,11 @@
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 
+#include "fast_crossing.hpp"
+#include "pybind11_fast_crossing.hpp"
+#include "pybind11_flatbush.hpp"
+#include "pybind11_polyline_ruler.hpp"
+
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
@@ -18,6 +23,10 @@ using namespace pybind11::literals;
 
 PYBIND11_MODULE(fast_crossing, m)
 {
+    cubao::bind_fast_crossing(m);
+    cubao::bind_flatbush(m);
+    cubao::bind_polyline_ruler(m);
+
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
