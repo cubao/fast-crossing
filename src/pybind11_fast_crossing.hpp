@@ -26,15 +26,30 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
     py::class_<FastCrossing>(m, "FastCrossing", py::module_local())
         .def(py::init<bool, bool>(), py::kw_only(), "is_wgs84"_a = false,
              "use_polyline_rulers"_a = true)
+
+        // add polyline
         .def("add_polyline",
 
-             py::overload_cast<const FastCrossing::FlatBush::PolylineType &,
-                               int>(&FastCrossing::add_polyline),
+             py::overload_cast<const FastCrossing::PolylineType &, int>(
+                 &FastCrossing::add_polyline),
              "polyline"_a, py::kw_only(), "index"_a = -1,
              "add polyline to tree, you can "
              "provide your own polyline index, "
              "default: -1")
+
+        .def("add_polyline",
+
+             py::overload_cast<
+                 const Eigen::Ref<const FastCrossing::FlatBush::PolylineType> &,
+                 int>(&FastCrossing::add_polyline),
+             "polyline"_a, py::kw_only(), "index"_a = -1,
+             "add polyline to tree, you can "
+             "provide your own polyline index, "
+             "default: -1")
+        // finish
+
         .def("finish", &FastCrossing::finish, "finish to finalize indexing")
+        // intersections
         .def("intersections",
              py::overload_cast<>(&FastCrossing::intersections, py::const_),
              "all segment intersections in tree")
@@ -45,16 +60,17 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "crossing intersections with [from, to] segment "
              "(sorted by t ratio)")
         .def("intersections",
-             py::overload_cast<
-                 const Eigen::Ref<const FastCrossing::PolylineType> &, bool>(
+             py::overload_cast<const FastCrossing::PolylineType &, bool>(
                  &FastCrossing::intersections, py::const_),
              "polyline"_a, py::kw_only(), "dedup"_a = true,
              "crossing intersections with polyline (sorted by t ratio)")
-        .def("intersections",
-             py::overload_cast<const FastCrossing::FlatBush::PolylineType &>(
-                 &FastCrossing::intersections, py::const_),
-             "polyline"_a,
-             "crossing intersections with polyline (sorted by t ratio)")
+        .def(
+            "intersections",
+            py::overload_cast<
+                const Eigen::Ref<const FastCrossing::FlatBush::PolylineType> &>(
+                &FastCrossing::intersections, py::const_),
+            "polyline"_a,
+            "crossing intersections with polyline (sorted by t ratio)")
         //
         .def("bush", &FastCrossing::bush, rvp::reference_internal)
         .def("num_poylines", &FastCrossing::num_poylines)

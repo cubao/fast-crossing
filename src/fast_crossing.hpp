@@ -39,7 +39,8 @@ struct FastCrossing
         return index;
     }
 
-    int add_polyline(const FlatBush::PolylineType &polyline, int index = -1)
+    int add_polyline(const Eigen::Ref<const FlatBush::PolylineType> &polyline,
+                     int index = -1)
     {
         PolylineType Nx3(polyline.rows(), 3);
         Nx3.leftCols(2) = polyline;
@@ -139,9 +140,8 @@ struct FastCrossing
         return ret;
     }
 
-    std::vector<IntersectionType>
-    intersections(const Eigen::Ref<const PolylineType> &polyline,
-                  bool dedup = true) const
+    std::vector<IntersectionType> intersections(const PolylineType &polyline,
+                                                bool dedup = true) const
     {
         std::vector<IntersectionType> ret;
         int N = polyline.rows();
@@ -170,8 +170,8 @@ struct FastCrossing
         return ret;
     }
 
-    std::vector<IntersectionType>
-    intersections(const FlatBush::PolylineType &polyline) const
+    std::vector<IntersectionType> intersections(
+        const Eigen::Ref<const FlatBush::PolylineType> &polyline) const
     {
         PolylineType Nx3(polyline.rows(), 3);
         Nx3.leftCols(2) = polyline;
