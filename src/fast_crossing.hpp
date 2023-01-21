@@ -21,21 +21,19 @@ struct FastCrossing
         Eigen::Vector2i, Eigen::Vector2i //
         >;
 
-    FastCrossing(bool is_wgs84 = false, bool use_polyline_rulers = true)
-        : is_wgs84_(is_wgs84), use_polyline_rulers_(use_polyline_rulers)
-    {
-    }
+    FastCrossing(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
 
     int add_polyline(const PolylineType &polyline, int index = -1)
     {
         if (index < 0) {
-            index = num_poylines_;
+            index = polyline_rulers_.size();
         }
-        ++num_poylines_;
+        if (polyline_rulers_.find(index) != polyline_rulers_.end()) {
+            throw std::invalid_argument("duplicate index: " +
+                                        std::to_string(index));
+        }
+        polyline_rulers_.emplace(index, PolylineRuler(polyline, is_wgs84_));
         bush_.Add(polyline.leftCols(2), index);
-        if (use_polyline_rulers_) {
-            polyline_rulers_.emplace(index, PolylineRuler(polyline, is_wgs84_));
-        }
         return index;
     }
 
@@ -181,8 +179,7 @@ struct FastCrossing
 
     const FlatBush &bush() const { return bush_; }
     bool is_wgs84() const { return is_wgs84_; }
-    bool use_polyline_rulers() const { return use_polyline_rulers_; }
-    int num_poylines() const { return num_poylines_; }
+    int num_poylines() const { return polyline_rulers_.size(); }
     const std::map<int, PolylineRuler> &polyline_rulers() const
     {
         return polyline_rulers_;
@@ -199,9 +196,6 @@ struct FastCrossing
   private:
     FlatBush bush_;
     const bool is_wgs84_{false};
-    const bool use_polyline_rulers_{true};
-    int num_poylines_ = 0;
-
     std::map<int, PolylineRuler> polyline_rulers_;
 };
 } // namespace cubao

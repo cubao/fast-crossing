@@ -22,6 +22,18 @@ def test_fast_crossing():
     # build index
     fc.finish()
 
+    # num_poylines
+    assert 2 == fc.num_poylines()
+    rulers = fc.polyline_rulers()
+    assert len(rulers) == 2
+    ruler0 = fc.polyline_ruler(0)
+    ruler1 = fc.polyline_ruler(1)
+    assert not ruler0.is_wgs84()
+    assert not ruler1.is_wgs84()
+    assert ruler0.length() == 5
+    assert ruler1.length() == 4
+    assert fc.polyline_ruler(10) is None
+
     # query all line segment intersections
     ret = fc.intersections()
     # [

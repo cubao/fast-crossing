@@ -24,8 +24,7 @@ using rvp = py::return_value_policy;
 CUBAO_INLINE void bind_fast_crossing(py::module &m)
 {
     py::class_<FastCrossing>(m, "FastCrossing", py::module_local())
-        .def(py::init<bool, bool>(), py::kw_only(), "is_wgs84"_a = false,
-             "use_polyline_rulers"_a = true)
+        .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a = false)
 
         // add polyline
         .def("add_polyline",
@@ -73,7 +72,11 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
             "crossing intersections with polyline (sorted by t ratio)")
         //
         .def("bush", &FastCrossing::bush, rvp::reference_internal)
+        .def("is_wgs84", &FastCrossing::is_wgs84)
         .def("num_poylines", &FastCrossing::num_poylines)
+        .def("polyline_rulers", &FastCrossing::polyline_rulers)
+        .def("polyline_ruler", &FastCrossing::polyline_ruler, "index"_a,
+             rvp::reference_internal)
         //
         ;
 }
