@@ -117,3 +117,17 @@ def test_fast_crossing_intersection3d():
     xyz2 = fc.coordinates(ret)
     assert np.linalg.norm(xyz1 - [2.5, 0, 50]) < 1e-10
     assert np.linalg.norm(xyz2 - [2.5, 0, 2 / 3 * 100.0]) < 1e-10
+
+
+def test_fast_crossing_auto_rebuild_flatbush():
+    fc = FastCrossing()
+    fc.add_polyline(np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 100]]))  # AB
+    fc.add_polyline(np.array([[2.5, 2.0, 0.0], [2.5, 1.0, 100], [2.5, -2.0, 0]]))  # CDE
+    ret = fc.intersections()
+    assert len(ret) == 1
+
+    fc.add_polyline([[1.5, 0], [3.5, 2]])
+    ret = fc.intersections()
+    for row in ret:
+        print(row)
+    assert len(ret) == 4  # should dedup to 3?

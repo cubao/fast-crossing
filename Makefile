@@ -38,7 +38,7 @@ python_sdist:
 	# tar -tvf dist/fast_crossing-*.tar.gz
 python_test: pytest
 pytest:
-	pytest tests
+	pytest tests --capture=tee-sys
 .PHONY: python_install python_build python_sdist python_test pytest
 
 # conda create -y -n py36 python=3.6

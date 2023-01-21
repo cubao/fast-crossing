@@ -5,6 +5,7 @@
 #include "flatbush.h"
 #include <set>
 #include <vector>
+#include <optional>
 
 namespace cubao
 {
@@ -33,7 +34,7 @@ struct FastCrossing
                                         std::to_string(index));
         }
         polyline_rulers_.emplace(index, PolylineRuler(polyline, is_wgs84_));
-        bush_.Add(polyline.leftCols(2), index);
+        bush_.reset();
         return index;
     }
 
@@ -41,15 +42,28 @@ struct FastCrossing
                      int index = -1)
     {
         PolylineType Nx3(polyline.rows(), 3);
-        Nx3.leftCols(2) = polyline;
+        Nx3.leftCols<2>() = polyline;
         Nx3.col(2).setZero();
         return add_polyline(Nx3, index);
     }
 
-    void finish() { bush_.Finish(); }
+    void finish() const
+    {
+        if (bush_) {
+            return;
+        }
+        bush_ = FlatBush(polyline_rulers_.size());
+        for (auto &pair : polyline_rulers_) {
+            auto &idx = pair.first;
+            auto &polyline = pair.second.polyline();
+            bush_->Add(polyline.leftCols<2>(), idx);
+        }
+        bush_->Finish();
+    }
     std::vector<IntersectionType> intersections() const
     {
-        auto boxes = bush_.boxes();
+        auto &bush = this->bush();
+        auto boxes = bush.boxes();
         std::set<std::array<int, 2>> pairs;
         for (int i = 0, N = boxes.rows(); i < N; ++i) {
             const auto &box = boxes.row(i);
@@ -57,8 +71,8 @@ struct FastCrossing
             double y0 = box[1];
             double x1 = box[2];
             double y1 = box[3];
-            auto hits = bush_.Search(std::min(x0, x1), std::min(y0, y1),
-                                     std::max(x0, x1), std::max(y0, y1));
+            auto hits = bush.Search(std::min(x0, x1), std::min(y0, y1),
+                                    std::max(x0, x1), std::max(y0, y1));
             for (auto &h : hits) {
                 int j = h;
                 if (i < j) {
@@ -69,7 +83,7 @@ struct FastCrossing
         if (pairs.empty()) {
             return {};
         }
-        auto labels = bush_.labels();
+        auto labels = bush.labels();
         std::vector<IntersectionType> ret;
         for (auto &pair : pairs) {
             const auto &label1 = labels.row(pair[0]);
@@ -99,17 +113,18 @@ struct FastCrossing
                                                 const Eigen::Vector2d &p1,
                                                 bool dedup = true) const
     {
+        auto &bush = this->bush();
         double x0 = p0[0], y0 = p0[1];
         double x1 = p1[0], y1 = p1[1];
-        auto hits = bush_.Search(std::min(x0, x1), std::min(y0, y1),
-                                 std::max(x0, x1), std::max(y0, y1));
+        auto hits = bush.Search(std::min(x0, x1), std::min(y0, y1),
+                                std::max(x0, x1), std::max(y0, y1));
         if (hits.empty()) {
             return {};
         }
         std::vector<IntersectionType> ret;
         Eigen::Vector2i label1(0, 0);
-        auto boxes = bush_.boxes();
-        auto labels = bush_.labels();
+        auto boxes = bush.boxes();
+        auto labels = bush.labels();
         for (auto &idx : hits) {
             const auto &seg = boxes.row(idx);
             auto intersect = intersect_segments(p0, p1, //
@@ -172,7 +187,7 @@ struct FastCrossing
         const Eigen::Ref<const FlatBush::PolylineType> &polyline) const
     {
         PolylineType Nx3(polyline.rows(), 3);
-        Nx3.leftCols(2) = polyline;
+        Nx3.leftCols<2>() = polyline;
         Nx3.col(2).setZero();
         return intersections(Nx3, true);
     }
@@ -200,7 +215,11 @@ struct FastCrossing
         return coordinates(idx1, ts[0]);
     }
 
-    const FlatBush &bush() const { return bush_; }
+    const FlatBush &bush() const
+    {
+        finish();
+        return *bush_;
+    }
     bool is_wgs84() const { return is_wgs84_; }
     int num_poylines() const { return polyline_rulers_.size(); }
     const std::map<int, PolylineRuler> &polyline_rulers() const
@@ -217,9 +236,10 @@ struct FastCrossing
     }
 
   private:
-    FlatBush bush_;
     const bool is_wgs84_{false};
     std::map<int, PolylineRuler> polyline_rulers_;
+    // auto rebuild flatbush
+    mutable std::optional<FlatBush> bush_;
 };
 } // namespace cubao
 
