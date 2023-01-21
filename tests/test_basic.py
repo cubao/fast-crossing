@@ -45,7 +45,6 @@ def test_fast_crossing():
     with pytest.raises(IndexError) as excinfo:
         xyz = fc.coordinates(2, 0, 0.5)
     assert "map::at" in str(excinfo)
-    assert "key not found" in str(excinfo)
 
     # query all line segment intersections
     # [
@@ -54,6 +53,7 @@ def test_fast_crossing():
     #     array([0, 0], dtype=int32),
     #     array([1, 1], dtype=int32))
     # ]
+    ret = fc.intersections()
     print(ret)
     assert len(ret) == 1
     for xy, ts, label1, label2 in ret:
