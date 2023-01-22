@@ -141,7 +141,13 @@ struct FastCrossing
                 label1, label2);
         }
         std::sort(ret.begin(), ret.end(), [](const auto &t1, const auto &t2) {
-            return std::get<1>(t1)[0] < std::get<1>(t2)[0];
+            double tt1 = std::get<1>(t1)[0];
+            double tt2 = std::get<1>(t2)[0];
+            if (tt1 != tt2) {
+                return tt1 < tt2;
+            }
+            return std::make_tuple(std::get<3>(t1)[0], std::get<3>(t1)[1]) <
+                   std::make_tuple(std::get<3>(t2)[0], std::get<3>(t2)[1]);
         });
         if (dedup) {
             auto last = std::unique(
@@ -150,7 +156,8 @@ struct FastCrossing
                     if (std::get<3>(t1)[0] != std::get<3>(t2)[0]) {
                         return false;
                     }
-                    return std::get<3>(t1) == std::get<3>(t2) ||
+                    return (std::get<3>(t1)[1] == std::get<3>(t2)[1] &&
+                            std::get<1>(t1)[1] == std::get<1>(t2)[1]) ||
                            ((std::get<3>(t1)[1] + 1) == std::get<3>(t2)[1] &&
                             std::get<1>(t1)[1] == 1.0 &&
                             std::get<1>(t2)[1] == 0.0) ||
@@ -183,14 +190,16 @@ struct FastCrossing
                 auto &curr = hit.front();
                 auto &prev_label = std::get<3>(prev);
                 auto &curr_label = std::get<3>(curr);
-                if ((prev_label[0] == curr_label[0] &&
-                     std::get<2>(prev)[1] == std::get<2>(curr)[1]) ||
-                    ((prev_label[1] + 1) == curr_label[1] &&
-                     std::get<2>(prev)[1] == 1.0 &&
-                     std::get<2>(curr)[1] == 0.0) ||
-                    ((prev_label[1] - 1) == curr_label[1] &&
-                     std::get<2>(prev)[1] == 0.0 &&
-                     std::get<2>(curr)[1] == 1.0)) {
+                if ((prev_label == curr_label &&
+                     std::get<1>(prev)[1] == std::get<1>(curr)[1]) ||
+                    (prev_label[0] == curr_label[0] &&
+                     (prev_label[1] + 1) == curr_label[1] &&
+                     std::get<1>(prev)[1] == 1.0 &&
+                     std::get<1>(curr)[1] == 0.0) ||
+                    (prev_label[0] == curr_label[0] &&
+                     (prev_label[1] - 1) == curr_label[1] &&
+                     std::get<1>(prev)[1] == 0.0 &&
+                     std::get<1>(curr)[1] == 1.0)) {
                     has_dup = true;
                 }
             }
@@ -199,13 +208,14 @@ struct FastCrossing
         return ret;
     }
 
-    std::vector<IntersectionType> intersections(
-        const Eigen::Ref<const FlatBush::PolylineType> &polyline) const
+    std::vector<IntersectionType>
+    intersections(const Eigen::Ref<const FlatBush::PolylineType> &polyline,
+                  bool dedup = true) const
     {
         PolylineType Nx3(polyline.rows(), 3);
         Nx3.leftCols<2>() = polyline;
         Nx3.col(2).setZero();
-        return intersections(Nx3);
+        return intersections(Nx3, dedup);
     }
 
     static Eigen::Vector3d coordinates(const RowVectors &xyzs, int seg_index,
