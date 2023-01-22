@@ -183,6 +183,10 @@ struct FastCrossing
             if (hit.empty()) {
                 continue;
             }
+            for (auto &h : hit) {
+                auto &label_of_curr_seg = std::get<2>(h);
+                label_of_curr_seg[1] = i;
+            }
             bool has_dup = false;
             if (dedup && !ret.empty()) {
                 // xy, ts, label1, label2
