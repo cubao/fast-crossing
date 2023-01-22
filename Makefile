@@ -77,6 +77,13 @@ tar.gz:
 	tar -cvz --exclude .git -f ../fast_crossing.tar.gz .
 	ls -alh ../fast_crossing.tar.gz
 
+
+SYNC_OUTPUT_DIR := headers/include/cubao
+sync_headers:
+	cp src/fast_crossing.hpp $(SYNC_OUTPUT_DIR)
+	cp src/pybind11_fast_crossing.hpp $(SYNC_OUTPUT_DIR)
+	cp src/pybind11_flatbush.hpp $(SYNC_OUTPUT_DIR)
+
 # https://stackoverflow.com/a/25817631
 echo-%  : ; @echo -n $($*)
 Echo-%  : ; @echo $($*)

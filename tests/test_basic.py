@@ -155,3 +155,23 @@ def test_fast_crossing_filter_by_z():
     assert len(ret) == 2
     assert fc.coordinates(ret[0])[2] == 10
     assert fc.coordinates(ret[1])[2] == 20
+
+
+def test_fast_crossing_dedup():
+    # should be stable
+    for _ in range(100):
+        fc = FastCrossing()
+        fc.add_polyline([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
+        fc.add_polyline([[0, 1, 0], [1, 1, 0], [2, 1, 0]])
+
+        ret = fc.intersections([[1, -1], [1, 1]])
+        assert len(ret) == 2
+        assert np.all(ret[0][-1] == [0, 0]), ret
+        assert np.all(ret[1][-1] == [1, 0]), ret
+        assert ret[0][1][1] == 1.0, ret
+        assert ret[1][1][1] == 1.0, ret
+
+        ret = fc.intersections([[1, -1], [1, 1]], dedup=False)
+        # for idx, row in enumerate(ret):
+        #     print(idx, row)
+        assert len(ret) == 4
