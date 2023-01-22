@@ -185,12 +185,12 @@ struct FastCrossing
                 auto &curr_label = std::get<3>(curr);
                 if ((prev_label[0] == curr_label[0] &&
                      std::get<2>(prev)[1] == std::get<2>(curr)[1]) ||
-                    (((prev_label[1] + 1) == curr_label[1] &&
-                      std::get<2>(prev)[1] == 1.0 &&
-                      std::get<2>(curr)[1] == 0.0) ||
-                     ((prev_label[1] - 1) == curr_label[1] &&
-                      std::get<2>(prev)[1] == 0.0 &&
-                      std::get<2>(curr)[1] == 1.0))) {
+                    ((prev_label[1] + 1) == curr_label[1] &&
+                     std::get<2>(prev)[1] == 1.0 &&
+                     std::get<2>(curr)[1] == 0.0) ||
+                    ((prev_label[1] - 1) == curr_label[1] &&
+                     std::get<2>(prev)[1] == 0.0 &&
+                     std::get<2>(curr)[1] == 1.0)) {
                     has_dup = true;
                 }
             }
@@ -205,7 +205,7 @@ struct FastCrossing
         PolylineType Nx3(polyline.rows(), 3);
         Nx3.leftCols<2>() = polyline;
         Nx3.col(2).setZero();
-        return intersections(Nx3, true);
+        return intersections(Nx3);
     }
 
     static Eigen::Vector3d coordinates(const RowVectors &xyzs, int seg_index,
