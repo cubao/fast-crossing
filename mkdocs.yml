@@ -1,0 +1,18 @@
+site_name: fast-crossing
+site_url: https://fast-crossing.readthedocs.io
+site_description: Fast polyline (line segments) intersection (fast version of bentley-ottmann)
+site_author: district10
+
+repo_url: https://github.com/cubao/fast-crossing
+edit_uri: blob/master/docs/
+
+theme: readthedocs
+nav:
+    - Home: index.md
+    - Usage: usage.md
+    - About:
+        - Release Notes: about/release-notes.md
+        - License: about/license.md
+plugins:
+  - include-markdown
+copyright: Copyright &copy; 2023 <a href="https://github.com/cubao">cubao team</a>.

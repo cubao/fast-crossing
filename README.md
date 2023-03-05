@@ -1,11 +1,13 @@
 # fast crossing
 
+<!--intro-start-->
+
 ## Installation
 
 ### via pip
 
-```
-pip install fast-crossing
+```bash
+pip install -U fast-crossing
 ```
 
 ### from source
@@ -17,11 +19,13 @@ pip install ./fast-crossing
 
 Or
 
-```
+```bash
 pip install git+https://github.com/cubao/fast-crossing.git
 ```
 
 (you can build wheels for later reuse by ` pip wheel git+https://github.com/cubao/fast-crossing.git`)
+
+<!--intro-end-->
 
 ## Usage & Tests
 
@@ -205,5 +209,4 @@ def test_fast_crossing_dedup():
         # for idx, row in enumerate(ret):
         #     print(idx, row)
         assert len(ret) == 4
-
 ```
