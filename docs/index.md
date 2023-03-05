@@ -1,4 +1,4 @@
-# polyline-ruler
+# fast-crossing
 
 {%
    include-markdown "../README.md"
@@ -7,6 +7,6 @@
 %}
 
 <div class="text-center">
-<a href="https://github.com/cubao/polyline-ruler" class="btn btn-primary" role="button">Code on GitHub</a>
-<a href="https://pypi.org/project/polyline-ruler" class="btn btn-primary" role="button">Package on PyPi</a>
+<a href="https://github.com/cubao/fast-crossing" class="btn btn-primary" role="button">Code on GitHub</a>
+<a href="https://pypi.org/project/fast-crossing" class="btn btn-primary" role="button">Package on PyPi</a>
 </div>

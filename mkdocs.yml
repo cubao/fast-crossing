@@ -1,9 +1,9 @@
-site_name: polyline-ruler
-site_url: https://polyline-ruler.readthedocs.io
-site_description:  cubao/polyline-ruler is more than mapbox/cheap-ruler.
+site_name: fast-crossing
+site_url: https://fast-crossing.readthedocs.io
+site_description: Fast polyline (line segments) intersection (fast version of bentley-ottmann)
 site_author: district10
 
-repo_url: https://github.com/cubao/polyline-ruler
+repo_url: https://github.com/cubao/fast-crossing
 edit_uri: blob/master/docs/
 
 theme: readthedocs
