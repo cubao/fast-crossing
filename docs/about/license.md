@@ -11,4 +11,4 @@ The legal stuff.
 
 ## License (BSD)
 
-See <https://github.com/cubao/cmake_example/blob/master/LICENSE>.
+See <https://github.com/cubao/fast-crossing/blob/master/LICENSE>.

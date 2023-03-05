@@ -4,21 +4,22 @@
 
 ## Upgrading
 
-To upgrade `polyline-ruler` to the latest version, use pip:
+To upgrade `fast-crossing` to the latest version, use pip:
 
 ```bash
-pip install -U polyline-ruler
+pip install -U fast-crossing
 ```
 
 ## Version 0.0.3 (2023-03-05)
 
+*   Fix CI
 *   Use GitHub workflow to release to pypi
 
-## Version 0.0.2 (2023-01-19)
+## Version 0.0.2 (2023-01-22)
 
-*   More bindings, more tests
+*
 
-## Version 0.0.1 (2022-10-08)
+## Version 0.0.1 (2023-01-22)
 
 *   First release
 
