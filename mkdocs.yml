@@ -1,0 +1,18 @@
+site_name: polyline-ruler
+site_url: https://polyline-ruler.readthedocs.io
+site_description:  cubao/polyline-ruler is more than mapbox/cheap-ruler.
+site_author: district10
+
+repo_url: https://github.com/cubao/polyline-ruler
+edit_uri: blob/master/docs/
+
+theme: readthedocs
+nav:
+    - Home: index.md
+    - Usage: usage.md
+    - About:
+        - Release Notes: about/release-notes.md
+        - License: about/license.md
+plugins:
+  - include-markdown
+copyright: Copyright &copy; 2023 <a href="https://github.com/cubao">cubao team</a>.
