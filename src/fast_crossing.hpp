@@ -129,19 +129,29 @@ struct FastCrossing
         // filter by intersection
         if (self_intersection == 0) {
             v.erase(std::remove_if(v.begin(), v.end(),
-                                   [](auto &inter) { return false; }),
+                                   [](const auto &inter) {
+                                       return std::get<2>(inter).first ==
+                                              std::get<3>(inter).first;
+                                   }),
                     v.end());
         } else if (self_intersection == 1) {
             v.erase(std::remove_if(v.begin(), v.end(),
-                                   [](auto &inter) { return false; }),
+                                   [](const auto &inter) {
+                                       return std::get<2>(inter).first !=
+                                              std::get<3>(inter).first;
+                                   }),
                     v.end());
         }
 
         // filter by z
         if (z_min > 0 || z_max < std::numeric_limits<double>::max()) {
             v.erase(std::remove_if(v.begin(), v.end(),
-                                   [z_min, z_max](auto &inter) { //
-                                       return false;
+                                   [&](auto &inter) { //
+                                       auto p0 = this->coordinates(inter, true);
+                                       auto p1 =
+                                           this->coordinates(inter, false);
+                                       double zz = std::fabs(p0[2] - p1[2]);
+                                       return z_min <= zz && zz < z_max;
                                    }),
                     v.end());
         }
