@@ -1,5 +1,9 @@
 # fast-crossing
 
+![](fast-crossing.png)
+
+(See jupyter notebook [here](https://github.com/cubao/index/blob/master/docs/notebooks/fast-crossing.ipynb))
+
 {%
    include-markdown "../README.md"
    start="<!--intro-start-->"

@@ -20,6 +20,9 @@
 #include "pybind11_flatbush.hpp"
 #include "pybind11_polyline_ruler.hpp"
 
+#include "point_in_polygon.hpp"
+#include "densify_polyline.hpp"
+
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
@@ -31,6 +34,13 @@ PYBIND11_MODULE(fast_crossing, m)
     cubao::bind_fast_crossing(m);
     cubao::bind_flatbush(m);
     cubao::bind_polyline_ruler(m);
+
+    m.def("point_in_polygon", &cubao::point_in_polygon, //
+          py::kw_only(), "points"_a, "polygon"_a,
+          "point-in-polygon test, returns 0-1 mask");
+    m.def("densify_polyline", &cubao::densify_polyline, //
+          "polyline"_a, py::kw_only(), "max_gap"_a,
+          "densify polyline, interpolate to satisfy max_gap");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

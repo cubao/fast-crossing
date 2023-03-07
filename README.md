@@ -1,6 +1,12 @@
 # fast crossing
 
+![](docs/fast-crossing.png)
+
+(See jupyter notebook [here](https://github.com/cubao/index/blob/master/docs/notebooks/fast-crossing.ipynb))
+
 <!--intro-start-->
+
+Fast polyline (line segments) intersection (fast version of bentley-ottmann).
 
 ## Installation
 
@@ -24,6 +30,10 @@ pip install git+https://github.com/cubao/fast-crossing.git
 ```
 
 (you can build wheels for later reuse by ` pip wheel git+https://github.com/cubao/fast-crossing.git`)
+
+## Related
+
+Inspired by [anvaka/isect: Segments intersection detection library](https://github.com/anvaka/isect).
 
 <!--intro-end-->
 

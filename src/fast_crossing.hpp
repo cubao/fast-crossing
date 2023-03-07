@@ -6,6 +6,8 @@
 #include <set>
 #include <vector>
 #include <optional>
+#include <limits>
+#include <cmath>
 
 namespace cubao
 {
@@ -107,6 +109,54 @@ struct FastCrossing
             }
         }
         return ret;
+    }
+
+    std::vector<IntersectionType> intersections(
+        const std::tuple<double, double> &z_offset_range,
+        // 2: no check, 1: only self intersection, 0: no self intersection
+        int self_intersection = 2) const
+    {
+        double z_min = std::get<0>(z_offset_range);
+        double z_max = std::get<1>(z_offset_range);
+        if (std::isinf(z_max)) {
+            z_max = std::numeric_limits<double>::max();
+        }
+        if (z_min > z_max || z_max < 0) {
+            return {};
+        }
+
+        auto v = this->intersections();
+        // filter by intersection
+        if (self_intersection == 0) {
+            v.erase(std::remove_if(v.begin(), v.end(),
+                                   [](const auto &inter) {
+                                       return std::get<2>(inter)[0] ==
+                                              std::get<3>(inter)[0];
+                                   }),
+                    v.end());
+        } else if (self_intersection == 1) {
+            v.erase(std::remove_if(v.begin(), v.end(),
+                                   [](const auto &inter) {
+                                       return std::get<2>(inter)[0] !=
+                                              std::get<3>(inter)[0];
+                                   }),
+                    v.end());
+        }
+
+        // filter by z
+        if (z_min > 0 || z_max < std::numeric_limits<double>::max()) {
+            v.erase(std::remove_if(v.begin(), v.end(),
+                                   [&](auto &inter) { //
+                                       auto p0 = this->coordinates(inter, true);
+                                       auto p1 =
+                                           this->coordinates(inter, false);
+                                       double zz = std::fabs(p0[2] - p1[2]);
+                                       return zz < z_min || zz > z_max;
+                                   }),
+                    v.end());
+        }
+
+        return v;
     }
 
     std::vector<IntersectionType> intersections(const Eigen::Vector2d &p0,

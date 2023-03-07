@@ -124,7 +124,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="fast_crossing",
-    version="0.0.3",
+    version="0.0.4",
     author="tzx",
     author_email="dvorak4tzx@gmail.com",
     url="https://github.com/cubao/fast-crossing",

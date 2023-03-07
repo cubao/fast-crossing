@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from fast_crossing import FastCrossing
+from fast_crossing import FastCrossing, densify_polyline, point_in_polygon
 
 
 def test_fast_crossing():
@@ -143,9 +143,12 @@ def test_fast_crossing_filter_by_z():
     assert len(ret) == 1
     assert fc.coordinates(ret[0])[2] == 0
 
-    ret = fc.intersections([[0.5, -1, 10], [0.5, 1, 10]], z_min=-1, z_max=1)
+    ret = fc.intersections([[0.5, -1, 10.5], [0.5, 1, 10.5]], z_min=-1, z_max=1)
     assert len(ret) == 1
-    assert fc.coordinates(ret[0])[2] == 10
+    assert np.all(fc.coordinates(ret[0]) == [0.5, 0, 10])
+    assert np.all(fc.coordinates(ret[0], second=True) == [0.5, 0, 10])
+    # don't do this, first point is not in fc!!!
+    # assert np.all(fc.coordinates(ret[0], second=False) == [0.5, 0, 10.5])
 
     ret = fc.intersections([[0.5, -1, 20], [0.5, 1, 20]], z_min=-1, z_max=1)
     assert len(ret) == 1
@@ -155,6 +158,10 @@ def test_fast_crossing_filter_by_z():
     assert len(ret) == 2
     assert fc.coordinates(ret[0])[2] == 10
     assert fc.coordinates(ret[1])[2] == 20
+
+    assert 3 == len(fc.intersections())  # 3 == C(3,2): choose 2 from 3
+    # for row in fc.intersections():
+    #     print(row)
 
 
 def test_fast_crossing_dedup():
@@ -175,3 +182,51 @@ def test_fast_crossing_dedup():
         # for idx, row in enumerate(ret):
         #     print(idx, row)
         assert len(ret) == 4
+
+
+def test_fast_crossing_single_polyline():
+    fc = FastCrossing()
+    fc.add_polyline([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
+    assert not fc.intersections()
+
+
+def test_fast_crossing_single_polyline_self_intersection():
+    fc = FastCrossing()
+    fc.add_polyline([[0, 0, 0], [1, 0, 0], [1, 1, 0], [-1, -1, 0]])
+    assert len(fc.intersections()) == 1
+    assert not fc.intersections(z_offset_range=[0.0, 10.0], self_intersection=0)
+    assert fc.intersections(z_offset_range=[0.0, 0.0])
+    assert not fc.intersections(z_offset_range=[1e-15, 1.0])
+
+    fc = FastCrossing()
+    fc.add_polyline([[0, 0, 0], [1, 0, 0], [1, 1, 0], [-1, -1, 0]])
+    fc.add_polyline(np.array([[0.0, 0.0], [5.0, 0.0]]))  # AB
+    fc.add_polyline(np.array([[2.5, 2.0], [2.5, 1.0], [2.5, -2.0]]))  # CDE
+    self_inter = fc.intersections(z_offset_range=[-1.0, 1e10], self_intersection=1)
+    assert len(self_inter) == 1
+
+
+def test_densify():
+    coords = np.array(
+        [
+            [0, 0, 0],
+            [2, 0, 0],
+            [5, 0, 0],
+        ],
+        dtype=np.float64,
+    )
+    dense = densify_polyline(coords, max_gap=1.0)
+    assert len(dense) == 6
+    dense = densify_polyline(coords, max_gap=2.0)
+    assert len(dense) == 4
+    dense = densify_polyline(coords, max_gap=3.0)
+    assert len(dense) == 3
+    assert 3 == len(densify_polyline(coords, max_gap=3.0 + 1e-3))
+    assert 4 == len(densify_polyline(coords, max_gap=3.0 - 1e-3))
+
+
+def test_point_in_polygon():
+    polygon = [[0, 0], [1, 0], [1, 1], [0, 1]]
+    points = [[0.5, 0.5], [10, 0]]
+    mask = point_in_polygon(points=points, polygon=polygon)
+    assert np.all(mask == [1, 0])

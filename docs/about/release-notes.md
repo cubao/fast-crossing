@@ -10,6 +10,11 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.0.4 (2023-03-07)
+
+*   Integrate `point_in_polygon` test
+*   Filter intersections by z, by self_intersection
+
 ## Version 0.0.3 (2023-03-05)
 
 *   Fix CI
