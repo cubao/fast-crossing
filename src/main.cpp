@@ -35,7 +35,8 @@ PYBIND11_MODULE(fast_crossing, m)
     cubao::bind_polyline_ruler(m);
 
     m.def("point_in_polygon", &cubao::point_in_polygon, //
-          py::kw_only(), "points"_a, "polygon"_a, "point-in-polygon test, returns 0-1 mask");
+          py::kw_only(), "points"_a, "polygon"_a,
+          "point-in-polygon test, returns 0-1 mask");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
