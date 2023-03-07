@@ -6,6 +6,7 @@
 #include <set>
 #include <vector>
 #include <optional>
+#include <limits>
 
 namespace cubao
 {
@@ -107,6 +108,33 @@ struct FastCrossing
             }
         }
         return ret;
+    }
+
+    std::vector<IntersectionType> intersections(
+        const Eigen::Vector2d z_offset_range,
+        int self_intersection =
+            2 // 2: no check, 1: only self intersection, 0: no self intersection
+    ) const
+    {
+        auto v = this->intersections();
+        if (z_offset_range[0] > 0 ||
+            z_offset_range < std::numeric_limits<double>::max()) {
+            v.erase(
+                std::remove_if(v.begin(), v.end(),
+                               [z_offset_range](auto &inter) { return false; }),
+                v.end());
+        }
+
+        if (self_intersection == 0) {
+            v.erase(std::remove_if(v.begin(), v.end(),
+                                   [](auto &inter) { return false; }),
+                    v.end());
+        } else if (self_intersection == 1) {
+            v.erase(std::remove_if(v.begin(), v.end(),
+                                   [](auto &inter) { return false; }),
+                    v.end());
+        }
+        return intersections;
     }
 
     std::vector<IntersectionType> intersections(const Eigen::Vector2d &p0,

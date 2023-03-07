@@ -53,6 +53,11 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              py::overload_cast<>(&FastCrossing::intersections, py::const_),
              "all segment intersections in tree")
         .def("intersections",
+             py::overload_cast<const Eigen::Vector2d, int>(
+                 &FastCrossing::intersections, py::const_),
+             py::kw_only(), "z_offset_range"_a, "self_intersection"_a = 2,
+             "segment intersections in tree, filter by some condition")
+        .def("intersections",
              py::overload_cast<const Eigen::Vector2d &, const Eigen::Vector2d &,
                                bool>(&FastCrossing::intersections, py::const_),
              "from"_a, "to"_a, py::kw_only(), "dedup"_a = true,

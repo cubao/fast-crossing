@@ -50,7 +50,7 @@ def point_in_polygon_polygons(points: np.ndarray, polygon: np.ndarray) -> np.nda
 
 def point_in_polygon_shapely(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
     import shapely
-    from shapely.geometry import Point, Polygon
+    from shapely.geometry import Polygon
 
     tic = time.time()
     polygon = Polygon(polygon)
@@ -163,7 +163,7 @@ def random_angle_steps(steps: int, irregularity: float) -> List[float]:
     lower = (2 * math.pi / steps) - irregularity
     upper = (2 * math.pi / steps) + irregularity
     cumsum = 0
-    for i in range(steps):
+    for _ in range(steps):
         angle = random.uniform(lower, upper)
         angles.append(angle)
         cumsum += angle
@@ -225,15 +225,6 @@ def point_in_polygon_all():
 
 if __name__ == "__main__":
     import fire
-
-    # path_points = 'dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy'
-    # path_polygon = 'dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy'
-    # output = f'dist/output.npy'
-    # wrapping(point_in_polygon_shapely)(
-    #     path_points,
-    #     path_polygon,
-    #     output,
-    # )
 
     fire.core.Display = lambda lines, out: print(*lines, file=out)
     fire.Fire(
