@@ -99,6 +99,7 @@ benchmark_point_in_polygon:
 		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy \
 		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy \
 		dist/mask_cubao.npy
+.PHONY: benchmark_point_in_polygon
 
 SYNC_OUTPUT_DIR := headers/include/cubao
 sync_headers:

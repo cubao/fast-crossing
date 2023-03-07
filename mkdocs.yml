@@ -10,6 +10,8 @@ theme: readthedocs
 nav:
     - Home: index.md
     - Usage: usage.md
+    - MISC:
+      - point-in-polygon-test: point-in-polygon.md
     - About:
         - Release Notes: about/release-notes.md
         - License: about/license.md
