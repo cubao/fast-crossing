@@ -112,12 +112,12 @@ struct FastCrossing
     }
 
     std::vector<IntersectionType> intersections(
-        const Eigen::Vector2d &z_offset_range,
+        const std::tuple<double, double> &z_offset_range,
         // 2: no check, 1: only self intersection, 0: no self intersection
         int self_intersection = 2) const
     {
-        double z_min = z_offset_range[0];
-        double z_max = z_offset_range[1];
+        double z_min = std::get<0>(z_offset_range);
+        double z_max = std::get<1>(z_offset_range);
         if (std::isinf(z_max)) {
             z_max = std::numeric_limits<double>::max();
         }

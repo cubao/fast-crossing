@@ -175,3 +175,16 @@ def test_fast_crossing_dedup():
         # for idx, row in enumerate(ret):
         #     print(idx, row)
         assert len(ret) == 4
+
+
+def test_fast_crossing_single_polyline():
+    fc = FastCrossing()
+    fc.add_polyline([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
+    assert not fc.intersections()
+
+
+def test_fast_crossing_single_polyline_self_intersection():
+    fc = FastCrossing()
+    fc.add_polyline([[0, 0, 0], [1, 0, 0], [1, 1, 0], [-1, -1, 0]])
+    assert len(fc.intersections()) == 1
+    assert not fc.intersections(z_offset_range=[0.0, 10.0], self_intersection=0)
