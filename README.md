@@ -2,6 +2,14 @@
 
 <!--intro-start-->
 
+>   Fast polyline (line segments) intersection (fast version of bentley-ottmann).
+>
+>   C++/Python version of [anvaka/isect: Segments intersection detection library](https://github.com/anvaka/isect).
+
+![](fast-crossing.png)
+
+See jupyter notebook [here](https://github.com/cubao/index/blob/master/docs/notebooks/fast-crossing.ipynb).
+
 ## Installation
 
 ### via pip
