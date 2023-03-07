@@ -31,11 +31,28 @@ def point_in_polygon_cubao(points: np.ndarray, polygon: np.ndarray) -> np.ndarra
 
 
 def point_in_polygon_polygons(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
-    from fast_crossing import point_in_polygon
+    """
+    not ready
+    """
+    import polygons
+
+    polygon = polygon.tolist()
+    num_edges_children = 4
+    num_nodes_children = 4
+    tree = polygons.build_search_tree(polygon, num_edges_children, num_nodes_children)
+    mask = polygons.points_are_inside(tree, points).astype(np.int32)
+    return mask
 
 
 def point_in_polygon_shapely(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
-    from fast_crossing import point_in_polygon
+    from shapely.geometry import Point, Polygon
+
+    tic = time.time()
+    polygon = Polygon(polygon)
+    mask = [polygon.contains(Point(p)) for p in points]
+    mask = np.array(mask).astype(np.int32)
+    logger.info(f"point_in_polygon_shapely, secs:{time.time() - tic:.9f}")
+    return mask
 
 
 def load_points(path: str):
@@ -49,7 +66,9 @@ def load_polygon(path: str):
 
 
 def write_mask(mask: np.ndarray, path: str):
-    pass
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    np.save(path, mask)
+    logger.info(f"wrote to {path}")
 
 
 def wrapping(fn):
@@ -200,10 +219,10 @@ def point_in_polygon_all():
 if __name__ == "__main__":
     import fire
 
-    # path_points = 'build/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy'
-    # path_polygon = 'build/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy'
-    # output = f'build/output.npy'
-    # wrapping(point_in_polygon_matplotlib)(
+    # path_points = 'dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy'
+    # path_polygon = 'dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy'
+    # output = f'dist/output.npy'
+    # wrapping(point_in_polygon_shapely)(
     #     path_points,
     #     path_polygon,
     #     output,
