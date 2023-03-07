@@ -116,29 +116,29 @@ struct FastCrossing
         // 2: no check, 1: only self intersection, 0: no self intersection
         int self_intersection = 2) const
     {
-        auto v = this->intersections();
         double z_min = z_offset_range[0];
         double z_max = z_offset_range[1];
         if (std::isinf(z_max)) {
             z_max = std::numeric_limits<double>::max();
         }
-        if (z_min > z_max) {
+        if (z_min > z_max || z_max < 0) {
             return {};
         }
 
+        auto v = this->intersections();
         // filter by intersection
         if (self_intersection == 0) {
             v.erase(std::remove_if(v.begin(), v.end(),
                                    [](const auto &inter) {
-                                       return std::get<2>(inter).first ==
-                                              std::get<3>(inter).first;
+                                       return std::get<2>(inter)[0] ==
+                                              std::get<3>(inter)[0];
                                    }),
                     v.end());
         } else if (self_intersection == 1) {
             v.erase(std::remove_if(v.begin(), v.end(),
                                    [](const auto &inter) {
-                                       return std::get<2>(inter).first !=
-                                              std::get<3>(inter).first;
+                                       return std::get<2>(inter)[0] !=
+                                              std::get<3>(inter)[0];
                                    }),
                     v.end());
         }
@@ -151,7 +151,7 @@ struct FastCrossing
                                        auto p1 =
                                            this->coordinates(inter, false);
                                        double zz = std::fabs(p0[2] - p1[2]);
-                                       return z_min <= zz && zz < z_max;
+                                       return zz < z_min || zz > z_max;
                                    }),
                     v.end());
         }
