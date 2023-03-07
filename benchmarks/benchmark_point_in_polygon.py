@@ -14,7 +14,9 @@ def point_in_polygon_matplotlib(points: np.ndarray, polygon: np.ndarray) -> np.n
     tic = time.time()
     path = Path(polygon)
     mask = path.contains_points(points).astype(np.int32)
-    logger.info(f"point_in_polygon_matplotlib, secs:{time.time() - tic:.9f}")
+    logger.info(
+        f"point_in_polygon_matplotlib, secs:{time.time() - tic:.9f} ({mask.sum():,}/{len(points)})"
+    )
     return mask
 
 
@@ -26,7 +28,9 @@ def point_in_polygon_cubao(points: np.ndarray, polygon: np.ndarray) -> np.ndarra
 
     tic = time.time()
     mask = point_in_polygon(points=points, polygon=polygon)
-    logger.info(f"point_in_polygon_cubao, secs:{time.time() - tic:.9f}")
+    logger.info(
+        f"point_in_polygon_cubao, secs:{time.time() - tic:.9f} ({mask.sum():,}/{len(points)})"
+    )
     return mask
 
 
@@ -45,13 +49,16 @@ def point_in_polygon_polygons(points: np.ndarray, polygon: np.ndarray) -> np.nda
 
 
 def point_in_polygon_shapely(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
+    import shapely
     from shapely.geometry import Point, Polygon
 
     tic = time.time()
     polygon = Polygon(polygon)
-    mask = [polygon.contains(Point(p)) for p in points]
-    mask = np.array(mask).astype(np.int32)
-    logger.info(f"point_in_polygon_shapely, secs:{time.time() - tic:.9f}")
+    points = shapely.points(points)
+    mask = shapely.contains(polygon, points).astype(np.int32)
+    logger.info(
+        f"point_in_polygon_shapely, secs:{time.time() - tic:.9f} ({mask.sum():,}/{len(points)})"
+    )
     return mask
 
 
