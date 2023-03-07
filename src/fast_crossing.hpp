@@ -7,6 +7,7 @@
 #include <vector>
 #include <optional>
 #include <limits>
+#include <cmath>
 
 namespace cubao
 {
@@ -111,20 +112,21 @@ struct FastCrossing
     }
 
     std::vector<IntersectionType> intersections(
-        const Eigen::Vector2d z_offset_range,
-        int self_intersection =
-            2 // 2: no check, 1: only self intersection, 0: no self intersection
-    ) const
+        const Eigen::Vector2d &z_offset_range,
+        // 2: no check, 1: only self intersection, 0: no self intersection
+        int self_intersection = 2) const
     {
         auto v = this->intersections();
-        if (z_offset_range[0] > 0 ||
-            z_offset_range < std::numeric_limits<double>::max()) {
-            v.erase(
-                std::remove_if(v.begin(), v.end(),
-                               [z_offset_range](auto &inter) { return false; }),
-                v.end());
+        double z_min = z_offset_range[0];
+        double z_max = z_offset_range[1];
+        if (std::isinf(z_max)) {
+            z_max = std::numeric_limits<double>::max();
+        }
+        if (z_min > z_max) {
+            return {};
         }
 
+        // filter by intersection
         if (self_intersection == 0) {
             v.erase(std::remove_if(v.begin(), v.end(),
                                    [](auto &inter) { return false; }),
@@ -134,7 +136,17 @@ struct FastCrossing
                                    [](auto &inter) { return false; }),
                     v.end());
         }
-        return intersections;
+
+        // filter by z
+        if (z_min > 0 || z_max < std::numeric_limits<double>::max()) {
+            v.erase(std::remove_if(v.begin(), v.end(),
+                                   [z_min, z_max](auto &inter) { //
+                                       return false;
+                                   }),
+                    v.end());
+        }
+
+        return v;
     }
 
     std::vector<IntersectionType> intersections(const Eigen::Vector2d &p0,
