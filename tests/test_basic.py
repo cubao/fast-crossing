@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from fast_crossing import FastCrossing, KdTree, densify_polyline, point_in_polygon
 
 

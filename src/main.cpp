@@ -31,7 +31,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-PYBIND11_MODULE(fast_crossing, m)
+PYBIND11_MODULE(_pybind11_fast_crossing, m)
 {
     cubao::bind_fast_crossing(m);
     cubao::bind_flatbush(m);
