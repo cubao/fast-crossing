@@ -49,7 +49,10 @@ struct PointCloud
 
 // https://github.com/jlblancoc/nanoflann/blob/master/examples/pointcloud_example.cpp
 using KdTreeIndex = nanoflann::KDTreeSingleIndexAdaptor<
-    nanoflann::L2_Simple_Adaptor<double, PointCloud>, PointCloud, 3 /* dim */>;
+    nanoflann::L2_Simple_Adaptor<double, PointCloud, int>, //
+    PointCloud,                                            //
+    3 /* dim */, int                                       /* AccessorType */
+    >;
 
 struct KdTree : PointCloud
 {
@@ -85,18 +88,19 @@ struct KdTree : PointCloud
         points.col(2).setZero();
         index_.reset();
     }
-    void clear()
+    void reset()
     {
         pts.clear();
         index_.reset();
     }
+    void reset_index() { index_.reset(); }
 
     std::pair<int, double> nearest(const Eigen::Vector3d &position, //
                                    bool return_squared_l2 = false) const
     {
-        size_t ret_index;
+        int ret_index;
         double out_dist_sqr;
-        nanoflann::KNNResultSet<double> resultSet(1);
+        auto resultSet = nanoflann::KNNResultSet<double, int, int>(1);
         resultSet.init(&ret_index, &out_dist_sqr);
         index().findNeighbors(resultSet, position.data(),
                               nanoflann::SearchParams());
@@ -119,29 +123,19 @@ struct KdTree : PointCloud
             bool sorted = true,              //
             bool return_squared_l2 = false) const
     {
-        if (k <= 0) {
-            return std::make_pair(Eigen::VectorXi(0), Eigen::VectorXd(0));
-        }
-        std::vector<size_t> ret_index(k);
-        std::vector<double> out_dist_sqr(k);
-        nanoflann::KNNResultSet<double> resultSet(k);
-        resultSet.init(&ret_index[0], &out_dist_sqr[0]);
+        auto indexes = std::vector<int>(k);
+        auto distances = std::vector<double>(k);
+        auto resultSet = nanoflann::KNNResultSet<double, int, int>(k);
+        resultSet.init(&indexes[0], &distances[0]);
         auto params = nanoflann::SearchParams();
         params.sorted = sorted;
         index().findNeighbors(resultSet, position.data(), params);
-        std::vector<int> indexes;
-        std::vector<double> distances;
-        for (size_t i = 0; i < resultSet.size(); i++) {
-            indexes.push_back(ret_index[i]);
-            distances.push_back(out_dist_sqr[i]);
-        }
+        const int N = resultSet.size();
         return std::make_pair(
-            Eigen::VectorXi::Map(&indexes[0], indexes.size()),
+            Eigen::VectorXi::Map(&indexes[0], N),
             return_squared_l2
-                ? Eigen::VectorXd::Map(&distances[0], distances.size())
-                : Eigen::VectorXd::Map(&distances[0], distances.size())
-                      .cwiseSqrt()
-                      .eval());
+                ? Eigen::VectorXd::Map(&distances[0], N)
+                : Eigen::VectorXd::Map(&distances[0], N).cwiseSqrt().eval());
     }
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
@@ -152,8 +146,8 @@ struct KdTree : PointCloud
         auto params = nanoflann::SearchParams();
         params.sorted = sorted;
         std::vector<std::pair<size_t, double>> indices_dists;
-        index().radiusSearch(position.data(), //
-                             radius * radius, indices_dists, params);
+        // index().radiusSearch(position.data(), //
+        //                      radius * radius, indices_dists, params);
 
         std::vector<int> indexes;
         std::vector<double> distances;
@@ -170,6 +164,9 @@ struct KdTree : PointCloud
                       .eval());
     }
 
+    int num_max_leaf() const { return num_max_leaf_; }
+    void set_num_max_leaf(size_t value) { num_max_leaf_ = value; }
+
     //
   private:
     Eigen::Map<RowVectors> points(int i, int N)
@@ -179,16 +176,21 @@ struct KdTree : PointCloud
     }
     Eigen::Map<RowVectors> points() { return points(0, pts.size()); }
 
+    // mutable index
+    //  CppCon 2017: Kate Gregory “10 Core Guidelines You Need to Start Using
+    //  Now” https://youtu.be/XkDEzfpdcSg?t=1093
+    //      Restoring const-correctness
+    mutable std::unique_ptr<KdTreeIndex> index_; // should be noncopyable
     KdTreeIndex &index() const
     {
         if (!index_) {
             index_ = std::make_unique<KdTreeIndex>(
                 3 /*dim*/, (const PointCloud &)*this,
-                nanoflann::KDTreeSingleIndexAdaptorParams(10));
+                nanoflann::KDTreeSingleIndexAdaptorParams(num_max_leaf_));
         }
         return *index_;
     }
-    mutable std::unique_ptr<KdTreeIndex> index_; // should be noncopyable
+    int num_max_leaf_ = 10;
 };
 } // namespace cubao
 
