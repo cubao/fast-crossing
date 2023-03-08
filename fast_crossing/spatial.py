@@ -61,15 +61,39 @@ class KDTree:
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.query_ball_point.html#scipy.spatial.cKDTree.query_ball_point
         """
         x = np.asarray(x, dtype=np.float64)
+        if return_sorted is None:
+            # If None, does not sort single point queries, but does sort
+            # multi-point queries which was the behavior before this option was
+            # added.
+            return_sorted = x.ndim != 1
         if x.ndim == 1:
-            if return_sorted is None:
-                return_sorted = False
-            ii, dd = self.vec3(x, radius=r)
-            return dd, ii
-            self.tree.nearest(x)
+            xyz = self.vec3(x)
+            ii, dd = self.tree.nearest(
+                xyz,
+                radius=r,
+                return_squared_l2=True,
+                sorted=return_sorted,
+            )
+            if return_length:
+                return len(ii)
+            return ii.tolist()
         if return_sorted is None:
             return_sorted = True
-        raise NotImplementedError
+        if isinstance(r, (int, float, np.number)):
+            r = [r] * len(x)
+        ret_ii = []
+        for pp, rr in zip(x, r):  # noqa
+            xyz = self.vec3(pp)
+            ii, dd = self.tree.nearest(
+                xyz,
+                radius=rr,
+                return_squared_l2=True,
+                sorted=return_sorted,
+            )
+            ret_ii.append(ii.tolist())
+        if return_length:
+            ret_ii = [len(ii) for ii in ret_ii]
+        return ret_ii
 
     def query_ball_tree(self, *args, **kwargs):
         raise NotImplementedError

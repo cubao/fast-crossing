@@ -286,6 +286,19 @@ def _test_cKDTree_query(KDTree):
         np.testing.assert_allclose(dd, DD, atol=1e-6)
         np.testing.assert_allclose(ii, II, atol=1e-6)
 
+    x, y = np.mgrid[0:4, 0:4]
+    points = np.c_[x.ravel(), y.ravel()]
+    tree = KDTree(points)
+    ret = sorted(tree.query_ball_point([2 + 1e-15, 1e-15], 1 + 1e-9))
+    assert np.all([4, 8, 9, 12] == np.array(ret))
+
+    ret = tree.query_ball_point([[2, 0], [3, 0]], 1 + 1e-9)
+    assert np.all([4, 8, 9, 12] == np.array(sorted(ret[0])))
+    assert np.all([8, 12, 13] == np.array(sorted(ret[1])))
+
+    ret = tree.query_ball_point([[2, 0], [3, 0]], 1 + 1e-9, return_length=True)
+    assert np.all([4, 3] == np.array(ret))
+
 
 def test_scipy_cKDTree():
     from scipy.spatial import cKDTree
