@@ -45,6 +45,29 @@ CUBAO_INLINE void bind_nano_kdtree(py::module &m)
         .def("leafsize", &KdTree::leafsize)
         .def("set_leafsize", &KdTree::set_leafsize, "value"_a)
         //
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, bool>(&KdTree::nearest,
+                                                              py::const_),
+             "position"_a, py::kw_only(), "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<int, bool>(&KdTree::nearest, py::const_),
+             "index"_a, py::kw_only(), "return_squared_l2"_a = false)
+        //
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, int, bool, bool>(
+                 &KdTree::nearest, py::const_),
+             "position"_a, py::kw_only(),
+             "k"_a,             //
+             "sorted"_a = true, //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, double, bool, bool>(
+                 &KdTree::nearest, py::const_),
+             "position"_a, py::kw_only(),
+             "radius"_a,        //
+             "sorted"_a = true, //
+             "return_squared_l2"_a = false)
+        //
         ;
 }
 } // namespace cubao
