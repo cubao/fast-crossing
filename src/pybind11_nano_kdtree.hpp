@@ -27,25 +27,23 @@ CUBAO_INLINE void bind_nano_kdtree(py::module &m)
     py::class_<KdTree>(m, "KdTree", py::module_local())
         .def(py::init<int>(), "leafsize"_a = 10)
         .def(py::init<const RowVectors &>(), "points"_a)
-        .def(py::init<const Eigen::Ref<const RowVectorsNx2 &>>(), "points"_a)
+        .def(py::init<const Eigen::Ref<const RowVectorsNx2> &>(), "points"_a)
         //
-        .def("points", py::overload_cast<>(&Kdtree::points, py::const_)),
-        .def("points", py::overload_cast<int, int>(&Kdtree::points, py::const_),
-             "i"_a, "N"_a),
+        .def("points", &KdTree::points, rvp::reference_internal)
         //
-        .def("add", py::overload_cast<const RowVectors &>(&Kdtree::add),
+        .def("add", py::overload_cast<const RowVectors &>(&KdTree::add),
              "points"_a)
-            .def("add",
-                 py::overload_cast<const Eigen::Ref<const RowVectorsNx2 &>>(
-                     &Kdtree::add),
-                 "points"_a)
-            //
-            .def("reset", &Kdtree::reset)
-            .def("reset_index", &Kdtree::reset_index)
-            .def("build_index", &Kdtree::build_index, "force_rebuild"_a = false)
-            //
-            .def("leafsize", &Kdtree::leafsize)
-            .def("set_leafsize", &Kdtree::leafsize, "value"_a)
+        .def("add",
+             py::overload_cast<const Eigen::Ref<const RowVectorsNx2> &>(
+                 &KdTree::add),
+             "points"_a)
+        //
+        .def("reset", &KdTree::reset)
+        .def("reset_index", &KdTree::reset_index)
+        .def("build_index", &KdTree::build_index, "force_rebuild"_a = false)
+        //
+        .def("leafsize", &KdTree::leafsize)
+        .def("set_leafsize", &KdTree::set_leafsize, "value"_a)
         //
         ;
 }

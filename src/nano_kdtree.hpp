@@ -61,14 +61,9 @@ struct KdTree : PointCloud
     KdTree(const RowVectors &xyzs) { add(xyzs); }
     KdTree(const Eigen::Ref<const RowVectorsNx2> &xys) { add(xys); }
 
-    Eigen::Map<const RowVectors> points(int i, int N) const
-    {
-        const double *data = &pts[i][0];
-        return Eigen::Map<const RowVectors>(data, N, 3);
-    }
     Eigen::Map<const RowVectors> points() const
     {
-        return points(0, pts.size());
+        return Eigen::Map<const RowVectors>(&pts[0][0], pts.size(), 3);
     }
 
     void add(const RowVectors &xyzs)
@@ -76,7 +71,7 @@ struct KdTree : PointCloud
         int N = pts.size();
         int M = xyzs.rows();
         pts.resize(N + M);
-        points(N, M) = xyzs;
+        points_(N, M) = xyzs;
         index_.reset();
     }
     void add(const Eigen::Ref<const RowVectorsNx2> &xys)
@@ -84,7 +79,7 @@ struct KdTree : PointCloud
         int N = pts.size();
         int M = xys.rows();
         pts.resize(N + M);
-        auto points = this->points(N, M);
+        auto points = this->points_(N, M);
         points.leftCols(2) = xys;
         points.col(2).setZero();
         index_.reset();
@@ -171,12 +166,12 @@ struct KdTree : PointCloud
 
     //
   private:
-    Eigen::Map<RowVectors> points(int i, int N)
+    Eigen::Map<RowVectors> points_(int i, int N)
     {
         double *data = &pts[i][0];
         return Eigen::Map<RowVectors>(data, N, 3);
     }
-    Eigen::Map<RowVectors> points() { return points(0, pts.size()); }
+    Eigen::Map<RowVectors> points_() { return points_(0, pts.size()); }
 
     // mutable index
     //  CppCon 2017: Kate Gregory “10 Core Guidelines You Need to Start Using
