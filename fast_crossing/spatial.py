@@ -7,7 +7,7 @@ class KDTree:
         data = np.asarray(data, dtype=np.float64)
         self.tree: _KdTree = _KdTree(data)
         self.tree.set_leafsize(leafsize)
-    
+
     @staticmethod
     def vec3(arr: np.ndarray):
         return np.r_[arr, 0.0] if len(arr) == 2 else np.asarray(arr, dtype=np.float64)
@@ -39,8 +39,8 @@ class KDTree:
         for xyz in x:
             xyz = self.vec3(xyz)
             ii, dd = self.tree.nearest(xyz, k=K)
-            ii = [ii[kk-1] for kk in k]
-            dd = [dd[kk-1] for kk in k]
+            ii = [ii[kk - 1] for kk in k]
+            dd = [dd[kk - 1] for kk in k]
             ret_ii.append(ii)
             ret_dd.append(dd)
         return ret_dd, ret_ii
@@ -79,6 +79,7 @@ class KDTree:
 
     def query_distance_matrix(self, *args, **kwargs):
         raise NotImplementedError
+
 
 # create alias
 cKDTree = KDTree

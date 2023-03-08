@@ -1,3 +1,6 @@
+import os
+import sys
+
 import numpy as np
 import pytest
 
@@ -251,7 +254,7 @@ def test_kdtree():
     np.testing.assert_allclose(dist, [0.0, 0.1, 0.2], atol=1e-15)
 
 
-def _test_cKDTree(KDTree):
+def _test_cKDTree_query(KDTree):
     x, y = np.mgrid[0:5, 2:8]
     tree = KDTree(np.c_[x.ravel(), y.ravel()])
 
@@ -284,9 +287,19 @@ def _test_cKDTree(KDTree):
         np.testing.assert_allclose(ii, II, atol=1e-6)
 
 
+def test_scipy_cKDTree():
+    from scipy.spatial import cKDTree
+
+    _test_cKDTree_query(cKDTree)
+
+
+def test_nanoflann_KDTree():
+    from fast_crossing.spatial import KDTree
+
+    _test_cKDTree_query(KDTree)
+
+
 def pytest_main(dir: str, *, test_file: str = None):
-    import os
-    import sys
 
     os.chdir(dir)
     sys.exit(
@@ -304,11 +317,5 @@ def pytest_main(dir: str, *, test_file: str = None):
 
 
 if __name__ == "__main__":
-    # pytest_main(pwd, test_file=os.path.basename(__file__))
-    from scipy.spatial import cKDTree
-
-    _test_cKDTree(cKDTree)
-
-    from fast_crossing.spatial import KDTree
-
-    _test_cKDTree(KDTree)
+    pwd = os.path.abspath(os.path.dirname(__file__))
+    pytest_main(pwd, test_file=os.path.basename(__file__))
