@@ -4,7 +4,8 @@
 #include <nanoflann.hpp>
 #include <Eigen/Core>
 
-namespace cubao {
+namespace cubao
+{
 using RowVectors = Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
 using RowVectorsNx3 = RowVectors;
 using RowVectorsNx2 = Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>;
@@ -17,7 +18,7 @@ struct PointCloud
         double x, y, z;
     };
 
-    using coord_t = double;  //!< The type of each coordinate
+    using coord_t = double; //!< The type of each coordinate
 
     std::vector<Point> pts;
 
@@ -43,41 +44,41 @@ struct PointCloud
     //   Return true if the BBOX was already computed by the class and returned
     //   in "bb" so it can be avoided to redo it again. Look at bb.size() to
     //   find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-    template <class BBOX>
-    bool kdtree_get_bbox(BBOX& /* bb */) const
+    template <class BBOX> bool kdtree_get_bbox(BBOX & /* bb */) const
     {
         return false;
     }
 };
 
-
 // https://github.com/jlblancoc/nanoflann/blob/master/examples/pointcloud_example.cpp
-using KdTreeIndex = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, PointCloud>, PointCloud, 3 /* dim */>;
+using KdTreeIndex = nanoflann::KDTreeSingleIndexAdaptor<
+    nanoflann::L2_Simple_Adaptor<double, PointCloud>, PointCloud, 3 /* dim */>;
 
-struct KdTree: PointCloud {
+struct KdTree : PointCloud
+{
     KdTree() {}
-    KdTree(const RowVectors &xyzs) {
-        add(xyzs);
-    }
-    KdTree(const Eigen::Ref<const RowVectorsNx2> &xys) {
-        add(xys);
-    }
+    KdTree(const RowVectors &xyzs) { add(xyzs); }
+    KdTree(const Eigen::Ref<const RowVectorsNx2> &xys) { add(xys); }
 
-    Eigen::Map<const RowVectors> points(int i, int N) const {
+    Eigen::Map<const RowVectors> points(int i, int N) const
+    {
         const double *data = &pts[i].x;
         return Eigen::Map<RowVectors>(data, N, 3);
     }
-    Eigen::Map<const RowVectors> points() const {
+    Eigen::Map<const RowVectors> points() const
+    {
         return points(0, pts.size());
     }
 
-    void add(const RowVectors &xyzs) {
+    void add(const RowVectors &xyzs)
+    {
         int N = pts.size();
         int M = xyzs.rows();
         pts.resize(N + M);
         points(N, M) = xyzs;
     }
-    void add(const Eigen::Ref<const RowVectorsNx2> &xys) {
+    void add(const Eigen::Ref<const RowVectorsNx2> &xys)
+    {
         int N = pts.size();
         int M = xys.rows();
         pts.resize(N + M);
@@ -86,24 +87,25 @@ struct KdTree: PointCloud {
         points.col(2).setZero();
     }
 
-    // 
-    private:
-    Eigen::Map<RowVectors> points(int i, int N) {
+    //
+  private:
+    Eigen::Map<RowVectors> points(int i, int N)
+    {
         double *data = &pts[i].x;
         return Eigen::Map<RowVectors>(data, N, 3);
     }
-    Eigen::Map<RowVectors> points() {
-        return points(0, pts.size());
-    }
+    Eigen::Map<RowVectors> points() { return points(0, pts.size()); }
 
-    KdTreeIndex &index() const {
+    KdTreeIndex &index() const
+    {
         if (!index_) {
-            index_ = std::make_unique<KdTreeIndex>(3 /*dim*/, (const PointCloud&)*this, {10 /* max leaf */});
+            index_ = std::make_unique<KdTreeIndex>(
+                3 /*dim*/, (const PointCloud &)*this, {10 /* max leaf */});
         }
         return *index_;
     }
     mutable std::unique_ptr<KdTreeIndex> index_;
 };
-}
+} // namespace cubao
 
 #endif
