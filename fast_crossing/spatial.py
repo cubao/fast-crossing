@@ -1,11 +1,11 @@
 import numpy as np
-from _pybind11_fast_crossing import KdTree as cKDTree
+from _pybind11_fast_crossing import KdTree as _KdTree
 
 
 class KDTree:
     def __init__(self, data: np.ndarray, leafsize: int = 10, *args, **kwargs):
         data = np.asarray(data, dtype=np.float64)
-        self.tree: cKDTree = cKDTree(data)
+        self.tree: _KdTree = _KdTree(data)
         self.tree.set_leafsize(leafsize)
     
     @staticmethod
@@ -18,11 +18,32 @@ class KDTree:
     def query(self, x, k=1, *args, **kwargs):
         x = np.asarray(x, dtype=np.float64)
         if x.ndim == 1:
-            x = self.vec3(x)
-            ii, dd = self.tree.nearest(x, k=k)
+            xyz = self.vec3(x)
+            ii, dd = self.tree.nearest(xyz, k=k)
             return dd, ii
-        for row in x:
-            pass
+        if isinstance(k, (int, np.integer)):
+            ret_ii, ret_dd = [], []
+            for xyz in x:
+                xyz = self.vec3(xyz)
+                if k == 1:
+                    ii, dd = self.tree.nearest(xyz)
+                else:
+                    ii, dd = self.tree.nearest(xyz, k=k)
+                    ii = ii.tolist()
+                    dd = dd.tolist()
+                ret_ii.append(ii)
+                ret_dd.append(dd)
+            return ret_dd, ret_ii
+        K = max(k)
+        ret_ii, ret_dd = [], []
+        for xyz in x:
+            xyz = self.vec3(xyz)
+            ii, dd = self.tree.nearest(xyz, k=K)
+            ii = [ii[kk-1] for kk in k]
+            dd = [dd[kk-1] for kk in k]
+            ret_ii.append(ii)
+            ret_dd.append(dd)
+        return ret_dd, ret_ii
 
     def query_ball_point(
         self,
@@ -58,3 +79,6 @@ class KDTree:
 
     def query_distance_matrix(self, *args, **kwargs):
         raise NotImplementedError
+
+# create alias
+cKDTree = KDTree

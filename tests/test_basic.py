@@ -251,30 +251,64 @@ def test_kdtree():
     np.testing.assert_allclose(dist, [0.0, 0.1, 0.2], atol=1e-15)
 
 
-def test_cKDTree():
-    import numpy as np
-    from scipy.spatial import cKDTree
-
+def _test_cKDTree(KDTree):
     x, y = np.mgrid[0:5, 2:8]
-    tree = cKDTree(np.c_[x.ravel(), y.ravel()])
-    dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=1)
-    print(dd)
-    print(ii)
+    tree = KDTree(np.c_[x.ravel(), y.ravel()])
+
+    expected_k1 = [[2.0, 0.2236068], [0, 13]]
+    expected_k2 = [[[2.0, 2.23606798], [0.2236068, 0.80622577]], [[0, 6], [13, 19]]]
+    for k, expected in zip([1, 2], [expected_k1, expected_k2]):  # noqa
+        dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=k)
+        DD, II = expected
+        np.testing.assert_allclose(dd, DD, atol=1e-6)
+        np.testing.assert_allclose(ii, II, atol=1e-6)
+
+    expected_k1 = [
+        [[2.0], [0.22360679774997916]],
+        [[0], [13]],
+    ]
+    expected_k2 = [
+        [[2.23606797749979], [0.8062257748298548]],
+        [[6], [19]],
+    ]
+    expected_k1_k2 = [
+        [[2.0, 2.23606797749979], [0.22360679774997916, 0.8062257748298548]],
+        [[0, 6], [13, 19]],
+    ]
+    for k, expected in zip(  # noqa
+        [[1], [2], [1, 2]], [expected_k1, expected_k2, expected_k1_k2]
+    ):
+        dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=k)
+        DD, II = expected
+        np.testing.assert_allclose(dd, DD, atol=1e-6)
+        np.testing.assert_allclose(ii, II, atol=1e-6)
 
 
 def pytest_main(dir: str, *, test_file: str = None):
+    import os
+    import sys
+
     os.chdir(dir)
     sys.exit(
-        pytest.main([
-            dir,
-            *(['-k', test_file] if test_file else []),
-            '--capture',
-            'tee-sys',
-            '-vv',
-            '-x',
-        ]))
+        pytest.main(
+            [
+                dir,
+                *(["-k", test_file] if test_file else []),
+                "--capture",
+                "tee-sys",
+                "-vv",
+                "-x",
+            ]
+        )
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # pytest_main(pwd, test_file=os.path.basename(__file__))
-    test_cKDTree()
+    from scipy.spatial import cKDTree
+
+    _test_cKDTree(cKDTree)
+
+    from fast_crossing.spatial import KDTree
+
+    _test_cKDTree(KDTree)
