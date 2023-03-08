@@ -49,14 +49,15 @@ struct PointCloud
 
 // https://github.com/jlblancoc/nanoflann/blob/master/examples/pointcloud_example.cpp
 using KdTreeIndex = nanoflann::KDTreeSingleIndexAdaptor<
-    nanoflann::L2_Simple_Adaptor<double, PointCloud, int>, //
-    PointCloud,                                            //
-    3 /* dim */, int                                       /* AccessorType */
+    nanoflann::L2_Simple_Adaptor<double, PointCloud, double, int>, //
+    PointCloud,                                                    //
+    3 /* dim */,                                                   //
+    int /* AccessorType */
     >;
 
 struct KdTree : PointCloud
 {
-    KdTree() {}
+    KdTree(int max_leaf = 10) : num_max_leaf_(max_leaf) {}
     KdTree(const RowVectors &xyzs) { add(xyzs); }
     KdTree(const Eigen::Ref<const RowVectorsNx2> &xys) { add(xys); }
 
@@ -95,6 +96,7 @@ struct KdTree : PointCloud
     }
     void reset_index() { index_.reset(); }
 
+    // https://github.com/kzampog/cilantro/tree/master
     std::pair<int, double> nearest(const Eigen::Vector3d &position, //
                                    bool return_squared_l2 = false) const
     {
@@ -111,7 +113,7 @@ struct KdTree : PointCloud
     std::pair<int, double> nearest(int index, //
                                    bool return_squared_l2 = false) const
     {
-        auto ret = nearest(pts[index], 2, return_squared_l2);
+        auto ret = nearest(pts[index], 2, false, return_squared_l2);
         return ret.first[0] == index
                    ? std::make_pair(ret.first[1], ret.second[1])
                    : std::make_pair(ret.first[0], ret.second[0]);
@@ -145,23 +147,21 @@ struct KdTree : PointCloud
     {
         auto params = nanoflann::SearchParams();
         params.sorted = sorted;
-        std::vector<std::pair<size_t, double>> indices_dists;
-        // index().radiusSearch(position.data(), //
-        //                      radius * radius, indices_dists, params);
+        std::vector<std::pair<int, double>> indices_dists;
+        index().radiusSearch(position.data(), //
+                             radius * radius, //
+                             indices_dists, params);
 
-        std::vector<int> indexes;
-        std::vector<double> distances;
-        for (size_t i = 0; i < indices_dists.size(); i++) {
-            indexes.push_back(indices_dists[i].first);
-            distances.push_back(indices_dists[i].second);
+        const int N = indices_dists.size();
+        Eigen::VectorXi indexes(N);
+        Eigen::VectorXd distances(N);
+        for (int i = 0; i < N; i++) {
+            indexes[i] = indices_dists[i].first;
+            distances[i] = indices_dists[i].second;
         }
-        return std::make_pair(
-            Eigen::VectorXi::Map(&indexes[0], indexes.size()),
-            return_squared_l2
-                ? Eigen::VectorXd::Map(&distances[0], distances.size())
-                : Eigen::VectorXd::Map(&distances[0], distances.size())
-                      .cwiseSqrt()
-                      .eval());
+        return std::make_pair(indexes, return_squared_l2
+                                           ? distances
+                                           : distances.cwiseSqrt().eval());
     }
 
     int num_max_leaf() const { return num_max_leaf_; }
