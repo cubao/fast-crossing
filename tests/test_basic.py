@@ -1,6 +1,10 @@
+import os
+import sys
+
 import numpy as np
 import pytest
-from fast_crossing import FastCrossing, densify_polyline, point_in_polygon
+
+from fast_crossing import FastCrossing, KdTree, densify_polyline, point_in_polygon
 
 
 def test_fast_crossing():
@@ -230,3 +234,101 @@ def test_point_in_polygon():
     points = [[0.5, 0.5], [10, 0]]
     mask = point_in_polygon(points=points, polygon=polygon)
     assert np.all(mask == [1, 0])
+
+
+def test_kdtree():
+    xs = np.linspace(0, 10, 101)
+    xyzs = np.zeros((len(xs), 3))
+    xyzs[:, 0] = xs
+    tree = KdTree(xyzs)
+    assert tree.points().shape == (101, 3)
+    idx, dist = tree.nearest(0)
+    assert idx == 1, dist == 0.1
+    idx, dist = tree.nearest([0.0, 0.0, 0.0])
+    assert idx == 0, dist == 0.0
+    idx, dist = tree.nearest([0.0, 0.0, 0.0], k=4)
+    assert np.all(idx == [0, 1, 2, 3])
+    np.testing.assert_allclose(dist, [0.0, 0.1, 0.2, 0.3], atol=1e-15)
+    idx, dist = tree.nearest([0.0, 0.0, 0.0], radius=0.25)
+    assert np.all(idx == [0, 1, 2])
+    np.testing.assert_allclose(dist, [0.0, 0.1, 0.2], atol=1e-15)
+
+
+def _test_cKDTree_query(KDTree):
+    x, y = np.mgrid[0:5, 2:8]
+    tree = KDTree(np.c_[x.ravel(), y.ravel()])
+
+    expected_k1 = [[2.0, 0.2236068], [0, 13]]
+    expected_k2 = [[[2.0, 2.23606798], [0.2236068, 0.80622577]], [[0, 6], [13, 19]]]
+    for k, expected in zip([1, 2], [expected_k1, expected_k2]):  # noqa
+        dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=k)
+        DD, II = expected
+        np.testing.assert_allclose(dd, DD, atol=1e-6)
+        np.testing.assert_allclose(ii, II, atol=1e-6)
+
+    expected_k1 = [
+        [[2.0], [0.22360679774997916]],
+        [[0], [13]],
+    ]
+    expected_k2 = [
+        [[2.23606797749979], [0.8062257748298548]],
+        [[6], [19]],
+    ]
+    expected_k1_k2 = [
+        [[2.0, 2.23606797749979], [0.22360679774997916, 0.8062257748298548]],
+        [[0, 6], [13, 19]],
+    ]
+    for k, expected in zip(  # noqa
+        [[1], [2], [1, 2]], [expected_k1, expected_k2, expected_k1_k2]
+    ):
+        dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=k)
+        DD, II = expected
+        np.testing.assert_allclose(dd, DD, atol=1e-6)
+        np.testing.assert_allclose(ii, II, atol=1e-6)
+
+    x, y = np.mgrid[0:4, 0:4]
+    points = np.c_[x.ravel(), y.ravel()]
+    tree = KDTree(points)
+    ret = sorted(tree.query_ball_point([2 + 1e-15, 1e-15], 1 + 1e-9))
+    assert np.all([4, 8, 9, 12] == np.array(ret))
+
+    ret = tree.query_ball_point([[2, 0], [3, 0]], 1 + 1e-9)
+    assert np.all([4, 8, 9, 12] == np.array(sorted(ret[0])))
+    assert np.all([8, 12, 13] == np.array(sorted(ret[1])))
+
+    ret = tree.query_ball_point([[2, 0], [3, 0]], 1 + 1e-9, return_length=True)
+    assert np.all([4, 3] == np.array(ret))
+
+
+def test_scipy_cKDTree():
+    from scipy.spatial import cKDTree
+
+    _test_cKDTree_query(cKDTree)
+
+
+def test_nanoflann_KDTree():
+    from fast_crossing.spatial import KDTree
+
+    _test_cKDTree_query(KDTree)
+
+
+def pytest_main(dir: str, *, test_file: str = None):
+
+    os.chdir(dir)
+    sys.exit(
+        pytest.main(
+            [
+                dir,
+                *(["-k", test_file] if test_file else []),
+                "--capture",
+                "tee-sys",
+                "-vv",
+                "-x",
+            ]
+        )
+    )
+
+
+if __name__ == "__main__":
+    pwd = os.path.abspath(os.path.dirname(__file__))
+    pytest_main(pwd, test_file=os.path.basename(__file__))

@@ -18,6 +18,8 @@
 #include "fast_crossing.hpp"
 #include "pybind11_fast_crossing.hpp"
 #include "pybind11_flatbush.hpp"
+#include "pybind11_nanoflann_kdtree.hpp"
+
 #include "pybind11_polyline_ruler.hpp"
 
 #include "point_in_polygon.hpp"
@@ -29,10 +31,11 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-PYBIND11_MODULE(fast_crossing, m)
+PYBIND11_MODULE(_pybind11_fast_crossing, m)
 {
     cubao::bind_fast_crossing(m);
     cubao::bind_flatbush(m);
+    cubao::bind_nanoflann_kdtree(m);
     cubao::bind_polyline_ruler(m);
 
     m.def("point_in_polygon", &cubao::point_in_polygon, //

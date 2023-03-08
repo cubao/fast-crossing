@@ -27,7 +27,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(PYBIND11_CPP_STANDARD -std=c++17)
 
 add_subdirectory(pybind11)
-pybind11_add_module(fast_crossing src/main.cpp)
+pybind11_add_module(_pybind11_fast_crossing src/main.cpp)
 
-target_compile_definitions(fast_crossing
+target_compile_definitions(_pybind11_fast_crossing
                            PRIVATE VERSION_INFO=${FAST_CROSSING_VERSION_INFO})

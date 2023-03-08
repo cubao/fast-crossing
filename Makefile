@@ -85,19 +85,20 @@ tar.gz:
 	tar -cvz --exclude .git -f ../fast_crossing.tar.gz .
 	ls -alh ../fast_crossing.tar.gz
 
+NUM_POINTS = 100000
 benchmark_point_in_polygon:
-	python3 benchmarks/benchmark_point_in_polygon.py generate_test_data -o dist/point_in_polygon
+	python3 benchmarks/benchmark_point_in_polygon.py generate_test_data --num=$(NUM_POINTS) -o dist/point_in_polygon
 	python3 benchmarks/benchmark_point_in_polygon.py shapely \
-		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy \
-		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy \
+		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__points.npy \
+		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__polygon.npy \
 		dist/mask_shapely.npy
 	python3 benchmarks/benchmark_point_in_polygon.py matplotlib \
-		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy \
-		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy \
+		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__points.npy \
+		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__polygon.npy \
 		dist/mask_matplotlib.npy
 	python3 benchmarks/benchmark_point_in_polygon.py cubao \
-		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__points.npy \
-		dist/point_in_polygon/random_num_10000__bbox_800.00x600.00__radius_250.00__polygon.npy \
+		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__points.npy \
+		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__polygon.npy \
 		dist/mask_cubao.npy
 .PHONY: benchmark_point_in_polygon
 

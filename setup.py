@@ -3,7 +3,7 @@ import re
 import subprocess
 import sys
 
-from setuptools import Extension, setup
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -124,16 +124,17 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="fast_crossing",
-    version="0.0.4",
+    version="0.0.5",
     author="tzx",
     author_email="dvorak4tzx@gmail.com",
-    url="https://github.com/cubao/fast-crossing",
+    url="https://fast-crossing.readthedocs.io",
     description="fast crossing",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
+    packages=find_packages(),
     ext_modules=[CMakeExtension("fast_crossing")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     install_requires=["numpy"],
-    extras_require={"test": ["pytest>=6.0"]},
+    extras_require={"test": ["pytest>=6.0", "scipy"]},
 )
