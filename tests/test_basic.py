@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from fast_crossing import FastCrossing, densify_polyline, point_in_polygon
+from fast_crossing import FastCrossing, KdTree, densify_polyline, point_in_polygon
 
 
 def test_fast_crossing():
@@ -230,3 +230,21 @@ def test_point_in_polygon():
     points = [[0.5, 0.5], [10, 0]]
     mask = point_in_polygon(points=points, polygon=polygon)
     assert np.all(mask == [1, 0])
+
+
+def test_kdtree():
+    xs = np.linspace(0, 10, 101)
+    xyzs = np.zeros((len(xs), 3))
+    xyzs[:, 0] = xs
+    tree = KdTree(xyzs)
+    assert tree.points().shape == (101, 3)
+    idx, dist = tree.nearest(0)
+    assert idx == 1, dist == 0.1
+    idx, dist = tree.nearest([0.0, 0.0, 0.0])
+    assert idx == 0, dist == 0.0
+    idx, dist = tree.nearest([0.0, 0.0, 0.0], k=4)
+    assert np.all(idx == [0, 1, 2, 3])
+    np.testing.assert_allclose(dist, [0.0, 0.1, 0.2, 0.3], atol=1e-15)
+    idx, dist = tree.nearest([0.0, 0.0, 0.0], radius=0.25)
+    assert np.all(idx == [0, 1, 2])
+    np.testing.assert_allclose(dist, [0.0, 0.1, 0.2], atol=1e-15)
