@@ -18,6 +18,8 @@
 #include "fast_crossing.hpp"
 #include "pybind11_fast_crossing.hpp"
 #include "pybind11_flatbush.hpp"
+#include "pybind11_nano_kdtree.hpp"
+
 #include "pybind11_polyline_ruler.hpp"
 
 #include "point_in_polygon.hpp"
