@@ -57,7 +57,7 @@ using KdTreeIndex = nanoflann::KDTreeSingleIndexAdaptor<
 
 struct KdTree : PointCloud
 {
-    KdTree(int max_leaf = 10) : num_max_leaf_(max_leaf) {}
+    KdTree(int leafsize = 10) : leafsize_(leafsize) {}
     KdTree(const RowVectors &xyzs) { add(xyzs); }
     KdTree(const Eigen::Ref<const RowVectorsNx2> &xys) { add(xys); }
 
@@ -89,12 +89,17 @@ struct KdTree : PointCloud
         points.col(2).setZero();
         index_.reset();
     }
+
     void reset()
     {
         pts.clear();
         index_.reset();
     }
     void reset_index() { index_.reset(); }
+    void build_index(bool force = false) { index(force); }
+
+    int leafsize() const { return leafsize_; }
+    void set_leafsize(size_t value) { leafsize_ = value; }
 
     // https://github.com/kzampog/cilantro/tree/master
     std::pair<int, double> nearest(const Eigen::Vector3d &position, //
@@ -164,9 +169,6 @@ struct KdTree : PointCloud
                                            : distances.cwiseSqrt().eval());
     }
 
-    int num_max_leaf() const { return num_max_leaf_; }
-    void set_num_max_leaf(size_t value) { num_max_leaf_ = value; }
-
     //
   private:
     Eigen::Map<RowVectors> points(int i, int N)
@@ -181,16 +183,16 @@ struct KdTree : PointCloud
     //  Now” https://youtu.be/XkDEzfpdcSg?t=1093
     //      Restoring const-correctness
     mutable std::unique_ptr<KdTreeIndex> index_; // should be noncopyable
-    KdTreeIndex &index() const
+    KdTreeIndex &index(bool force_rebuild = false) const
     {
-        if (!index_) {
+        if (force_rebuild || !index_) {
             index_ = std::make_unique<KdTreeIndex>(
                 3 /*dim*/, (const PointCloud &)*this,
-                nanoflann::KDTreeSingleIndexAdaptorParams(num_max_leaf_));
+                nanoflann::KDTreeSingleIndexAdaptorParams(leafsize_));
         }
         return *index_;
     }
-    int num_max_leaf_ = 10;
+    int leafsize_ = 10;
 };
 } // namespace cubao
 
