@@ -249,3 +249,14 @@ def test_kdtree():
     idx, dist = tree.nearest([0.0, 0.0, 0.0], radius=0.25)
     assert np.all(idx == [0, 1, 2])
     np.testing.assert_allclose(dist, [0.0, 0.1, 0.2], atol=1e-15)
+
+
+def test_cKDTree():
+    import numpy as np
+    from scipy.spatial import cKDTree
+
+    x, y = np.mgrid[0:5, 2:8]
+    tree = cKDTree(np.c_[x.ravel(), y.ravel()])
+    dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=1)
+    print(dd)
+    print(ii)
