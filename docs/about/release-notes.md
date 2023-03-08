@@ -10,6 +10,10 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.0.5 (2023-03-08)
+
+*   Add nanaflann KdTree, use identical interface to `scipy.spatial.cKDTree`
+
 ## Version 0.0.4 (2023-03-07)
 
 *   Integrate `point_in_polygon` test
