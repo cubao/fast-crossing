@@ -260,3 +260,21 @@ def test_cKDTree():
     dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=1)
     print(dd)
     print(ii)
+
+
+def pytest_main(dir: str, *, test_file: str = None):
+    os.chdir(dir)
+    sys.exit(
+        pytest.main([
+            dir,
+            *(['-k', test_file] if test_file else []),
+            '--capture',
+            'tee-sys',
+            '-vv',
+            '-x',
+        ]))
+
+
+if __name__ == '__main__':
+    # pytest_main(pwd, test_file=os.path.basename(__file__))
+    test_cKDTree()
