@@ -4,7 +4,14 @@ import sys
 import numpy as np
 import pytest
 
-from fast_crossing import FastCrossing, KdTree, densify_polyline, point_in_polygon
+from fast_crossing import (
+    Arrow,
+    FastCrossing,
+    KdTree,
+    Quiver,
+    densify_polyline,
+    point_in_polygon,
+)
 
 
 def test_fast_crossing():
@@ -310,6 +317,21 @@ def test_nanoflann_KDTree():
     from fast_crossing.spatial import KDTree
 
     _test_cKDTree_query(KDTree)
+
+
+def test_arrow():
+    arrow = Arrow()
+    assert np.all(arrow.label() == [-1, -1])
+    assert arrow.t() == -1
+    assert arrow.range() == -1
+    assert np.all(arrow.position() == [0, 0, 0])
+    assert np.all(arrow.direction() == [0, 0, 1])
+    assert arrow.heading() == 5
+
+    print(arrow.label())
+    arrow.label([5, 10])
+    assert np.all(arrow.label() == [5, 10])
+    assert False
 
 
 def pytest_main(dir: str, *, test_file: str = None):

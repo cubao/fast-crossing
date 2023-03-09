@@ -14,6 +14,12 @@ struct Arrow
     {
     }
     Eigen::Vector2i label() const { return {polyline_index_, segment_index_}; }
+    Arrow &label(const Eigen::Vector2i &value)
+    {
+        polyline_index_ = value[0];
+        segment_index_ = value[1];
+        return *this;
+    }
     Arrow &label(int polyline_index, int segment_index,
                  std::optional<double> t = std::nullopt,
                  std::optional<double> range = std::nullopt)

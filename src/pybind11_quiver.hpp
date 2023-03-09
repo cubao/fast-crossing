@@ -32,6 +32,8 @@ CUBAO_INLINE void bind_quiver(py::module &m)
              "direction"_a = Eigen::Vector3d(0.0, 0.0, 1.0))
         //
         .def("label", py::overload_cast<>(&Arrow::label, py::const_))
+        .def("label", py::overload_cast<const Eigen::Vector2i &>(&Arrow::label),
+             "new_value"_a, rvp::reference_internal)
         .def("label",
              py::overload_cast<int,                   //
                                int,                   //
@@ -40,7 +42,28 @@ CUBAO_INLINE void bind_quiver(py::module &m)
              "polyline_index"_a, "segment_index"_a, //
              py::kw_only(),
              "t"_a = std::nullopt, //
-             "range"_a = std::nullopt)
+             "range"_a = std::nullopt, rvp::reference_internal)
+        //
+        .def("t", py::overload_cast<>(&Arrow::t, py::const_))
+        .def("t", py::overload_cast<double>(&Arrow::t), "new_value"_a,
+             rvp::reference_internal)
+        .def("range", py::overload_cast<>(&Arrow::range, py::const_))
+        .def("range", py::overload_cast<double>(&Arrow::range), "new_value"_a,
+             rvp::reference_internal)
+        //
+        .def("position", py::overload_cast<>(&Arrow::position, py::const_))
+        .def("position",
+             py::overload_cast<const Eigen::Vector3d &>(&Arrow::position),
+             "new_value"_a, rvp::reference_internal)
+        .def("direction", py::overload_cast<>(&Arrow::direction, py::const_))
+        .def(
+            "direction",
+            py::overload_cast<const Eigen::Vector3d &, bool>(&Arrow::direction),
+            "new_value"_a, "need_normalize"_a = false, rvp::reference_internal)
+        //
+        .def("heading", py::overload_cast<>(&Arrow::heading, py::const_))
+        .def("heading", py::overload_cast<double>(&Arrow::heading),
+             "new_value"_a)
         //
         ;
 
