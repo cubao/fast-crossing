@@ -372,7 +372,23 @@ def test_arrow():
 
 def test_quiver():
     quiver = Quiver()
-    assert quiver is not None
+    assert not quiver.is_wgs84()
+    assert np.all(quiver.k() == [1, 1, 1])
+    assert np.all(quiver.anchor() == [0, 0, 0])
+
+    quiver = Quiver([123, 45, 6])
+    assert quiver.is_wgs84()
+    assert np.all(quiver.anchor() == [123, 45, 6])
+    k = quiver.k()
+    np.testing.assert_allclose(k, [78846.8350939781, 111131.7774141756, 1.0], atol=1e-6)
+    np.testing.assert_allclose(np.sum(k @ quiver.inv_k()), 3.0, atol=1e-16)
+
+    arrow = Arrow([123, 45, 6])
+    updated = quiver.update(arrow, [1, 1, 1])
+    np.testing.assert_allclose(updated.position(), [123.00001268281724,45.000008998326344,7], atol=1e-8)
+    np.testing.assert_allclose(updated.heading(), 45, atol=1e-8)
+    updated = quiver.update(arrow, [1, 1, 0], keep_direction=True)
+    np.testing.assert_allclose(updated.direction(), [0, 0, 1], atol=1e-8)
 
 
 def pytest_main(dir: str, *, test_file: str = None):

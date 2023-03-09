@@ -96,7 +96,7 @@ struct Arrow
     {
         direction_ = direction;
         if (need_normalize) {
-            direction_ /= direction_.norm(); // + 1e-18
+            direction_ /= (direction_.norm() + 1e-18);
         }
         return *this;
     }
@@ -106,7 +106,7 @@ struct Arrow
         if (direction_[2] == 0.0 || std::fabs(direction_[2]) < 1e-6) {
             return vec;
         }
-        vec /= vec.norm();
+        vec /= (vec.norm() + 1e-18);
         return vec;
     }
 
@@ -134,10 +134,11 @@ struct Quiver
 {
     const Eigen::Vector3d anchor_{0.0, 0.0, 0.0};
     const Eigen::Vector3d k_{1.0, 1.0, 1.0};
+    const Eigen::Vector3d inv_k_{1.0, 1.0, 1.0};
     const bool is_wgs84_{false};
     Quiver() {}
     Quiver(const Eigen::Vector3d &anchor_lla)
-        : anchor_(anchor_lla), k_(k(anchor_lla[1])), is_wgs84_(true)
+        : anchor_(anchor_lla), k_(k(anchor_lla[1])), inv_k_(1.0 / k_.array()), is_wgs84_(true)
     {
     }
 
@@ -161,13 +162,13 @@ struct Quiver
     Arrow forward(const Arrow &cur, double delta) const
     {
         auto copy = cur;
-        copy.position_.array() += delta * k_.array() * copy.direction().array();
+        copy.position_.array() += delta * inv_k_.array() * copy.direction().array();
         return copy;
     }
     Arrow leftward(const Arrow &cur, double delta) const
     {
         auto copy = cur;
-        copy.position_.array() += delta * k_.array() * copy.leftward().array();
+        copy.position_.array() += delta * inv_k_.array() * copy.leftward().array();
         return copy;
     }
     Arrow upward(const Arrow &cur, double delta) const
@@ -184,7 +185,7 @@ struct Quiver
             return cur;
         }
         auto copy = cur;
-        copy.position_.array() += k_.array() * delta.array();
+        copy.position_.array() += inv_k_.array() * delta.array();
         if (!keep_direction) {
             copy.direction_ = delta / norm;
         }

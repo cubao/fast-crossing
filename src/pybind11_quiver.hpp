@@ -107,6 +107,7 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         //
         .def_static("_k", &Quiver::k)
         .def("k", [](const Quiver &self) { return self.k_; })
+        .def("inv_k", [](const Quiver &self) { return self.inv_k_; })
         .def("anchor", [](const Quiver &self) { return self.anchor_; })
         .def("is_wgs84", [](const Quiver &self) { return self.is_wgs84_; })
         //
