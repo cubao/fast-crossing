@@ -15,6 +15,8 @@
 #include "cubao_inline.hpp"
 #include "quiver.hpp"
 
+#include <spdlog/spdlog.h>
+
 namespace cubao
 {
 namespace py = pybind11;
@@ -80,10 +82,40 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("heading", py::overload_cast<double>(&Arrow::heading),
              "new_value"_a)
         //
+        .def("__repr__",
+             [](const Arrow &self) {
+                 return fmt::format("label:({}/{}/{:.3f}),range:{},"
+                                    "xyz:({},{},{}),"
+                                    "dir:({:.3f},{:.3f},{:.1f}),heading:{:.2f}",
+                                    self.polyline_index_, self.segment_index_,
+                                    self.t_, self.range_, self.position_[0],
+                                    self.position_[1], self.position_[2],
+                                    self.direction_[0], self.direction_[1],
+                                    self.direction_[2], self.heading());
+             })
+        .def("copy", [](const Arrow &self) -> Arrow { return self; })
+        .def("__copy__",
+             [](const Arrow &self, py::dict) -> Arrow { return self; })
+        //
         ;
 
     using Quiver = cubao::Quiver;
-    py::class_<Quiver>(m, "Quiver", py::module_local()).def(py::init<>())
+    py::class_<Quiver>(m, "Quiver", py::module_local())
+        //
+        .def(py::init<>())
+        .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
+        //
+        .def_static("_k", &Quiver::k)
+        .def("k", [](const Quiver &self) { return self.k_; })
+        .def("anchor", [](const Quiver &self) { return self.anchor_; })
+        .def("is_wgs84", [](const Quiver &self) { return self.is_wgs84_; })
+        //
+        .def("forward", &Quiver::forward, "arrow"_a, "delta"_a)
+        .def("leftward", &Quiver::leftward, "arrow"_a, "delta"_a)
+        .def("upward", &Quiver::upward, "arrow"_a, "delta"_a)
+        .def("update", &Quiver::update, "arrow"_a, "delta"_a, py::kw_only(),
+             "keep_direction"_a = false)
+        //
         //
         ;
 }

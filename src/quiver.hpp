@@ -135,7 +135,7 @@ struct Quiver
     const Eigen::Vector3d anchor_{0.0, 0.0, 0.0};
     const Eigen::Vector3d k_{1.0, 1.0, 1.0};
     const bool is_wgs84_{false};
-    Quiver(bool is_wgs84 = false) : is_wgs84_(is_wgs84) {}
+    Quiver() {}
     Quiver(const Eigen::Vector3d &anchor_lla)
         : anchor_(anchor_lla), k_(k(anchor_lla[1])), is_wgs84_(true)
     {

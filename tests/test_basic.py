@@ -359,6 +359,16 @@ def test_arrow():
     np.testing.assert_allclose(arrow.direction(), [0, 1, 0], atol=1e-8)
     np.testing.assert_allclose(arrow.heading(), 0.0, atol=1e-8)
 
+    arrow.t(0.000001)
+    assert 'label:(5/20/0.000)' in repr(arrow)
+    # same like f-string format
+    assert f'{0.009:.2f}' == '0.01'
+    assert f'{0.001:.2f}' == '0.00'
+
+    arrow2 = arrow.copy()
+    arrow2.t(0.3)
+    assert arrow.t() == 0.000001
+
 
 def test_quiver():
     quiver = Quiver()
