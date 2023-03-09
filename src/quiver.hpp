@@ -1,16 +1,88 @@
 #ifndef CUBAO_QUIVER_HPP
 #define CUBAO_QUIVER_HPP
 
+#include <optional>
+
 namespace cubao
 {
 struct Arrow
 {
-    int polyline_index = -1;
-    int segment_index = -1;
-    double t = -1.0;
-    double range = -1.0;
-    Eigen::Vector3d position{0.0, 0.0, 0.0};  // origin
-    Eigen::Vector3d direction{0.0, 0.0, 1.0}; // upwards
+    Arrow() {}
+    Arrow(const Eigen::Vector3d &position,
+          const Eigen::Vector3d &direction{0.0, 0.0, 1.0})
+        : position_(position), direction_(direction)
+    {
+    }
+    Eigen::Vecor2i label() const { return {polyline_index_, segment_index_}; }
+    Arrow &label(int polyline_index, int segment_index,
+                 std::optional<double> t = std::nullopt,
+                 std::optional<double> range = std::nullopt)
+    {
+        polyline_index_ = polyline_index;
+        segment_index_ = segment_index;
+        if (t) {
+            t_ = *t;
+        }
+        if (range) {
+            range_ = *range;
+        }
+        return *this;
+    }
+    double t() const { return t_; }
+    Arrow &t(double value)
+    {
+        t_ = value;
+        return *this;
+    }
+    double range() const { return range_; }
+    Arrow &range(double value)
+    {
+        range_ = value;
+        return *this;
+    }
+
+    Eigen::Vector3d position() const { return position_; }
+    Arrow &position(const Eigen::Vector3d &position)
+    {
+        position_ = position;
+        return *this;
+    }
+    Eigen::Vector3d direction() const { return direction_; }
+    Arrow &direction(const Eigen::Vector3d &direction,
+                     bool need_normalize = false)
+    {
+        direction_ = direction;
+        if (need_normalize) {
+            direction_ /= (direction_.norm() + 1e-18);
+        }
+        return *this;
+    }
+    double heading() const
+    {
+        static constexpr double DEG = 180.0 / 3.14159265358979323846;
+        double h = std::atan(direction[0], direction_[1]) * DEG;
+        if (h < 0) {
+            h += 360.0;
+        }
+        return h;
+    }
+    Arrow &heading(double value)
+    {
+        static constexpr double RAD = 3.14159265358979323846 / 180.0;
+        value = 90.0 - value * RAD;
+        direction_[0] = std::cos(value);
+        direction_[1] = std::sin(value);
+        direction_[2] = 0.0;
+        return *this;
+    }
+
+  private:
+    int polyline_index_ = -1;
+    int segment_index_ = -1;
+    double t_ = -1.0;
+    double range_ = -1.0;
+    Eigen::Vector3d position_{0.0, 0.0, 0.0};  // init to origin
+    Eigen::Vector3d direction_{0.0, 0.0, 1.0}; // init to upwards
 };
 
 struct Quiver
