@@ -135,6 +135,22 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a, py::kw_only(),
              "update_direction"_a = true)
         //
+        .def("enu2lla",
+             py::overload_cast<const Eigen::Vector3d &>(&Quiver::enu2lla,
+                                                        py::const_),
+             "coords"_a)
+        .def(
+            "enu2lla",
+            py::overload_cast<const RowVectors &>(&Quiver::enu2lla, py::const_),
+            "coords"_a)
+        .def("lla2enu",
+             py::overload_cast<const Eigen::Vector3d &>(&Quiver::lla2enu,
+                                                        py::const_),
+             "coords"_a)
+        .def(
+            "lla2enu",
+            py::overload_cast<const RowVectors &>(&Quiver::lla2enu, py::const_),
+            "coords"_a)
         //
         ;
 

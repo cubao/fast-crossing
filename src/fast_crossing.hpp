@@ -356,7 +356,7 @@ struct FastCrossing
 
   private:
     const bool is_wgs84_{false};
-    std::map<int, PolylineRuler> polyline_rulers_;
+    std::map<int, PolylineRuler> polyline_rulers_; // use quiver
     // auto rebuild flatbush
     mutable std::optional<FlatBush> bush_;
 };

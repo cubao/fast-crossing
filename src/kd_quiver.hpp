@@ -28,9 +28,18 @@ inline std::pair<int, double> range_to_seg_t(const Eigen::VectorXd &ranges,
     return {seg_idx, t};
 }
 
+inline bool is_in_range(double v, const Eigen::VectorXd &intervals)
+{
+    for (int i = 0, N = intervals.size(); i + 1 < N; i += 2) {
+        if (intervals[i] <= v && v <= intervals[i + 1]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 struct KdQuiver : Quiver
 {
-
     // add data
     void add(const std::map<int, PolylineRuler> &rulers)
     {
@@ -52,9 +61,70 @@ struct KdQuiver : Quiver
         }
     }
 
+    // query
+    std::pair<int, double> nearest(const Eigen::Vector3d &position, //
+                                   bool return_squared_l2 = false) const
+    {
+        return tree_.nearest(is_wgs84_ ? lla2enu(position) : position,
+                             return_squared_l2);
+    }
+    std::pair<int, double> nearest(int index, //
+                                   bool return_squared_l2 = false) const
+    {
+        return tree_.nearest(index, return_squared_l2);
+    }
+    std::pair<Eigen::VectorXi, Eigen::VectorXd>
+    nearest(const Eigen::Vector3d &position, //
+            int k,                           //
+            bool sorted = true,              //
+            bool return_squared_l2 = false) const
+    {
+        return tree_.nearest(is_wgs84_ ? lla2enu(position) : position, //
+                             k,                                        //
+                             sorted,                                   //
+                             return_squared_l2);
+    }
+    std::pair<Eigen::VectorXi, Eigen::VectorXd>
+    nearest(const Eigen::Vector3d &position, //
+            double radius,                   //
+            bool sorted = true,              //
+            bool return_squared_l2 = false) const
+    {
+        return tree_.nearest(is_wgs84_ ? lla2enu(position) : position, //
+                             radius,                                   //
+                             sorted,                                   //
+                             return_squared_l2);
+    }
+
+    RowVectors positions(const Eigen::VectorXi &hits) const
+    {
+        const int N = hits.size();
+        RowVectors coords(N, 3);
+        for (int i = 0; i < N; ++i) {
+            // index(hits[i]);
+        }
+        return coords;
+    }
+    RowVectors directions(const Eigen::VectorXi &hits) const
+    {
+        const int N = hits.size();
+        RowVectors coords(N, 3);
+        return coords;
+    }
+
+    // Eigen::VectorXi
+    // filter(const Eigen::VectorXi &hits, const Arrow &arrow,
+    //        // positions
+    //        std::optional<Eigen::VectorXd> x_slots = std::nullopt,
+    //        std::optional<Eigen::VectorXd> y_slots = std::nullopt,
+    //        std::optional<Eigen::VectorXd> z_slots = std::nullopt, )
+    // {
+    // }
+
     // helpers
     Arrow arrow(const PolylineRuler &ruler, int segment_index, double t)
     {
+
         auto &polyline_ = ruler.polyline();
         Eigen::Vector3d pos =
             ruler.interpolate(polyline_.row(segment_index),     //
@@ -64,7 +134,7 @@ struct KdQuiver : Quiver
         auto arrow = Arrow(pos, dir);
         arrow.segment_index(segment_index).t(t);
         if (is_wgs84_ && ruler.is_wgs84()) {
-            // TODO, change pos to ENU
+            arrow.position(lla2enu(arrow.position()));
         }
         return arrow;
     }
@@ -94,6 +164,7 @@ struct KdQuiver : Quiver
 
   private:
     KdTree tree_;
+    std::map<int, PolylineRuler> polyline_rulers_;
     std::vector<Eigen::Vector2i> index_list_; // polyline_index, segment_index
     std::map<int, std::map<int, int>> index_map_;
 };
