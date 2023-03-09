@@ -68,7 +68,7 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         ;
 
     using Quiver = cubao::Quiver;
-    py::class_<Quiver>(m, "Quiver", py::module_local())
+    py::class_<Quiver>(m, "Quiver", py::module_local()).def(py::init<>())
         //
         ;
 }

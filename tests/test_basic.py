@@ -326,12 +326,40 @@ def test_arrow():
     assert arrow.range() == -1
     assert np.all(arrow.position() == [0, 0, 0])
     assert np.all(arrow.direction() == [0, 0, 1])
-    assert arrow.heading() == 5
+    # https://stackoverflow.com/questions/47909048/what-will-be-atan2-output-for-both-x-and-y-as-0
+    h = arrow.heading()
+    assert h == 0.0 or np.isnan(h) or np.isinf(h)
+
+    arrow.position([1, 2, 3])
+    assert np.all(arrow.position() == [1, 2, 3])
+    arrow.direction([3, 4, 12])
+    assert np.all(arrow.direction() == [3, 4, 12])
+    arrow.direction([3, 4, 0], True)
+    np.testing.assert_allclose(arrow.direction(), [3 / 5, 4 / 5, 0], atol=1e-6)
 
     print(arrow.label())
     arrow.label([5, 10])
     assert np.all(arrow.label() == [5, 10])
-    assert False
+    arrow.label(5, 20)
+    assert np.all(arrow.label() == [5, 20])
+    arrow.label(5, 20, t=0.3, range=23.0)
+    assert arrow.t() == 0.3
+    assert arrow.range() == 23.0
+    arrow.label(5, 20, range=46.0)
+    assert arrow.t() == 0.3
+    assert arrow.range() == 46.0
+
+    arrow.heading(90.0)
+    np.testing.assert_allclose(arrow.direction(), [1, 0, 0], atol=1e-8)
+    np.testing.assert_allclose(arrow.heading(), 90.0, atol=1e-8)
+    arrow.heading(0.0)
+    np.testing.assert_allclose(arrow.direction(), [0, 1, 0], atol=1e-8)
+    np.testing.assert_allclose(arrow.heading(), 0.0, atol=1e-8)
+
+
+def test_quiver():
+    quiver = Quiver()
+    assert quiver is not None
 
 
 def pytest_main(dir: str, *, test_file: str = None):

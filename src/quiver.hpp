@@ -75,7 +75,7 @@ struct Arrow
     Arrow &heading(double value)
     {
         static constexpr double RAD = 3.14159265358979323846 / 180.0;
-        value = 90.0 - value * RAD;
+        value = (90.0 - value) * RAD;
         direction_[0] = std::cos(value);
         direction_[1] = std::sin(value);
         direction_[2] = 0.0;
