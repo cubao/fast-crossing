@@ -111,10 +111,13 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("anchor", [](const Quiver &self) { return self.anchor_; })
         .def("is_wgs84", [](const Quiver &self) { return self.is_wgs84_; })
         //
-        .def("forward", &Quiver::forward, "arrow"_a, "delta"_a)
-        .def("leftward", &Quiver::leftward, "arrow"_a, "delta"_a)
-        .def("upward", &Quiver::upward, "arrow"_a, "delta"_a)
-        .def("update", &Quiver::update, "arrow"_a, "delta"_a, py::kw_only(),
+        .def("forwards", &Quiver::forwards, "arrow"_a, "delta_x"_a)
+        .def("leftwards", &Quiver::leftwards, "arrow"_a, "delta_y"_a)
+        .def("upwards", &Quiver::upwards, "arrow"_a, "delta_z"_a)
+        .def("towards", &Quiver::towards, "arrow"_a, "delta_dir"_a,
+             py::kw_only(), "update_direction"_a = true)
+        //
+        .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a, py::kw_only(),
              "keep_direction"_a = false)
         //
         //

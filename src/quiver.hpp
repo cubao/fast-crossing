@@ -6,6 +6,7 @@
 namespace cubao
 {
 constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+constexpr double NormEps = 1e-18;
 struct Arrow
 {
     // POD as it can be, all public in c++ (should not expose to python side)
@@ -96,17 +97,14 @@ struct Arrow
     {
         direction_ = direction;
         if (need_normalize) {
-            direction_ /= (direction_.norm() + 1e-18);
+            direction_ /= (direction_.norm() + NormEps);
         }
         return *this;
     }
     Eigen::Vector3d leftward() const
     {
         Eigen::Vector3d vec{-direction_[1], direction_[0], 0.0};
-        if (direction_[2] == 0.0 || std::fabs(direction_[2]) < 1e-6) {
-            return vec;
-        }
-        vec /= (vec.norm() + 1e-18);
+        vec /= (vec.norm() + NormEps);
         return vec;
     }
 
@@ -138,7 +136,8 @@ struct Quiver
     const bool is_wgs84_{false};
     Quiver() {}
     Quiver(const Eigen::Vector3d &anchor_lla)
-        : anchor_(anchor_lla), k_(k(anchor_lla[1])), inv_k_(1.0 / k_.array()), is_wgs84_(true)
+        : anchor_(anchor_lla), k_(k(anchor_lla[1])), inv_k_(1.0 / k_.array()),
+          is_wgs84_(true)
     {
     }
 
@@ -159,24 +158,45 @@ struct Quiver
         return {MUL * w * coslat, MUL * w * w2 * (1.0 - E2), 1.0};
     }
 
-    Arrow forward(const Arrow &cur, double delta) const
+    Arrow forwards(const Arrow &cur, double delta) const
     {
         auto copy = cur;
-        copy.position_.array() += delta * inv_k_.array() * copy.direction().array();
+        copy.position_.array() +=
+            delta * inv_k_.array() * copy.direction().array();
         return copy;
     }
-    Arrow leftward(const Arrow &cur, double delta) const
+    Arrow leftwards(const Arrow &cur, double delta) const
     {
         auto copy = cur;
-        copy.position_.array() += delta * inv_k_.array() * copy.leftward().array();
+        copy.position_.array() +=
+            delta * inv_k_.array() * copy.leftward().array();
         return copy;
     }
-    Arrow upward(const Arrow &cur, double delta) const
+    Arrow upwards(const Arrow &cur, double delta) const
     {
         auto copy = cur;
         copy.position_[2] += delta; // * k_[2];
         return copy;
     }
+    Arrow towards(const Arrow &cur, const Eigen::Vector3d &delta,
+                  bool update_direction = true) const
+    {
+        double norm = delta.norm();
+        if (!norm) {
+            return cur;
+        }
+        auto copy = cur;
+        // update position (delta in Frenet)
+        Eigen::Vector3d offset = delta.dot(copy.direction_) * copy.direction_;
+        Eigen::Vector3d left = copy.leftward();
+        offset += delta.dot(left) * left;
+        copy.position_.array() += inv_k_.array() * offset.array();
+        if (update_direction) {
+            copy.direction_ = delta / (norm + NormEps);
+        }
+        return copy;
+    }
+
     Arrow update(const Arrow &cur, const Eigen::Vector3d &delta,
                  bool keep_direction = false) const
     {
@@ -185,6 +205,7 @@ struct Quiver
             return cur;
         }
         auto copy = cur;
+        // update position (delta in XYZ (like ENU))
         copy.position_.array() += inv_k_.array() * delta.array();
         if (!keep_direction) {
             copy.direction_ = delta / norm;
