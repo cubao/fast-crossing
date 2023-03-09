@@ -40,13 +40,6 @@ inline bool is_in_range(double v, const Eigen::VectorXd &intervals)
 
 struct KdQuiver : Quiver
 {
-    // add data
-    void add(const std::map<int, PolylineRuler> &rulers)
-    {
-        for (auto &pair : rulers) {
-            add(pair.second, pair.first);
-        }
-    }
     void add(const PolylineRuler &ruler, int polyline_index)
     {
         auto &xyzs = ruler.polyline();
@@ -162,9 +155,19 @@ struct KdQuiver : Quiver
     }
     Eigen::Vector2i index(int index) { return index_list_[index]; }
 
+    const std::map<int, PolylineRuler> &polylines() const { return polylines_; }
+    const PolylineRuler *polyline(int index) const
+    {
+        auto itr = polylines_.find(index);
+        if (itr == polylines_.end()) {
+            return nullptr;
+        }
+        return &itr->second;
+    }
+
   private:
     KdTree tree_;
-    std::map<int, PolylineRuler> polyline_rulers_;
+    std::map<int, PolylineRuler> polylines_;
     std::vector<Eigen::Vector2i> index_list_; // polyline_index, segment_index
     std::map<int, std::map<int, int>> index_map_;
 };
