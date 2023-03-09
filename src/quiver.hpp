@@ -9,11 +9,11 @@ struct Arrow
 {
     Arrow() {}
     Arrow(const Eigen::Vector3d &position,
-          const Eigen::Vector3d &direction{0.0, 0.0, 1.0})
+          const Eigen::Vector3d &direction = {0.0, 0.0, 1.0})
         : position_(position), direction_(direction)
     {
     }
-    Eigen::Vecor2i label() const { return {polyline_index_, segment_index_}; }
+    Eigen::Vector2i label() const { return {polyline_index_, segment_index_}; }
     Arrow &label(int polyline_index, int segment_index,
                  std::optional<double> t = std::nullopt,
                  std::optional<double> range = std::nullopt)
@@ -60,7 +60,7 @@ struct Arrow
     double heading() const
     {
         static constexpr double DEG = 180.0 / 3.14159265358979323846;
-        double h = std::atan(direction[0], direction_[1]) * DEG;
+        double h = std::atan2(direction_[0], direction_[1]) * DEG;
         if (h < 0) {
             h += 360.0;
         }

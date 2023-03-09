@@ -23,13 +23,29 @@ using rvp = py::return_value_policy;
 
 CUBAO_INLINE void bind_quiver(py::module &m)
 {
-    using Quiver = cubao::Quiver;
-    py::class_<Quiver>(m, "Quiver", py::module_local())
+    using Arrow = cubao::Arrow;
+    py::class_<Arrow>(m, "Arrow", py::module_local())
+        //
+        .def(py::init<>())
+        .def(py::init<const Eigen::Vector3d &, const Eigen::Vector3d &>(),
+             "position"_a, //
+             "direction"_a = Eigen::Vector3d(0.0, 0.0, 1.0))
+        //
+        .def("label", py::overload_cast<>(&Arrow::label, py::const_))
+        .def("label",
+             py::overload_cast<int,                   //
+                               int,                   //
+                               std::optional<double>, //
+                               std::optional<double>>(&Arrow::label),
+             "polyline_index"_a, "segment_index"_a, //
+             py::kw_only(),
+             "t"_a = std::nullopt, //
+             "range"_a = std::nullopt)
         //
         ;
 
-    using Arrow = cubao::Arrow;
-    py::class_<Arrow>(m, "Arrow", py::module_local())
+    using Quiver = cubao::Quiver;
+    py::class_<Quiver>(m, "Quiver", py::module_local())
         //
         ;
 }
