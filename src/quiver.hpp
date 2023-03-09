@@ -132,7 +132,7 @@ struct Arrow
         return d;
     }
 
-    // directly expose some on-invariant values on c++ side
+    // directly expose some non-invariant values on c++ side
     int polyline_index_ = -1;
     int segment_index_ = -1;
     double t_ = NaN;
@@ -140,7 +140,7 @@ struct Arrow
     Eigen::Vector3d position_{0.0, 0.0, 0.0}; // init to origin
   private:
     Eigen::Vector3d direction_{1.0, 0.0, 0.0}; // init to east
-    Eigen::Vector3d leftward_{0.0, 1.0, 1.0};  // init to north
+    Eigen::Vector3d leftward_{0.0, 1.0, 0.0};  // init to north
     Eigen::Vector3d upward_{0.0, 0.0, 1.0};    // init to up
 };
 
