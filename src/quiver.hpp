@@ -43,6 +43,20 @@ struct Arrow
         }
         return *this;
     }
+
+    int polyline_index() const { return polyline_index_; }
+    Arrow &polyline_index(int value)
+    {
+        polyline_index_ = value;
+        return *this;
+    }
+    int segment_index() const { return segment_index_; }
+    Arrow &segment_index(int value)
+    {
+        segment_index_ = value;
+        return *this;
+    }
+
     double t() const { return t_; }
     Arrow &t(double value)
     {
@@ -130,7 +144,7 @@ struct Quiver
     // based on
     // https://github.com/cubao/headers/blob/main/include/cubao/crs_transform.hpp
     // https://github.com/mapbox/cheap-ruler-cpp
-    inline static Eigen::Vector3d k(double latitude)
+    static Eigen::Vector3d k(double latitude)
     {
         static constexpr double PI = 3.14159265358979323846;
         static constexpr double RE = 6378.137;
@@ -165,7 +179,15 @@ struct Quiver
     Arrow update(const Arrow &cur, const Eigen::Vector3d &delta,
                  bool keep_direction = false) const
     {
+        double norm = delta.norm();
+        if (!norm) {
+            return cur;
+        }
         auto copy = cur;
+        copy.position_.array() += k_.array() * delta.array();
+        if (!keep_direction) {
+            copy.direction_ = delta / norm;
+        }
         return copy;
     }
 

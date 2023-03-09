@@ -44,6 +44,15 @@ CUBAO_INLINE void bind_quiver(py::module &m)
              "t"_a = std::nullopt, //
              "range"_a = std::nullopt, rvp::reference_internal)
         //
+        .def("polyline_index",
+             py::overload_cast<>(&Arrow::polyline_index, py::const_))
+        .def("polyline_index", py::overload_cast<int>(&Arrow::polyline_index),
+             "new_value"_a, rvp::reference_internal)
+        .def("segment_index",
+             py::overload_cast<>(&Arrow::segment_index, py::const_))
+        .def("segment_index", py::overload_cast<int>(&Arrow::segment_index),
+             "new_value"_a, rvp::reference_internal)
+        //
         .def("t", py::overload_cast<>(&Arrow::t, py::const_))
         .def("t", py::overload_cast<double>(&Arrow::t), "new_value"_a,
              rvp::reference_internal)

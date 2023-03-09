@@ -331,6 +331,9 @@ def test_arrow():
     h = arrow.heading()
     assert h == 0.0 or np.isnan(h) or np.isinf(h)
 
+    arrow.label([2, 3]).t(0.5).range(23.0)
+    assert arrow.has_index()
+
     arrow.position([1, 2, 3])
     assert np.all(arrow.position() == [1, 2, 3])
     arrow.direction([3, 4, 12])
@@ -338,7 +341,6 @@ def test_arrow():
     arrow.direction([3, 4, 0], True)
     np.testing.assert_allclose(arrow.direction(), [3 / 5, 4 / 5, 0], atol=1e-6)
 
-    print(arrow.label())
     arrow.label([5, 10])
     assert np.all(arrow.label() == [5, 10])
     arrow.label(5, 20)
