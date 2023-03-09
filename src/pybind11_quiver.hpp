@@ -14,6 +14,7 @@
 
 #include "cubao_inline.hpp"
 #include "quiver.hpp"
+#include "kd_quiver.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -134,6 +135,20 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a, py::kw_only(),
              "update_direction"_a = true)
         //
+        //
+        ;
+
+    using KdQuiver = cubao::KdQuiver;
+    py::class_<KdQuiver, Quiver>(m, "KdQuiver", py::module_local())
+        //
+        .def("add",
+             py::overload_cast<const PolylineRuler &, int>(&KdQuiver::add),
+             "ruler"_a, "polyline_index"_a)
+        .def("reset", &KdQuiver::reset)
+        .def("index", py::overload_cast<int>(&KdQuiver::index), "point_index"_a)
+        .def("index", py::overload_cast<int, int>(&KdQuiver::index),
+             "polyline_index"_a, "segment_index"_a)
+        //     void add() {
         //
         ;
 }
