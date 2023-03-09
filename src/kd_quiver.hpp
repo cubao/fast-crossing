@@ -165,7 +165,7 @@ struct KdQuiver : Quiver
         return arrow(ruler, seg_idx, t);
     }
 
-    void reset() {}
+    void reset() { reset_index(); }
 
     void reset_index() const
     {

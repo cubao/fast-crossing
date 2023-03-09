@@ -46,6 +46,8 @@ struct FastCrossing
             return;
         }
         if (!quiver_) {
+            bush_ = FlatBush();
+            bush_->Finish();
             return;
         }
         auto &polylines = quiver_->polylines();
@@ -275,7 +277,12 @@ struct FastCrossing
     Eigen::Vector3d coordinates(int polyline_index, int seg_index,
                                 double t) const
     {
-        auto ruler = quiver_->polyline(polyline_index);
+        const PolylineRuler *ruler =
+            quiver_ ? quiver_->polyline(polyline_index) : nullptr;
+        if (!ruler) {
+            throw std::out_of_range("[exception stub] map::at " +
+                                    std::to_string(polyline_index));
+        }
         return coordinates(ruler->polyline(), seg_index, t);
     }
     Eigen::Vector3d coordinates(const Eigen::Vector2i &index, double t) const
