@@ -5,7 +5,6 @@
 #include <Eigen/Core>
 #include <memory>
 #include <vector>
-#include <optional>
 
 namespace cubao
 {
