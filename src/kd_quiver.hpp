@@ -43,7 +43,7 @@ struct KdQuiver : Quiver
         auto &xyzs = ruler.polyline();
         const int N = ruler.N();
         if (is_wgs84_) {
-            tree_.add(lla2enu(xyzs, anchor_));
+            tree_.add(lla2enu(xyzs));
         } else {
             tree_.add(xyzs);
         }

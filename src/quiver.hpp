@@ -231,6 +231,34 @@ struct Quiver
         }
         return copy;
     }
+
+    Eigen::Vector3d enu2lla(const Eigen::Vector3d &enu) const
+    {
+        return anchor_ + Eigen::Vector3d(enu.array() * inv_k_.array());
+    }
+    Eigen::Vector3d lla2enu(const Eigen::Vector3d &lla) const
+    {
+        return (lla - anchor_).array() * k_.array();
+    }
+    RowVectors lla2enu(const RowVectors &llas) const
+    {
+        RowVectors ret = llas;
+        for (int i = 0; i < 3; ++i) {
+            ret.col(i).array() -= anchor_[i];
+            ret.col(i).array() *= k_[i];
+        }
+        return ret;
+    }
+    RowVectors enu2lla(const RowVectors &enus) const
+    {
+        RowVectors ret = enus;
+        for (int i = 0; i < 3; ++i) {
+            ret.col(i).array() *= inv_k_[i];
+            ret.col(i).array() += anchor_[i];
+        }
+        return ret;
+    }
+
     // handles center,
     // searches
 
