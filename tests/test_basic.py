@@ -322,8 +322,9 @@ def test_nanoflann_KDTree():
 def test_arrow():
     arrow = Arrow()
     assert np.all(arrow.label() == [-1, -1])
-    assert arrow.t() == -1
-    assert arrow.range() == -1
+    assert np.isnan(arrow.t())
+    assert np.isnan(arrow.range())
+    assert not arrow.has_index()
     assert np.all(arrow.position() == [0, 0, 0])
     assert np.all(arrow.direction() == [0, 0, 1])
     # https://stackoverflow.com/questions/47909048/what-will-be-atan2-output-for-both-x-and-y-as-0

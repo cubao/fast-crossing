@@ -5,8 +5,17 @@
 
 namespace cubao
 {
+constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 struct Arrow
 {
+    // POD as it can be, all public in c++ (should not expose to python side)
+    int polyline_index_ = -1;
+    int segment_index_ = -1;
+    double t_ = NaN;
+    double range_ = NaN;
+    Eigen::Vector3d position_{0.0, 0.0, 0.0};  // init to origin
+    Eigen::Vector3d direction_{0.0, 0.0, 1.0}; // init to upwards
+
     Arrow() {}
     Arrow(const Eigen::Vector3d &position,
           const Eigen::Vector3d &direction = {0.0, 0.0, 1.0})
@@ -46,6 +55,20 @@ struct Arrow
         range_ = value;
         return *this;
     }
+    void reset_index()
+    {
+        polyline_index_ = -1;
+        segment_index_ = -1;
+        t_ = NaN;
+        range_ = NaN;
+    }
+    bool has_index(bool check_range = true) const
+    {
+        return polyline_index_ >= 0 && //
+               segment_index_ >= 0 &&  //
+               !std::isnan(t_) &&      //
+               (check_range || !std::isnan(range_));
+    }
 
     Eigen::Vector3d position() const { return position_; }
     Arrow &position(const Eigen::Vector3d &position)
@@ -59,10 +82,20 @@ struct Arrow
     {
         direction_ = direction;
         if (need_normalize) {
-            direction_ /= (direction_.norm() + 1e-18);
+            direction_ /= direction_.norm(); // + 1e-18
         }
         return *this;
     }
+    Eigen::Vector3d leftward() const
+    {
+        Eigen::Vector3d vec{-direction_[1], direction_[0], 0.0};
+        if (direction_[2] == 0.0 || std::fabs(direction_[2]) < 1e-6) {
+            return vec;
+        }
+        vec /= vec.norm();
+        return vec;
+    }
+
     double heading() const
     {
         static constexpr double DEG = 180.0 / 3.14159265358979323846;
@@ -81,14 +114,6 @@ struct Arrow
         direction_[2] = 0.0;
         return *this;
     }
-
-  private:
-    int polyline_index_ = -1;
-    int segment_index_ = -1;
-    double t_ = -1.0;
-    double range_ = -1.0;
-    Eigen::Vector3d position_{0.0, 0.0, 0.0};  // init to origin
-    Eigen::Vector3d direction_{0.0, 0.0, 1.0}; // init to upwards
 };
 
 struct Quiver
@@ -117,6 +142,31 @@ struct Quiver
         double w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
         double w = std::sqrt(w2);
         return {MUL * w * coslat, MUL * w * w2 * (1.0 - E2), 1.0};
+    }
+
+    Arrow forward(const Arrow &cur, double delta) const
+    {
+        auto copy = cur;
+        copy.position_.array() += delta * k_.array() * copy.direction().array();
+        return copy;
+    }
+    Arrow leftward(const Arrow &cur, double delta) const
+    {
+        auto copy = cur;
+        copy.position_.array() += delta * k_.array() * copy.leftward().array();
+        return copy;
+    }
+    Arrow upward(const Arrow &cur, double delta) const
+    {
+        auto copy = cur;
+        copy.position_[2] += delta; // * k_[2];
+        return copy;
+    }
+    Arrow update(const Arrow &cur, const Eigen::Vector3d &delta,
+                 bool keep_direction = false) const
+    {
+        auto copy = cur;
+        return copy;
     }
 
     // handles center,

@@ -51,6 +51,11 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("range", py::overload_cast<double>(&Arrow::range), "new_value"_a,
              rvp::reference_internal)
         //
+        .def("reset_index", py::overload_cast<>(&Arrow::reset_index))
+        .def("has_index",
+             py::overload_cast<bool>(&Arrow::has_index, py::const_),
+             "check_range"_a = true)
+        //
         .def("position", py::overload_cast<>(&Arrow::position, py::const_))
         .def("position",
              py::overload_cast<const Eigen::Vector3d &>(&Arrow::position),
@@ -60,6 +65,7 @@ CUBAO_INLINE void bind_quiver(py::module &m)
             "direction",
             py::overload_cast<const Eigen::Vector3d &, bool>(&Arrow::direction),
             "new_value"_a, "need_normalize"_a = false, rvp::reference_internal)
+        .def("leftward", py::overload_cast<>(&Arrow::leftward, py::const_))
         //
         .def("heading", py::overload_cast<>(&Arrow::heading, py::const_))
         .def("heading", py::overload_cast<double>(&Arrow::heading),
