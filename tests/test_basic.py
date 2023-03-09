@@ -368,6 +368,15 @@ def test_arrow():
     arrow2.t(0.3)
     assert arrow.t() == 0.000001
 
+    arrow = Arrow().label([0, 0]).t(0)
+    assert not arrow.has_index()
+    assert arrow.has_index(check_range=False)
+    arrow.range(10)
+    assert arrow.has_index()
+    assert arrow.has_index(check_range=False)
+    arrow.reset_index()
+    assert not arrow.has_index()
+
 
 def test_quiver():
     quiver = Quiver()

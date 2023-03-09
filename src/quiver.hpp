@@ -10,11 +10,10 @@ constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 constexpr double NormEps = 1e-12; // DBL_EPSILON = 2.22045e-16
 struct Arrow
 {
-
     Arrow() {}
     Arrow(const Eigen::Vector3d &position) : position_(position) {}
     Arrow(const Eigen::Vector3d &position, const Eigen::Vector3d &direction)
-        : position_(position)
+        : Arrow(position)
     {
         this->direction(direction);
     }
@@ -77,7 +76,7 @@ struct Arrow
         return polyline_index_ >= 0 && //
                segment_index_ >= 0 &&  //
                !std::isnan(t_) &&      //
-               (check_range || !std::isnan(range_));
+               (!check_range || !std::isnan(range_));
     }
 
     const Eigen::Vector3d &position() const { return position_; }
