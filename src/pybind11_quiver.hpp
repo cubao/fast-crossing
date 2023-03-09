@@ -29,9 +29,9 @@ CUBAO_INLINE void bind_quiver(py::module &m)
     py::class_<Arrow>(m, "Arrow", py::module_local())
         //
         .def(py::init<>())
+        .def(py::init<const Eigen::Vector3d &>(), "position"_a)
         .def(py::init<const Eigen::Vector3d &, const Eigen::Vector3d &>(),
-             "position"_a, //
-             "direction"_a = Eigen::Vector3d(0.0, 0.0, 1.0))
+             "position"_a, "direction"_a)
         //
         .def("label", py::overload_cast<>(&Arrow::label, py::const_))
         .def("label", py::overload_cast<const Eigen::Vector2i &>(&Arrow::label),
@@ -72,27 +72,40 @@ CUBAO_INLINE void bind_quiver(py::module &m)
              py::overload_cast<const Eigen::Vector3d &>(&Arrow::position),
              "new_value"_a, rvp::reference_internal)
         .def("direction", py::overload_cast<>(&Arrow::direction, py::const_))
-        .def(
-            "direction",
-            py::overload_cast<const Eigen::Vector3d &, bool>(&Arrow::direction),
-            "new_value"_a, "need_normalize"_a = false, rvp::reference_internal)
+        .def("direction",
+             py::overload_cast<const Eigen::Vector3d &>(&Arrow::direction),
+             rvp::reference_internal)
+        .def("forward", py::overload_cast<>(&Arrow::direction, py::const_))
         .def("leftward", py::overload_cast<>(&Arrow::leftward, py::const_))
+        .def("upward", py::overload_cast<>(&Arrow::upward, py::const_))
+        .def("Frenet", py::overload_cast<>(&Arrow::Frenet, py::const_))
         //
         .def("heading", py::overload_cast<>(&Arrow::heading, py::const_))
         .def("heading", py::overload_cast<double>(&Arrow::heading),
-             "new_value"_a)
-        .def_static("_dir", &Arrow::dir)
+             "new_value"_a, rvp::reference_internal)
+        .def_static("_heading", py::overload_cast<double>(&Arrow::_heading),
+                    "heading"_a)
+        .def_static("_heading",
+                    py::overload_cast<double, double>(&Arrow::_heading),
+                    "east"_a, "north"_a)
+        //
+        .def_static("_unit_vector", &Arrow::_unit_vector, "vector"_a,
+                    "with_eps"_a = true)
         //
         .def("__repr__",
              [](const Arrow &self) {
+                 auto &pos = self.position();
+                 auto &dir = self.direction();
                  return fmt::format(
                      "Arrow(label:({}/{}/{:.3f}),range:{},"
                      "xyz:({},{},{}),"
                      "dir:({:.3f},{:.3f},{:.1f}),heading:{:.2f})",
-                     self.polyline_index_, self.segment_index_, self.t_,
-                     self.range_, self.position_[0], self.position_[1],
-                     self.position_[2], self.direction_[0], self.direction_[1],
-                     self.direction_[2], self.heading());
+                     self.polyline_index_, self.segment_index_, //
+                     self.t_,
+                     self.range_,            //
+                     pos[0], pos[1], pos[2], //
+                     dir[0], dir[1], dir[2], //
+                     self.heading());
              })
         .def("copy", [](const Arrow &self) -> Arrow { return self; })
         .def("__copy__",

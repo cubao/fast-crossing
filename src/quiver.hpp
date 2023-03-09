@@ -10,19 +10,13 @@ constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 constexpr double NormEps = 1e-12; // DBL_EPSILON = 2.22045e-16
 struct Arrow
 {
-    // POD as it can be, all public in c++ (should not expose to python side)
-    int polyline_index_ = -1;
-    int segment_index_ = -1;
-    double t_ = NaN;
-    double range_ = NaN;
-    Eigen::Vector3d position_{0.0, 0.0, 0.0};  // init to origin
-    Eigen::Vector3d direction_{0.0, 0.0, 1.0}; // init to upwards
 
     Arrow() {}
-    Arrow(const Eigen::Vector3d &position,
-          const Eigen::Vector3d &direction = {0.0, 0.0, 1.0})
-        : position_(position), direction_(direction)
+    Arrow(const Eigen::Vector3d &position) : position_(position) {}
+    Arrow(const Eigen::Vector3d &position, const Eigen::Vector3d &direction)
+        : position_(position)
     {
+        this->direction(direction);
     }
     Eigen::Vector2i label() const { return {polyline_index_, segment_index_}; }
     Arrow &label(const Eigen::Vector2i &value)
@@ -86,54 +80,69 @@ struct Arrow
                (check_range || !std::isnan(range_));
     }
 
-    Eigen::Vector3d position() const { return position_; }
+    const Eigen::Vector3d &position() const { return position_; }
     Arrow &position(const Eigen::Vector3d &position)
     {
         position_ = position;
         return *this;
     }
-    Eigen::Vector3d direction() const { return direction_; }
-    Arrow &direction(const Eigen::Vector3d &direction,
-                     bool need_normalize = false)
+    const Eigen::Vector3d &direction() const { return direction_; }
+    Arrow &direction(const Eigen::Vector3d &direction)
     {
         direction_ = direction;
-        if (need_normalize) {
-            direction_ /= (direction_.norm() + NormEps);
-        }
+        leftward_ = _unit_vector({-direction_[1], direction_[0], 0.0}, false);
+        upward_ = direction_.cross(leftward_);
         return *this;
     }
-    Eigen::Vector3d leftward() const
+    const Eigen::Vector3d leftward() const { return leftward_; }
+    const Eigen::Vector3d &upward() const { return upward_; }
+    Eigen::Matrix3d Frenet() const
     {
-        Eigen::Vector3d vec{-direction_[1], direction_[0], 0.0};
-        vec /= (vec.norm() + NormEps);
-        return vec;
+        Eigen::Matrix3d T;
+        T.col(0) = direction_;
+        T.col(1) = leftward_;
+        T.col(2) = upward_;
+        return T;
     }
 
-    double heading() const
+    static double _heading(double east, double north)
     {
+        // https://stackoverflow.com/questions/47909048/what-will-be-atan2-output-for-both-x-and-y-as-0
         static constexpr double DEG = 180.0 / 3.14159265358979323846;
-        double h = std::atan2(direction_[0], direction_[1]) * DEG;
+        double h = std::atan2(east, north) * DEG;
         if (h < 0) {
             h += 360.0;
         }
         return h;
     }
-    Arrow &heading(double value)
+
+    double heading() const { return _heading(direction_[0], direction_[1]); }
+    static Eigen::Vector3d _heading(double value)
     {
         static constexpr double RAD = 3.14159265358979323846 / 180.0;
         value = (90.0 - value) * RAD;
-        direction_[0] = std::cos(value);
-        direction_[1] = std::sin(value);
-        direction_[2] = 0.0;
-        return *this;
+        return Eigen::Vector3d(std::cos(value), std::sin(value), 0.0);
     }
+    Arrow &heading(double value) { return direction(_heading(value)); }
 
-    static Eigen::Vector3d dir(const Eigen::Vector3d &not_unit_vector)
+    static Eigen::Vector3d _unit_vector(const Eigen::Vector3d &vector,
+                                        bool with_eps = true)
     {
-        Eigen::Vector3d d = not_unit_vector;
-        d /= (d.norm() + NormEps);
+        Eigen::Vector3d d = vector;
+        d /= (d.norm() + (with_eps ? NormEps : 0.0));
         return d;
     }
+
+    // directly expose some on-invariant values on c++ side
+    int polyline_index_ = -1;
+    int segment_index_ = -1;
+    double t_ = NaN;
+    double range_ = NaN;
+    Eigen::Vector3d position_{0.0, 0.0, 0.0}; // init to origin
+  private:
+    Eigen::Vector3d direction_{1.0, 0.0, 0.0}; // init to east
+    Eigen::Vector3d leftward_{0.0, 1.0, 1.0};  // init to north
+    Eigen::Vector3d upward_{0.0, 0.0, 1.0};    // init to up
 };
 
 struct Quiver
@@ -192,14 +201,18 @@ struct Quiver
         if (!delta.squaredNorm()) {
             return cur;
         }
-        auto copy = cur;
         // update position (delta in Frenet)
-        Eigen::Vector3d offset = delta.dot(copy.direction_) * copy.direction_;
-        Eigen::Vector3d left = copy.leftward();
-        offset += (delta.dot(left) * left);
+        Eigen::Vector3d offset = delta[0] * cur.direction() +
+                                 delta[1] * cur.leftward() +
+                                 delta[2] * cur.upward();
+        double norm = offset.norm();
+        if (!norm) {
+            return cur;
+        }
+        auto copy = cur;
         copy.position_.array() += inv_k_.array() * offset.array();
         if (update_direction) {
-            copy.direction_ = offset / (offset.norm() + NormEps);
+            copy.direction(offset / norm);
         }
         return copy;
     }
@@ -215,7 +228,7 @@ struct Quiver
         // update position (delta in XYZ (like ENU))
         copy.position_.array() += inv_k_.array() * delta.array();
         if (update_direction) {
-            copy.direction_ = delta / (norm + NormEps);
+            copy.direction(delta / norm);
         }
         return copy;
     }

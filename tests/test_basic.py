@@ -326,10 +326,9 @@ def test_arrow():
     assert np.isnan(arrow.range())
     assert not arrow.has_index()
     assert np.all(arrow.position() == [0, 0, 0])
-    assert np.all(arrow.direction() == [0, 0, 1])
-    # https://stackoverflow.com/questions/47909048/what-will-be-atan2-output-for-both-x-and-y-as-0
+    assert np.all(arrow.direction() == [1, 0, 0])
     h = arrow.heading()
-    assert h == 0.0 or np.isnan(h) or np.isinf(h)
+    assert h == 90.0
 
     arrow.label([2, 3]).t(0.5).range(23.0)
     assert arrow.has_index()
@@ -338,7 +337,7 @@ def test_arrow():
     assert np.all(arrow.position() == [1, 2, 3])
     arrow.direction([3, 4, 12])
     assert np.all(arrow.direction() == [3, 4, 12])
-    arrow.direction([3, 4, 0], True)
+    arrow.direction(Arrow._unit_vector([3, 4, 0]))
     np.testing.assert_allclose(arrow.direction(), [3 / 5, 4 / 5, 0], atol=1e-6)
 
     arrow.label([5, 10])
@@ -389,11 +388,9 @@ def test_quiver():
         updated.position(), [123.00001268281724, 45.000008998326344, 7], atol=1e-8
     )
     np.testing.assert_allclose(updated.heading(), 45, atol=1e-8)
-    # quiver.forward(arrow, 1)
-    # quiver.forward(arrow, 1)
 
     updated = quiver.update(arrow, [1, 1, 0], update_direction=False)
-    np.testing.assert_allclose(updated.direction(), [0, 0, 1], atol=1e-8)
+    np.testing.assert_allclose(updated.direction(), [1, 0, 0], atol=1e-8)
 
     # delta
     #   ^ y (north)
@@ -411,12 +408,16 @@ def test_quiver():
     updated = quiver.update(arrow, [2, 0, 0])
     np.testing.assert_allclose(updated.position(), [2, 1, 0], atol=1e-8)
     #
-    arrow = Arrow([0, 1, 0], direction=Arrow._dir([1, 1, 0]))
-    print(arrow)
+    arrow = Arrow([0, 1, 0], direction=Arrow._unit_vector([1, 1, 0]))
     updated = quiver.towards(arrow, [3, 3, 0])
-    print(updated.position())
+    sqrt2 = np.sqrt(2)
+    np.testing.assert_allclose(updated.position(), [0, 3 * sqrt2 + 1, 0], atol=1e-8)
+    np.testing.assert_allclose(updated.direction(), [0, 1, 0], atol=1e-8)
     updated = quiver.update(arrow, [3, 3, 0])
     np.testing.assert_allclose(updated.position(), [3, 4, 0], atol=1e-8)
+    np.testing.assert_allclose(
+        updated.direction(), [sqrt2 / 2, sqrt2 / 2, 0], atol=1e-8
+    )
 
 
 def pytest_main(dir: str, *, test_file: str = None):
