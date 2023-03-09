@@ -40,31 +40,59 @@ inline bool is_in_range(double v, const Eigen::VectorXd &intervals)
 
 struct KdQuiver : Quiver
 {
-    void add(const PolylineRuler &ruler, int polyline_index)
+    KdQuiver() : Quiver() {}
+    KdQuiver(const Eigen::Vector3d &anchor_lla) : Quiver(anchor_lla) {}
+
+    int add(const RowVectors &polyline, int index = -1)
     {
-        auto &xyzs = ruler.polyline();
-        const int N = ruler.N();
-        if (is_wgs84_) {
-            tree_.add(lla2enu(xyzs));
-        } else {
-            tree_.add(xyzs);
+        if (index < 0) {
+            index = polylines_.size();
         }
-        for (int i = 0; i < N; ++i) {
-            index(polyline_index, i);
+        if (polylines_.find(index) != polylines_.end()) {
+            throw std::invalid_argument("duplicate index: " +
+                                        std::to_string(index));
         }
+        polylines_.emplace(index, PolylineRuler(polyline, is_wgs84_));
+        tree_.reset();
+        return index;
+    }
+    int add(const Eigen::Ref<const RowVectorsNx2> &polyline, int index = -1)
+    {
+        RowVectors Nx3(polyline.rows(), 3);
+        Nx3.leftCols<2>() = polyline;
+        Nx3.col(2).setZero();
+        return add(Nx3, index);
+    }
+
+    void build(bool force = false) const
+    {
+        if (!force && tree_) {
+            return;
+        }
+        reset_index();
+        // auto &xyzs = ruler.polyline();
+        // const int N = ruler.N();
+        // if (is_wgs84_) {
+        //     tree_.add(lla2enu(xyzs));
+        // } else {
+        //     tree_.add(xyzs);
+        // }
+        // for (int i = 0; i < N; ++i) {
+        //     index(polyline_index, i);
+        // }
     }
 
     // query
     std::pair<int, double> nearest(const Eigen::Vector3d &position, //
                                    bool return_squared_l2 = false) const
     {
-        return tree_.nearest(is_wgs84_ ? lla2enu(position) : position,
-                             return_squared_l2);
+        return tree().nearest(is_wgs84_ ? lla2enu(position) : position,
+                              return_squared_l2);
     }
     std::pair<int, double> nearest(int index, //
                                    bool return_squared_l2 = false) const
     {
-        return tree_.nearest(index, return_squared_l2);
+        return tree().nearest(index, return_squared_l2);
     }
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
@@ -72,10 +100,10 @@ struct KdQuiver : Quiver
             bool sorted = true,              //
             bool return_squared_l2 = false) const
     {
-        return tree_.nearest(is_wgs84_ ? lla2enu(position) : position, //
-                             k,                                        //
-                             sorted,                                   //
-                             return_squared_l2);
+        return tree().nearest(is_wgs84_ ? lla2enu(position) : position, //
+                              k,                                        //
+                              sorted,                                   //
+                              return_squared_l2);
     }
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
@@ -83,10 +111,10 @@ struct KdQuiver : Quiver
             bool sorted = true,              //
             bool return_squared_l2 = false) const
     {
-        return tree_.nearest(is_wgs84_ ? lla2enu(position) : position, //
-                             radius,                                   //
-                             sorted,                                   //
-                             return_squared_l2);
+        return tree().nearest(is_wgs84_ ? lla2enu(position) : position, //
+                              radius,                                   //
+                              sorted,                                   //
+                              return_squared_l2);
     }
 
     RowVectors positions(const Eigen::VectorXi &hits) const
@@ -137,7 +165,9 @@ struct KdQuiver : Quiver
         return arrow(ruler, seg_idx, t);
     }
 
-    void reset()
+    void reset() {}
+
+    void reset_index() const
     {
         tree_.reset();
         index_list_.clear();
@@ -166,10 +196,19 @@ struct KdQuiver : Quiver
     }
 
   private:
-    KdTree tree_;
+    // data
     std::map<int, PolylineRuler> polylines_;
-    std::vector<Eigen::Vector2i> index_list_; // polyline_index, segment_index
-    std::map<int, std::map<int, int>> index_map_;
+
+    // index
+    mutable std::optional<KdTree> tree_;
+    KdTree &tree() const
+    {
+        build();
+        return *tree_;
+    }
+    // polyline_index, segment_index
+    mutable std::vector<Eigen::Vector2i> index_list_;
+    mutable std::map<int, std::map<int, int>> index_map_;
 };
 } // namespace cubao
 

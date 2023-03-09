@@ -156,10 +156,15 @@ CUBAO_INLINE void bind_quiver(py::module &m)
 
     using KdQuiver = cubao::KdQuiver;
     py::class_<KdQuiver, Quiver>(m, "KdQuiver", py::module_local())
+        .def(py::init<>())
+        .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
         //
+        .def("add", py::overload_cast<const RowVectors &, int>(&KdQuiver::add),
+             "polyline"_a, "index"_a)
         .def("add",
-             py::overload_cast<const PolylineRuler &, int>(&KdQuiver::add),
-             "ruler"_a, "polyline_index"_a)
+             py::overload_cast<const Eigen::Ref<const RowVectorsNx2> &, int>(
+                 &KdQuiver::add),
+             "polyline"_a, "index"_a)
         .def("reset", &KdQuiver::reset)
         .def("index", py::overload_cast<int>(&KdQuiver::index), "point_index"_a)
         .def("index", py::overload_cast<int, int>(&KdQuiver::index),
