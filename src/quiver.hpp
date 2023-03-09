@@ -6,7 +6,8 @@
 namespace cubao
 {
 constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
-constexpr double NormEps = 1e-18;
+// https://en.cppreference.com/w/cpp/types/climits
+constexpr double NormEps = 1e-12; // DBL_EPSILON = 2.22045e-16
 struct Arrow
 {
     // POD as it can be, all public in c++ (should not expose to python side)
@@ -126,6 +127,13 @@ struct Arrow
         direction_[2] = 0.0;
         return *this;
     }
+
+    static Eigen::Vector3d dir(const Eigen::Vector3d &not_unit_vector)
+    {
+        Eigen::Vector3d d = not_unit_vector;
+        d /= (d.norm() + NormEps);
+        return d;
+    }
 };
 
 struct Quiver
@@ -181,24 +189,23 @@ struct Quiver
     Arrow towards(const Arrow &cur, const Eigen::Vector3d &delta,
                   bool update_direction = true) const
     {
-        double norm = delta.norm();
-        if (!norm) {
+        if (!delta.squaredNorm()) {
             return cur;
         }
         auto copy = cur;
         // update position (delta in Frenet)
         Eigen::Vector3d offset = delta.dot(copy.direction_) * copy.direction_;
         Eigen::Vector3d left = copy.leftward();
-        offset += delta.dot(left) * left;
+        offset += (delta.dot(left) * left);
         copy.position_.array() += inv_k_.array() * offset.array();
         if (update_direction) {
-            copy.direction_ = delta / (norm + NormEps);
+            copy.direction_ = offset / (offset.norm() + NormEps);
         }
         return copy;
     }
 
     Arrow update(const Arrow &cur, const Eigen::Vector3d &delta,
-                 bool keep_direction = false) const
+                 bool update_direction = true) const
     {
         double norm = delta.norm();
         if (!norm) {
@@ -207,8 +214,8 @@ struct Quiver
         auto copy = cur;
         // update position (delta in XYZ (like ENU))
         copy.position_.array() += inv_k_.array() * delta.array();
-        if (!keep_direction) {
-            copy.direction_ = delta / norm;
+        if (update_direction) {
+            copy.direction_ = delta / (norm + NormEps);
         }
         return copy;
     }

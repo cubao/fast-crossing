@@ -81,17 +81,18 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("heading", py::overload_cast<>(&Arrow::heading, py::const_))
         .def("heading", py::overload_cast<double>(&Arrow::heading),
              "new_value"_a)
+        .def_static("_dir", &Arrow::dir)
         //
         .def("__repr__",
              [](const Arrow &self) {
-                 return fmt::format("label:({}/{}/{:.3f}),range:{},"
-                                    "xyz:({},{},{}),"
-                                    "dir:({:.3f},{:.3f},{:.1f}),heading:{:.2f}",
-                                    self.polyline_index_, self.segment_index_,
-                                    self.t_, self.range_, self.position_[0],
-                                    self.position_[1], self.position_[2],
-                                    self.direction_[0], self.direction_[1],
-                                    self.direction_[2], self.heading());
+                 return fmt::format(
+                     "Arrow(label:({}/{}/{:.3f}),range:{},"
+                     "xyz:({},{},{}),"
+                     "dir:({:.3f},{:.3f},{:.1f}),heading:{:.2f})",
+                     self.polyline_index_, self.segment_index_, self.t_,
+                     self.range_, self.position_[0], self.position_[1],
+                     self.position_[2], self.direction_[0], self.direction_[1],
+                     self.direction_[2], self.heading());
              })
         .def("copy", [](const Arrow &self) -> Arrow { return self; })
         .def("__copy__",
@@ -114,11 +115,11 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("forwards", &Quiver::forwards, "arrow"_a, "delta_x"_a)
         .def("leftwards", &Quiver::leftwards, "arrow"_a, "delta_y"_a)
         .def("upwards", &Quiver::upwards, "arrow"_a, "delta_z"_a)
-        .def("towards", &Quiver::towards, "arrow"_a, "delta_dir"_a,
+        .def("towards", &Quiver::towards, "arrow"_a, "delta_frenet"_a,
              py::kw_only(), "update_direction"_a = true)
         //
         .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a, py::kw_only(),
-             "keep_direction"_a = false)
+             "update_direction"_a = true)
         //
         //
         ;

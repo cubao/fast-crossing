@@ -384,7 +384,7 @@ def test_quiver():
     np.testing.assert_allclose(np.sum(k @ quiver.inv_k()), 3.0, atol=1e-16)
 
     arrow = Arrow([123, 45, 6])
-    updated = quiver.update(arrow, [1, 1, 1])
+    updated = quiver.update(arrow, [1, 1, 1], update_direction=True)
     np.testing.assert_allclose(
         updated.position(), [123.00001268281724, 45.000008998326344, 7], atol=1e-8
     )
@@ -392,8 +392,31 @@ def test_quiver():
     # quiver.forward(arrow, 1)
     # quiver.forward(arrow, 1)
 
-    updated = quiver.update(arrow, [1, 1, 0], keep_direction=True)
+    updated = quiver.update(arrow, [1, 1, 0], update_direction=False)
     np.testing.assert_allclose(updated.direction(), [0, 0, 1], atol=1e-8)
+
+    # delta
+    #   ^ y (north)
+    #   |
+    #   @->
+    #   |
+    #   o---------> x (east)
+    #
+    quiver = Quiver()
+    arrow = Arrow([0, 1, 0], direction=[1, 0, 0])
+    # towards (delta in Frenet, x->forwards, y->leftwards, z->upwards)
+    updated = quiver.towards(arrow, [2, 0, 0])
+    np.testing.assert_allclose(updated.position(), [2, 1, 0], atol=1e-8)
+    # update (delta in EUN, x->east, y->north, z->up)
+    updated = quiver.update(arrow, [2, 0, 0])
+    np.testing.assert_allclose(updated.position(), [2, 1, 0], atol=1e-8)
+    #
+    arrow = Arrow([0, 1, 0], direction=Arrow._dir([1, 1, 0]))
+    print(arrow)
+    updated = quiver.towards(arrow, [3, 3, 0])
+    print(updated.position())
+    updated = quiver.update(arrow, [3, 3, 0])
+    np.testing.assert_allclose(updated.position(), [3, 4, 0], atol=1e-8)
 
 
 def pytest_main(dir: str, *, test_file: str = None):
