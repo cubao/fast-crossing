@@ -231,7 +231,6 @@ struct Quiver
         }
         return copy;
     }
-
     // handles center,
     // searches
 
@@ -241,6 +240,5 @@ struct Quiver
     // label: polyline_index, seg_index, float
     // position, direction
 };
-
 } // namespace cubao
 #endif
