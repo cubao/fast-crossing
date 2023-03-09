@@ -4,7 +4,14 @@ import sys
 import numpy as np
 import pytest
 
-from fast_crossing import FastCrossing, KdTree, densify_polyline, point_in_polygon
+from fast_crossing import (
+    Arrow,
+    FastCrossing,
+    KdTree,
+    Quiver,
+    densify_polyline,
+    point_in_polygon,
+)
 
 
 def test_fast_crossing():
@@ -310,6 +317,116 @@ def test_nanoflann_KDTree():
     from fast_crossing.spatial import KDTree
 
     _test_cKDTree_query(KDTree)
+
+
+def test_arrow():
+    arrow = Arrow()
+    assert np.all(arrow.label() == [-1, -1])
+    assert np.isnan(arrow.t())
+    assert np.isnan(arrow.range())
+    assert not arrow.has_index()
+    assert np.all(arrow.position() == [0, 0, 0])
+    assert np.all(arrow.direction() == [1, 0, 0])
+    h = arrow.heading()
+    assert h == 90.0
+
+    arrow.label([2, 3]).t(0.5).range(23.0)
+    assert arrow.has_index()
+
+    arrow.position([1, 2, 3])
+    assert np.all(arrow.position() == [1, 2, 3])
+    arrow.direction([3, 4, 12])
+    assert np.all(arrow.direction() == [3, 4, 12])
+    arrow.direction(Arrow._unit_vector([3, 4, 0]))
+    np.testing.assert_allclose(arrow.direction(), [3 / 5, 4 / 5, 0], atol=1e-6)
+
+    arrow.label([5, 10])
+    assert np.all(arrow.label() == [5, 10])
+    arrow.label(5, 20)
+    assert np.all(arrow.label() == [5, 20])
+    arrow.label(5, 20, t=0.3, range=23.0)
+    assert arrow.t() == 0.3
+    assert arrow.range() == 23.0
+    arrow.label(5, 20, range=46.0)
+    assert arrow.t() == 0.3
+    assert arrow.range() == 46.0
+
+    arrow.heading(90.0)
+    np.testing.assert_allclose(arrow.direction(), [1, 0, 0], atol=1e-8)
+    np.testing.assert_allclose(arrow.heading(), 90.0, atol=1e-8)
+    arrow.heading(0.0)
+    np.testing.assert_allclose(arrow.direction(), [0, 1, 0], atol=1e-8)
+    np.testing.assert_allclose(arrow.heading(), 0.0, atol=1e-8)
+
+    arrow.t(0.000001)
+    assert "label:(5/20/0.000)" in repr(arrow)
+    # same like f-string format
+    assert f"{0.009:.2f}" == "0.01"
+    assert f"{0.001:.2f}" == "0.00"
+
+    arrow2 = arrow.copy()
+    arrow2.t(0.3)
+    assert arrow.t() == 0.000001
+
+    arrow = Arrow().label([0, 0]).t(0)
+    assert not arrow.has_index()
+    assert arrow.has_index(check_range=False)
+    arrow.range(10)
+    assert arrow.has_index()
+    assert arrow.has_index(check_range=False)
+    arrow.reset_index()
+    assert not arrow.has_index()
+
+
+def test_quiver():
+    quiver = Quiver()
+    assert not quiver.is_wgs84()
+    assert np.all(quiver.k() == [1, 1, 1])
+    assert np.all(quiver.anchor() == [0, 0, 0])
+
+    quiver = Quiver([123, 45, 6])
+    assert quiver.is_wgs84()
+    assert np.all(quiver.anchor() == [123, 45, 6])
+    k = quiver.k()
+    np.testing.assert_allclose(k, [78846.8350939781, 111131.7774141756, 1.0], atol=1e-6)
+    np.testing.assert_allclose(np.sum(k @ quiver.inv_k()), 3.0, atol=1e-16)
+
+    arrow = Arrow([123, 45, 6])
+    updated = quiver.update(arrow, [1, 1, 1], update_direction=True)
+    np.testing.assert_allclose(
+        updated.position(), [123.00001268281724, 45.000008998326344, 7], atol=1e-8
+    )
+    np.testing.assert_allclose(updated.heading(), 45, atol=1e-8)
+
+    updated = quiver.update(arrow, [1, 1, 0], update_direction=False)
+    np.testing.assert_allclose(updated.direction(), [1, 0, 0], atol=1e-8)
+
+    # delta
+    #   ^ y (north)
+    #   |
+    #   @->
+    #   |
+    #   o---------> x (east)
+    #
+    quiver = Quiver()
+    arrow = Arrow([0, 1, 0], direction=[1, 0, 0])
+    # towards (delta in Frenet, x->forwards, y->leftwards, z->upwards)
+    updated = quiver.towards(arrow, [2, 0, 0])
+    np.testing.assert_allclose(updated.position(), [2, 1, 0], atol=1e-8)
+    # update (delta in EUN, x->east, y->north, z->up)
+    updated = quiver.update(arrow, [2, 0, 0])
+    np.testing.assert_allclose(updated.position(), [2, 1, 0], atol=1e-8)
+    #
+    arrow = Arrow([0, 1, 0], direction=Arrow._unit_vector([1, 1, 0]))
+    updated = quiver.towards(arrow, [3, 3, 0])
+    sqrt2 = np.sqrt(2)
+    np.testing.assert_allclose(updated.position(), [0, 3 * sqrt2 + 1, 0], atol=1e-8)
+    np.testing.assert_allclose(updated.direction(), [0, 1, 0], atol=1e-8)
+    updated = quiver.update(arrow, [3, 3, 0])
+    np.testing.assert_allclose(updated.position(), [3, 4, 0], atol=1e-8)
+    np.testing.assert_allclose(
+        updated.direction(), [sqrt2 / 2, sqrt2 / 2, 0], atol=1e-8
+    )
 
 
 def pytest_main(dir: str, *, test_file: str = None):
