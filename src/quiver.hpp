@@ -132,7 +132,7 @@ struct Arrow
         return d;
     }
 
-    // directly expose some on-invariant values on c++ side
+    // directly expose some non-invariant values on c++ side
     int polyline_index_ = -1;
     int segment_index_ = -1;
     double t_ = NaN;
@@ -140,7 +140,7 @@ struct Arrow
     Eigen::Vector3d position_{0.0, 0.0, 0.0}; // init to origin
   private:
     Eigen::Vector3d direction_{1.0, 0.0, 0.0}; // init to east
-    Eigen::Vector3d leftward_{0.0, 1.0, 1.0};  // init to north
+    Eigen::Vector3d leftward_{0.0, 1.0, 0.0};  // init to north
     Eigen::Vector3d upward_{0.0, 0.0, 1.0};    // init to up
 };
 
@@ -232,6 +232,33 @@ struct Quiver
         return copy;
     }
 
+    Eigen::Vector3d enu2lla(const Eigen::Vector3d &enu) const
+    {
+        return anchor_ + Eigen::Vector3d(enu.array() * inv_k_.array());
+    }
+    Eigen::Vector3d lla2enu(const Eigen::Vector3d &lla) const
+    {
+        return (lla - anchor_).array() * k_.array();
+    }
+    RowVectors lla2enu(const RowVectors &llas) const
+    {
+        RowVectors ret = llas;
+        for (int i = 0; i < 3; ++i) {
+            ret.col(i).array() -= anchor_[i];
+            ret.col(i).array() *= k_[i];
+        }
+        return ret;
+    }
+    RowVectors enu2lla(const RowVectors &enus) const
+    {
+        RowVectors ret = enus;
+        for (int i = 0; i < 3; ++i) {
+            ret.col(i).array() *= inv_k_[i];
+            ret.col(i).array() += anchor_[i];
+        }
+        return ret;
+    }
+
     // handles center,
     // searches
 
@@ -241,6 +268,5 @@ struct Quiver
     // label: polyline_index, seg_index, float
     // position, direction
 };
-
 } // namespace cubao
 #endif

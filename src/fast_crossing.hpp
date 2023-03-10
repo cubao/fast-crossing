@@ -1,21 +1,22 @@
 #ifndef CUBAO_FAST_CROSSING_HPP
 #define CUBAO_FAST_CROSSING_HPP
 
-#include "polyline_ruler.hpp"
-#include "flatbush.h"
 #include <set>
 #include <vector>
 #include <optional>
 #include <limits>
 #include <cmath>
 
+#include "flatbush.h"
+#include "polyline_ruler.hpp"
+#include "kd_quiver.hpp"
+
 namespace cubao
 {
 struct FastCrossing
 {
     using FlatBush = flatbush::FlatBush<double>;
-    using PolylineType =
-        Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
+    using PolylineType = RowVectors;
     using LabelsType = FlatBush::LabelsType;
     using IntersectionType = std::tuple<
         // intersection point, intersection ratio: t, s
@@ -28,25 +29,15 @@ struct FastCrossing
 
     int add_polyline(const PolylineType &polyline, int index = -1)
     {
-        if (index < 0) {
-            index = polyline_rulers_.size();
-        }
-        if (polyline_rulers_.find(index) != polyline_rulers_.end()) {
-            throw std::invalid_argument("duplicate index: " +
-                                        std::to_string(index));
-        }
-        polyline_rulers_.emplace(index, PolylineRuler(polyline, is_wgs84_));
         bush_.reset();
-        return index;
+        return quiver(polyline(0, 0), polyline(0, 1)).add(polyline, index);
     }
 
     int add_polyline(const Eigen::Ref<const FlatBush::PolylineType> &polyline,
                      int index = -1)
     {
-        PolylineType Nx3(polyline.rows(), 3);
-        Nx3.leftCols<2>() = polyline;
-        Nx3.col(2).setZero();
-        return add_polyline(Nx3, index);
+        bush_.reset();
+        return quiver(polyline(0, 0), polyline(0, 1)).add(polyline, index);
     }
 
     void finish() const
@@ -54,8 +45,14 @@ struct FastCrossing
         if (bush_) {
             return;
         }
-        bush_ = FlatBush(polyline_rulers_.size());
-        for (auto &pair : polyline_rulers_) {
+        if (!quiver_) {
+            bush_ = FlatBush();
+            bush_->Finish();
+            return;
+        }
+        auto &polylines = quiver_->polylines();
+        bush_ = FlatBush(polylines.size());
+        for (auto &pair : polylines) {
             auto &idx = pair.first;
             auto &polyline = pair.second.polyline();
             bush_->Add(polyline.leftCols<2>(), idx);
@@ -280,8 +277,13 @@ struct FastCrossing
     Eigen::Vector3d coordinates(int polyline_index, int seg_index,
                                 double t) const
     {
-        auto &ruler = polyline_rulers_.at(polyline_index);
-        return coordinates(ruler.polyline(), seg_index, t);
+        const PolylineRuler *ruler =
+            quiver_ ? quiver_->polyline(polyline_index) : nullptr;
+        if (!ruler) {
+            throw std::out_of_range("[exception stub] map::at " +
+                                    std::to_string(polyline_index));
+        }
+        return coordinates(ruler->polyline(), seg_index, t);
     }
     Eigen::Vector3d coordinates(const Eigen::Vector2i &index, double t) const
     {
@@ -340,23 +342,41 @@ struct FastCrossing
         return *bush_;
     }
     bool is_wgs84() const { return is_wgs84_; }
-    int num_poylines() const { return polyline_rulers_.size(); }
+    int num_poylines() const
+    {
+        return quiver_ ? quiver_->polylines().size() : 0;
+    }
     const std::map<int, PolylineRuler> &polyline_rulers() const
     {
-        return polyline_rulers_;
+        static const std::map<int, PolylineRuler> dummy;
+        if (!quiver_) {
+            return dummy;
+        }
+        return quiver_->polylines();
     }
     const PolylineRuler *polyline_ruler(int label) const
     {
-        auto itr = polyline_rulers_.find(label);
-        if (itr == polyline_rulers_.end()) {
+        if (!quiver_) {
             return nullptr;
         }
-        return &itr->second;
+        return quiver_->polyline(label);
     }
 
   private:
     const bool is_wgs84_{false};
-    std::map<int, PolylineRuler> polyline_rulers_;
+
+    std::unique_ptr<KdQuiver> quiver_;
+    KdQuiver &quiver(double lon, double lat)
+    {
+        if (!quiver_) {
+            quiver_ =
+                is_wgs84_
+                    ? std::make_unique<KdQuiver>(Eigen::Vector3d(lon, lat, 0.0))
+                    : std::make_unique<KdQuiver>();
+        }
+        return *quiver_;
+    }
+
     // auto rebuild flatbush
     mutable std::optional<FlatBush> bush_;
 };

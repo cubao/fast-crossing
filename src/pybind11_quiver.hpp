@@ -14,6 +14,7 @@
 
 #include "cubao_inline.hpp"
 #include "quiver.hpp"
+#include "kd_quiver.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -134,6 +135,41 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a, py::kw_only(),
              "update_direction"_a = true)
         //
+        .def("enu2lla",
+             py::overload_cast<const Eigen::Vector3d &>(&Quiver::enu2lla,
+                                                        py::const_),
+             "coords"_a)
+        .def(
+            "enu2lla",
+            py::overload_cast<const RowVectors &>(&Quiver::enu2lla, py::const_),
+            "coords"_a)
+        .def("lla2enu",
+             py::overload_cast<const Eigen::Vector3d &>(&Quiver::lla2enu,
+                                                        py::const_),
+             "coords"_a)
+        .def(
+            "lla2enu",
+            py::overload_cast<const RowVectors &>(&Quiver::lla2enu, py::const_),
+            "coords"_a)
+        //
+        ;
+
+    using KdQuiver = cubao::KdQuiver;
+    py::class_<KdQuiver, Quiver>(m, "KdQuiver", py::module_local())
+        .def(py::init<>())
+        .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
+        //
+        .def("add", py::overload_cast<const RowVectors &, int>(&KdQuiver::add),
+             "polyline"_a, "index"_a)
+        .def("add",
+             py::overload_cast<const Eigen::Ref<const RowVectorsNx2> &, int>(
+                 &KdQuiver::add),
+             "polyline"_a, "index"_a)
+        .def("reset", &KdQuiver::reset)
+        .def("index", py::overload_cast<int>(&KdQuiver::index), "point_index"_a)
+        .def("index", py::overload_cast<int, int>(&KdQuiver::index),
+             "polyline_index"_a, "segment_index"_a)
+        //     void add() {
         //
         ;
 }
