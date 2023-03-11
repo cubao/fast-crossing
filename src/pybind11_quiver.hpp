@@ -166,8 +166,9 @@ CUBAO_INLINE void bind_quiver(py::module &m)
                  &KdQuiver::add),
              "polyline"_a, "index"_a)
         .def("reset", &KdQuiver::reset)
-        .def("index", py::overload_cast<int>(&KdQuiver::index), "point_index"_a)
-        .def("index", py::overload_cast<int, int>(&KdQuiver::index),
+        .def("index", py::overload_cast<int>(&KdQuiver::index, py::const_),
+             "point_index"_a)
+        .def("index", py::overload_cast<int, int>(&KdQuiver::index, py::const_),
              "polyline_index"_a, "segment_index"_a)
         //     void add() {
         //

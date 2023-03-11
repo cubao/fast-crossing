@@ -7,27 +7,6 @@
 
 namespace cubao
 {
-inline std::pair<int, double> range_to_seg_t(const Eigen::VectorXd &ranges,
-                                             double range)
-{
-    // TODO, merge into polyline_ruler
-    // use lower_bound?
-    int seg_idx = 0;
-    double t = 0.0;
-    int N_ = ranges.size();
-    if (range <= 0.0) {
-        t = range / ranges[1];
-    } else if (range >= ranges[N_ - 1]) {
-        t = (range - ranges[N_ - 2]) / (ranges[N_ - 1] - ranges[N_ - 2]);
-    } else {
-        while (seg_idx + 1 < N_ && ranges[seg_idx + 1] < range) {
-            ++seg_idx;
-        }
-        t = (range - ranges[seg_idx]) / (ranges[seg_idx + 1] - ranges[seg_idx]);
-    }
-    return {seg_idx, t};
-}
-
 inline bool is_in_range(double v, const Eigen::VectorXd &intervals)
 {
     for (int i = 0, N = intervals.size(); i + 1 < N; i += 2) {
@@ -58,10 +37,7 @@ struct KdQuiver : Quiver
     }
     int add(const Eigen::Ref<const RowVectorsNx2> &polyline, int index = -1)
     {
-        RowVectors Nx3(polyline.rows(), 3);
-        Nx3.leftCols<2>() = polyline;
-        Nx3.col(2).setZero();
-        return add(Nx3, index);
+        return add(to_Nx3(polyline), index);
     }
 
     void build(bool force = false) const
@@ -70,16 +46,15 @@ struct KdQuiver : Quiver
             return;
         }
         reset_index();
-        // auto &xyzs = ruler.polyline();
-        // const int N = ruler.N();
-        // if (is_wgs84_) {
-        //     tree_.add(lla2enu(xyzs));
-        // } else {
-        //     tree_.add(xyzs);
-        // }
-        // for (int i = 0; i < N; ++i) {
-        //     index(polyline_index, i);
-        // }
+        tree_ = KdTree();
+        for (auto &pair : polylines_) {
+            int polyline_idx = pair.first;
+            auto &xyzs = pair.second.polyline();
+            tree_->add(is_wgs84_ ? lla2enu(xyzs) : xyzs);
+            for (int pt_idx = 0, N = xyzs.rows(); pt_idx < N; ++pt_idx) {
+                __index(polyline_idx, pt_idx);
+            }
+        }
     }
 
     // query
@@ -122,7 +97,11 @@ struct KdQuiver : Quiver
         const int N = hits.size();
         RowVectors coords(N, 3);
         for (int i = 0; i < N; ++i) {
-            // index(hits[i]);
+            auto _ = index(hits[i]);
+            int line_idx = _[0];
+            int pt_idx = _[1];
+            auto &ruler = polylines_.at(line_idx);
+            coords.row(i) = ruler.at(i);
         }
         return coords;
     }
@@ -130,17 +109,56 @@ struct KdQuiver : Quiver
     {
         const int N = hits.size();
         RowVectors coords(N, 3);
+        for (int i = 0; i < N; ++i) {
+            auto _ = index(hits[i]);
+            int line_idx = _[0];
+            int pt_idx = _[1];
+            auto &ruler = polylines_.at(line_idx);
+            coords.row(i) = ruler.dir(i);
+        }
         return coords;
     }
+    std::vector<Arrow> arrows(const Eigen::VectorXi &hits)
+    {
+        const int N = hits.size();
+        std::vector<Arrow> arrows;
+        arrows.reserve(N);
+        for (int i = 0; i < N; ++i) {
+            auto _ = index(hits[i]);
+            int line_idx = _[0];
+            int pt_idx = _[1];
+            auto &ruler = polylines_.at(line_idx);
+            arrows.push_back(Arrow(ruler.at(pt_idx), ruler.dir(pt_idx)));
+        }
+        return arrows;
+    }
 
-    // Eigen::VectorXi
-    // filter(const Eigen::VectorXi &hits, const Arrow &arrow,
-    //        // positions
-    //        std::optional<Eigen::VectorXd> x_slots = std::nullopt,
-    //        std::optional<Eigen::VectorXd> y_slots = std::nullopt,
-    //        std::optional<Eigen::VectorXd> z_slots = std::nullopt, )
-    // {
-    // }
+    static Eigen::VectorXi
+    filter(const std::vector<Arrow> &arrows, const Arrow &arrow,
+           // angle
+           std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
+           // positions
+           std::optional<Eigen::VectorXd> x_slots = std::nullopt,
+           std::optional<Eigen::VectorXd> y_slots = std::nullopt,
+           std::optional<Eigen::VectorXd> z_slots = std::nullopt,
+           bool is_wgs84 = false)
+    {
+        Eigen::VectorXi mask(arrows.size());
+        return mask;
+    }
+
+    Eigen::VectorXi
+    filter(const Eigen::VectorXi &hits, const Arrow &arrow,
+           std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
+           std::optional<Eigen::VectorXd> x_slots = std::nullopt,
+           std::optional<Eigen::VectorXd> y_slots = std::nullopt,
+           std::optional<Eigen::VectorXd> z_slots = std::nullopt)
+    {
+        return filter(arrows(hits), arrow,       //
+                      angle_slots,               //
+                      x_slots, y_slots, z_slots, //
+                      is_wgs84_);
+    }
 
     // helpers
     Arrow arrow(const PolylineRuler &ruler, int segment_index, double t)
@@ -161,7 +179,7 @@ struct KdQuiver : Quiver
     }
     Arrow arrow(const PolylineRuler &ruler, double range)
     {
-        auto [seg_idx, t] = range_to_seg_t(ruler.ranges(), range);
+        auto [seg_idx, t] = ruler.segment_index_t(range);
         return arrow(ruler, seg_idx, t);
     }
 
@@ -174,16 +192,11 @@ struct KdQuiver : Quiver
         index_map_.clear();
     }
 
-    int index(int polyline_index, int segment_index)
+    int index(int polyline_index, int segment_index) const
     {
-        auto [itr, new_insert] = index_map_[polyline_index].emplace(
-            segment_index, index_list_.size());
-        if (new_insert) {
-            index_list_.emplace_back(polyline_index, segment_index);
-        }
-        return itr->second;
+        return index_map_.at(polyline_index).at(segment_index);
     }
-    Eigen::Vector2i index(int index) { return index_list_[index]; }
+    Eigen::Vector2i index(int index) const { return index_list_[index]; }
 
     const std::map<int, PolylineRuler> &polylines() const { return polylines_; }
     const PolylineRuler *polyline(int index) const
@@ -209,6 +222,15 @@ struct KdQuiver : Quiver
     // polyline_index, segment_index
     mutable std::vector<Eigen::Vector2i> index_list_;
     mutable std::map<int, std::map<int, int>> index_map_;
+    int __index(int polyline_index, int segment_index) const
+    {
+        auto [itr, new_insert] = index_map_[polyline_index].emplace(
+            segment_index, index_list_.size());
+        if (new_insert) {
+            index_list_.emplace_back(polyline_index, segment_index);
+        }
+        return itr->second;
+    }
 };
 } // namespace cubao
 
