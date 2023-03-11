@@ -443,7 +443,9 @@ def test_within():
            *      *
             *     *4E
     """
-    polygon = np.array([[0, 0], [-10, 0], [-10, -10], [10, -10], [10, 10], [0, 10]], dtype=np.float64)
+    polygon = np.array(
+        [[0, 0], [-10, 0], [-10, -10], [10, -10], [10, 10], [0, 10]], dtype=np.float64
+    )
     fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
     fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
     fc.add_polyline([[6, 0], [6, 9]])  # 2C
@@ -471,6 +473,29 @@ def test_within():
             [4, 0],
         ]
     )
+
+    hits = np.array(fc.within(min=np.array([0.0, 0.0]), max=np.array([10.0, 10.0])))
+    assert np.all(hits == [[2, 0]])
+    hits = np.array(fc.within(min=np.array([-10.0, -10.0]), max=np.array([10.0, 10.0])))
+    assert np.all(
+        hits
+        == [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [2, 0],
+            [3, 0],
+            [4, 0],
+        ]
+    )
+
+    # fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    hits = np.array(fc.within(center=np.array([-5.0, 10.0]), width=6.0, height=0.5))
+    assert not len(hits)
+    hits = np.array(
+        fc.within(center=np.array([-5.0, 10.0]), width=6.0, height=0.5, heading=30.0)
+    )
+    assert np.all(hits == [[0, 0]])
 
 
 def pytest_main(dir: str, *, test_file: str = None):

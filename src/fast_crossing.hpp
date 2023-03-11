@@ -403,11 +403,11 @@ struct FastCrossing
     }
 
     std::vector<Eigen::Vector2i>
-    within(const Eigen::Vector4d &bbox,
+    within(const Eigen::Vector2d &min, const Eigen::Vector2d &max,
            bool segment_wise = true, // else point-wise
            bool sort = true) const
     {
-        auto hits = bush().Search(bbox[0], bbox[1], bbox[2], bbox[3]);
+        auto hits = bush().Search(min[0], min[1], max[0], max[1]);
         if (hits.empty()) {
             return {};
         }
@@ -428,11 +428,11 @@ struct FastCrossing
             for (auto &idx : points) {
                 auto &xyzs = quiver_->polyline(idx[0])->polyline();
                 double x = xyzs(idx[1], 0);
-                if (x < bbox[0] || x > bbox[2]) {
+                if (x < min[0] || x > max[0]) {
                     continue;
                 }
                 double y = xyzs(idx[1], 1);
-                if (y < bbox[1] || y > bbox[3]) {
+                if (y < min[1] || y > max[3]) {
                     continue;
                 }
                 ret.push_back(idx);
@@ -443,9 +443,10 @@ struct FastCrossing
         }
         return ret;
     }
-    std::vector<Eigen::Vector2i> within(const RowVectorsNx2 &polygon,
-                                        bool segment_wise = true, //
-                                        bool sort = true) const
+    std::vector<Eigen::Vector2i>
+    within(const Eigen::Ref<const RowVectorsNx2> &polygon,
+           bool segment_wise = true, //
+           bool sort = true) const
     {
         Eigen::Vector2d min = polygon.colwise().minCoeff();
         Eigen::Vector2d max = polygon.colwise().maxCoeff();
@@ -511,8 +512,8 @@ struct FastCrossing
                                         bool sort = true) const
     {
         double rad = (90.0 - heading) / 180.0 * PI;
-        Eigen::Vector2d x(std::cos(rad), std::sin(rad));
-        Eigen::Vector2d y(-x[1], x[0]);
+        Eigen::Vector2d y(std::cos(rad), std::sin(rad));
+        Eigen::Vector2d x(y[1], -y[0]);
         RowVectorsNx2 polygon(5, 3);
         polygon.row(0) = width / 2 * x - height / 2 * y;
         polygon.row(1) = width / 2 * x + height / 2 * y;
