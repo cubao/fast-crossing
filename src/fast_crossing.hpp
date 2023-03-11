@@ -332,6 +332,13 @@ struct FastCrossing
         return coordinates(idx1, ts[0]);
     }
 
+    std::pair<Eigen::Vector3d, Eigen::Vector3d> arrow(int polyline_index,
+                                                      int point_index) const
+    {
+        auto polyline = quiver_->polyline(polyline_index);
+        return {polyline->at(point_index), polyline->dir(point_index)};
+    }
+
     std::vector<IntersectionType> intersections(const PolylineType &polyline,
                                                 double z_min, double z_max,
                                                 bool dedup = true) const

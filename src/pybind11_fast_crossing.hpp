@@ -163,6 +163,10 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              py::overload_cast<const FastCrossing::IntersectionType &, bool>(
                  &FastCrossing::coordinates, py::const_),
              "intersection"_a, "second"_a = true)
+        // arrow
+        .def("arrow",
+             py::overload_cast<int, int>(&FastCrossing::arrow, py::const_),
+             py::kw_only(), "polyline_index"_a, "point_index"_a)
         //
         .def("bush", &FastCrossing::bush, rvp::reference_internal)
         .def("is_wgs84", &FastCrossing::is_wgs84)

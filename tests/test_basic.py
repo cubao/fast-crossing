@@ -57,6 +57,10 @@ def test_fast_crossing():
         xyz = fc.coordinates(2, 0, 0.5)
     assert "map::at" in str(excinfo)
 
+    xyz, dir = fc.arrow(polyline_index=0, point_index=0)
+    assert np.all(xyz == [0, 0, 0])
+    assert np.all(dir == [1, 0, 0])
+
     # query all line segment intersections
     # [
     #    (array([2.5, 0. ]),
