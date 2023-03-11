@@ -555,7 +555,7 @@ struct FastCrossing
     nearest(const Eigen::Vector2i &index, //
             bool return_squared_l2 = false) const
     {
-        return {};
+        return nearest(point_index(index[0], index[1]), return_squared_l2);
     }
 
     std::pair<IntNx2, Eigen::VectorXd>

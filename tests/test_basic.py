@@ -515,12 +515,24 @@ def test_nearst():
     polygon = np.array(
         [[0, 0], [-10, 0], [-10, -10], [10, -10], [10, 10], [0, 10]], dtype=np.float64
     )
+    assert len(polygon)
     fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
     fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
     fc.add_polyline([[6, 0], [6, 9]])  # 2C
     fc.add_polyline([[7, -5], [18, -5]])  # 3D
     fc.add_polyline([[0, -5], [0, -15]])  # 4E
-    # fc.nearest()
+
+    # nearest
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]))
+    assert np.all(idx == [4, 0]) and np.fabs(dist - 5.0) < 1e-6
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), return_squared_l2=True)
+    assert np.all(idx == [4, 0]) and np.fabs(dist - 25.0) < 1e-6
+
+    # nearest
+    idx, dist = fc.nearest(np.array([0, 0]))
+    assert np.all(idx == [0, 1]) and np.fabs(dist - 6.0) < 1e-6
+    idx, dist = fc.nearest(np.array([0, 1]))
+    assert np.all(idx == [0, 0]) and np.fabs(dist - 6.0) < 1e-6
 
 
 def pytest_main(dir: str, *, test_file: str = None):

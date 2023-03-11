@@ -130,6 +130,16 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "heading"_a = 0.0,       //
              "segment_wise"_a = true, //
              "sort"_a = true)
+        // nearest
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, bool>(
+                 &FastCrossing::nearest, py::const_),
+             "position"_a, py::kw_only(), "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector2i &, bool>(
+                 &FastCrossing::nearest, py::const_),
+             "index"_a, py::kw_only(), "return_squared_l2"_a = false)
+
         // coordinates
         .def("coordinates",
              py::overload_cast<int, int, double>(&FastCrossing::coordinates,
