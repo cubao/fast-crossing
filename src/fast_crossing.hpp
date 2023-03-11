@@ -336,6 +336,47 @@ struct FastCrossing
         return intersections(to_Nx3(polyline), z_min, z_max, dedup);
     }
 
+    std::vector<Eigen::Vector2i> within(const Eigen::Vector4d &bbox)
+    {
+        return {};
+    }
+    std::vector<Eigen::Vector2i>
+    within(const Eigen::Ref<const RowVectorsNx2> &polygon)
+    {
+        return {};
+    }
+
+    // index
+    Eigen::Vector2i index(int pt_index) const
+    {
+        return quiver_->index(pt_index);
+    }
+    int index(int polyline_index, int segment_index) const
+    {
+        return quiver_->index(polyline_index, segment_index);
+    }
+
+    // nearest
+    std::pair<int, double> nearest(const Eigen::Vector3d &position, //
+                                   bool return_squared_l2 = false) const
+    {
+        return quiver_->nearest(position, return_squared_l2);
+    }
+    std::pair<int, double> nearest(int index, //
+                                   bool return_squared_l2 = false) const
+    {
+        return quiver_->nearest(index, return_squared_l2);
+    }
+    std::pair<Eigen::VectorXi, Eigen::VectorXd>
+    nearest(const Eigen::Vector3d &position, //
+            std::optional<int> k = std::nullopt,
+            std::optional<double> radius = std::nullopt,
+            bool sorted = true, //
+            bool return_squared_l2 = false) const
+    {
+        return {};
+    }
+
     const FlatBush &bush() const
     {
         finish();
