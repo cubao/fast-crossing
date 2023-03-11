@@ -247,10 +247,7 @@ struct FastCrossing
         return ret;
     }
 
-    // xy = ret[:, 0]  # 直接取出所有交点
-    // ts = ret[:, 1]  # 所有分位点
-    // label1 = ret[:, 2]  # 所有 label1（当前 polyline 的 label）
-    // label2 = ret[:, 3]  # tree 中 line segs 的 label
+    // xy, ts, label_of_cur_line, label_of_tree_line
     std::vector<IntersectionType> intersections(const PolylineType &polyline,
                                                 bool dedup = true) const
     {
