@@ -134,12 +134,22 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
         .def("nearest",
              py::overload_cast<const Eigen::Vector3d &, bool>(
                  &FastCrossing::nearest, py::const_),
-             "position"_a, py::kw_only(), "return_squared_l2"_a = false)
+             "position"_a, py::kw_only(), //
+             "return_squared_l2"_a = false)
         .def("nearest",
              py::overload_cast<const Eigen::Vector2i &, bool>(
                  &FastCrossing::nearest, py::const_),
-             "index"_a, py::kw_only(), "return_squared_l2"_a = false)
-
+             "index"_a, py::kw_only(), //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, std::optional<int>,
+                               std::optional<double>, bool, bool>(
+                 &FastCrossing::nearest, py::const_),
+             "position"_a, py::kw_only(), //
+             "k"_a = std::nullopt,        //
+             "radius"_a = std::nullopt,   //
+             "sorted"_a = true,           //
+             "return_squared_l2"_a = false)
         // coordinates
         .def("coordinates",
              py::overload_cast<int, int, double>(&FastCrossing::coordinates,

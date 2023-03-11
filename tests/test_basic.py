@@ -534,6 +534,18 @@ def test_nearst():
     idx, dist = fc.nearest(np.array([0, 1]))
     assert np.all(idx == [0, 0]) and np.fabs(dist - 6.0) < 1e-6
 
+    # nearest k
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), k=2)
+    assert np.all(idx == [[4, 0], [2, 0]])
+    np.testing.assert_allclose(dist, [5, 6], atol=1e-15)
+    # nearest radius
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), radius=6 + 1e-3)
+    assert np.all(idx == [[4, 0], [2, 0]])
+    np.testing.assert_allclose(dist, [5, 6], atol=1e-15)
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), radius=5 + 1e-3)
+    assert np.all(idx == [[4, 0]])
+    np.testing.assert_allclose(dist, [5], atol=1e-15)
+
 
 def pytest_main(dir: str, *, test_file: str = None):
 
