@@ -10,6 +10,7 @@
 #include "flatbush.h"
 #include "polyline_ruler.hpp"
 #include "kd_quiver.hpp"
+#include "point_in_polygon.hpp"
 
 namespace cubao
 {
@@ -27,6 +28,17 @@ template <typename T> struct hash_eigen
         return hash_seed;
     }
 };
+
+inline void sort_indexes(std::vector<Eigen::Vector2i> &indexes)
+{
+    std::sort(indexes.begin(), indexes.end(),
+              [](const auto &idx1, const auto &idx2) {
+                  if (idx1[0] == idx2[0]) {
+                      return idx1[1] < idx2[1];
+                  }
+                  return idx1[0] < idx2[0];
+              });
+}
 
 struct FastCrossing
 {
@@ -232,6 +244,10 @@ struct FastCrossing
         return ret;
     }
 
+    // xy = ret[:, 0]  # 直接取出所有交点
+    // ts = ret[:, 1]  # 所有分位点
+    // label1 = ret[:, 2]  # 所有 label1（当前 polyline 的 label）
+    // label2 = ret[:, 3]  # tree 中 line segs 的 label
     std::vector<IntersectionType> intersections(const PolylineType &polyline,
                                                 bool dedup = true) const
     {
@@ -356,23 +372,46 @@ struct FastCrossing
     {
         return bush_->label(index);
     }
+    std::vector<Eigen::Vector2i>
+    segment_index(const Eigen::VectorXi &indexes) const
+    {
+        const int N = indexes.size();
+        std::vector<Eigen::Vector2i> ret;
+        ret.reserve(N);
+        for (int i = 0; i < N; ++i) {
+            ret.push_back(segment_index(indexes[i]));
+        }
+        return ret;
+    }
     // point index
     Eigen::Vector2i point_index(int index) const
     {
         return quiver_->index(index);
     }
+    std::vector<Eigen::Vector2i>
+    point_index(const Eigen::VectorXi &indexes) const
+    {
+        const int N = indexes.size();
+        std::vector<Eigen::Vector2i> ret;
+        ret.reserve(N);
+        for (int i = 0; i < N; ++i) {
+            ret.push_back(point_index(indexes[i]));
+        }
+        return ret;
+    }
 
     std::vector<Eigen::Vector2i>
     within(const Eigen::Vector4d &bbox,
-           bool segment_wise = true /* else point-wise */)
+           bool segment_wise = true, // else point-wise
+           bool sort = true)
     {
-        std::vector<Eigen::Vector2i> ret;
         auto hits = bush().Search(bbox[0], bbox[1], bbox[2], bbox[3]);
+        if (hits.empty()) {
+            return {};
+        }
+        std::vector<Eigen::Vector2i> ret;
         if (segment_wise) {
-            ret.reserve(hits.size());
-            for (auto &idx : hits) {
-                ret.push_back(segment_index(idx));
-            }
+            ret = segment_index(Eigen::VectorXi::Map(&hits[0], hits.size()));
         } else {
             auto points = std::unordered_set<Eigen::Vector2i,
                                              hash_eigen<Eigen::Vector2i>>{};
@@ -397,20 +436,71 @@ struct FastCrossing
                 ret.push_back(idx);
             }
         }
-        std::sort(ret.begin(), ret.end(),
-                  [](const auto &idx1, const auto &idx2) {
-                      if (idx1[0] == idx2[0]) {
-                          return idx1[1] < idx2[1];
-                      }
-                      return idx1[0] < idx2[0];
-                  });
+        if (sort) {
+            sort_indexes(ret);
+        }
         return ret;
     }
     std::vector<Eigen::Vector2i>
     within(const Eigen::Ref<const RowVectorsNx2> &polygon,
-           bool segment_wise = true)
+           bool segment_wise = true, //
+           bool sort = true)
     {
-        return {};
+        Eigen::Vector2d min = polygon.colwise().minCoeff();
+        Eigen::Vector2d max = polygon.colwise().maxCoeff();
+        auto hits = bush().Search(min[0], min[1], max[0], max[1]);
+        if (hits.empty()) {
+            return {};
+        }
+        const int N = hits.size();
+        std::vector<Eigen::Vector2i> segs;
+        segs.reserve(N);
+        RowVectorsNx2 P0(N, 2);
+        RowVectorsNx2 P1(N, 2);
+        {
+            int i = -1;
+            for (auto &idx : hits) {
+                ++i;
+                auto index = segment_index(idx);
+                segs.push_back(index);
+                auto &xyzs = quiver_->polyline(index[0])->polyline();
+                P0.row(i) = xyzs.row(index[1]).head(2);
+                P1.row(i) = xyzs.row(index[1] + 1).head(2);
+            }
+        }
+        auto mask0 = point_in_polygon(P0, polygon);
+        auto mask1 = point_in_polygon(P1, polygon);
+
+        auto indexes =
+            std::unordered_set<Eigen::Vector2i, hash_eigen<Eigen::Vector2i>>{};
+        if (segment_wise) {
+            // intersects polygon itself
+            for (auto &xy_ts_label1_label2 : intersections(to_Nx3(polygon))) {
+                indexes.insert(std::get<3>(xy_ts_label1_label2));
+            }
+            // one point of segment inside polygon: mask0 | mask1
+            for (int i = 0; i < N; ++i) {
+                if (mask0[i] || mask1[i]) {
+                    indexes.insert(segs[i]);
+                }
+            }
+        } else {
+            for (int i = 0; i < N; ++i) {
+                if (mask0[i]) {
+                    indexes.insert(segs[i]);
+                }
+            }
+            for (int i = 0; i < N; ++i) {
+                if (mask1[i]) {
+                    indexes.insert({segs[i][0], segs[i][1] + 1});
+                }
+            }
+        }
+        auto ret = std::vector<Eigen::Vector2i>(indexes.begin(), indexes.end());
+        if (sort) {
+            sort_indexes(ret);
+        }
+        return ret;
     }
 
     // nearest
