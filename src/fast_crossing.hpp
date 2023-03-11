@@ -13,6 +13,21 @@
 
 namespace cubao
 {
+// https://github.com/isl-org/Open3D/blob/88693971ae7a7c3df27546ff7c5b1d91188e39cf/cpp/open3d/utility/Helper.h#L71
+template <typename T> struct hash_eigen
+{
+    std::size_t operator()(T const &matrix) const
+    {
+        size_t hash_seed = 0;
+        for (int i = 0; i < (int)matrix.size(); i++) {
+            auto elem = *(matrix.data() + i);
+            hash_seed ^= std::hash<typename T::Scalar>()(elem) + 0x9e3779b9 +
+                         (hash_seed << 6) + (hash_seed >> 2);
+        }
+        return hash_seed;
+    }
+};
+
 struct FastCrossing
 {
     using FlatBush = flatbush::FlatBush<double>;
@@ -336,24 +351,46 @@ struct FastCrossing
         return intersections(to_Nx3(polyline), z_min, z_max, dedup);
     }
 
-    std::vector<Eigen::Vector2i> within(const Eigen::Vector4d &bbox)
+    // segment index
+    Eigen::Vector2i segment_index(int index) const
     {
+        return bush_->label(index);
+    }
+    // point index
+    Eigen::Vector2i point_index(int index) const
+    {
+        return quiver_->index(index);
+    }
+
+    std::vector<Eigen::Vector2i>
+    within(const Eigen::Vector4d &bbox,
+           bool segment_wise = true /* else point-wise */)
+    {
+        std::vector<Eigen::Vector2i> ret;
+        auto hits = bush().Search(bbox[0], bbox[1], bbox[2], bbox[3]);
+        if (segment_wise) {
+            ret.reserve(hits.size());
+            for (auto &idx : hits) {
+                ret.push_back(segment_index(idx));
+            }
+            return ret;
+        }
+        std::unordered_set<Eigen::Vector2i, hash_eigen<Eigen::Vector2i>> points;
+        for (auto &idx : hits) {
+            auto index = segment_index(idx);
+            // first point of segment
+            points.insert(index);
+            index[1] += 1;
+            // second point of segment
+            points.insert(index);
+        }
         return {};
     }
     std::vector<Eigen::Vector2i>
-    within(const Eigen::Ref<const RowVectorsNx2> &polygon)
+    within(const Eigen::Ref<const RowVectorsNx2> &polygon,
+           bool segment_wise = true)
     {
         return {};
-    }
-
-    // index
-    Eigen::Vector2i index(int pt_index) const
-    {
-        return quiver_->index(pt_index);
-    }
-    int index(int polyline_index, int segment_index) const
-    {
-        return quiver_->index(polyline_index, segment_index);
     }
 
     // nearest
