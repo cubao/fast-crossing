@@ -498,6 +498,31 @@ def test_within():
     assert np.all(hits == [[0, 0]])
 
 
+def test_nearst():
+    fc = FastCrossing()
+    """
+          0A      ┌────────┐
+           ****   │    *2C │
+                  │    *   │
+    1B  ┌─────────o    *   │
+      * │                  │
+       *│               **********3D
+        *         *        │
+        └─*───────*────────┘
+           *      *
+            *     *4E
+    """
+    polygon = np.array(
+        [[0, 0], [-10, 0], [-10, -10], [10, -10], [10, 10], [0, 10]], dtype=np.float64
+    )
+    fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
+    fc.add_polyline([[6, 0], [6, 9]])  # 2C
+    fc.add_polyline([[7, -5], [18, -5]])  # 3D
+    fc.add_polyline([[0, -5], [0, -15]])  # 4E
+    # fc.nearest()
+
+
 def pytest_main(dir: str, *, test_file: str = None):
 
     os.chdir(dir)

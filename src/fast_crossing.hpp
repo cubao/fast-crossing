@@ -15,6 +15,7 @@
 namespace cubao
 {
 constexpr double PI = 3.14159265358979323846;
+using IntNx2 = Eigen::Matrix<int, Eigen::Dynamic, 2, Eigen::RowMajor>;
 
 // https://github.com/isl-org/Open3D/blob/88693971ae7a7c3df27546ff7c5b1d91188e39cf/cpp/open3d/utility/Helper.h#L71
 template <typename T> struct hash_eigen
@@ -401,6 +402,10 @@ struct FastCrossing
         }
         return ret;
     }
+    int point_index(int polyline_index, int point_index) const
+    {
+        return quiver_->index(polyline_index, point_index);
+    }
 
     std::vector<Eigen::Vector2i>
     within(const Eigen::Vector2d &min, const Eigen::Vector2d &max,
@@ -532,24 +537,51 @@ struct FastCrossing
     }
 
     // nearest
-    std::pair<int, double> nearest(const Eigen::Vector3d &position, //
-                                   bool return_squared_l2 = false) const
+    std::pair<Eigen::Vector2i, double>
+    nearest(const Eigen::Vector3d &position, //
+            bool return_squared_l2 = false) const
     {
-        return quiver_->nearest(position, return_squared_l2);
+        auto [idx, dist] = quiver_->nearest(position, return_squared_l2);
+        return {point_index(idx), dist};
     }
-    std::pair<int, double> nearest(int index, //
-                                   bool return_squared_l2 = false) const
+    std::pair<Eigen::Vector2i, double>
+    nearest(int index, //
+            bool return_squared_l2 = false) const
     {
-        return quiver_->nearest(index, return_squared_l2);
+        auto [idx, dist] = quiver_->nearest(index, return_squared_l2);
+        return {point_index(idx), dist};
     }
-    std::pair<Eigen::VectorXi, Eigen::VectorXd>
+    std::pair<Eigen::Vector2i, double>
+    nearest(const Eigen::Vector2i &index, //
+            bool return_squared_l2 = false) const
+    {
+        return {};
+    }
+
+    std::pair<IntNx2, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             std::optional<int> k = std::nullopt,
             std::optional<double> radius = std::nullopt,
             bool sorted = true, //
             bool return_squared_l2 = false) const
     {
-        return {};
+        if (k) {
+            auto [ii, dd] =
+                quiver_->nearest(position, *k, sorted, return_squared_l2);
+            auto vec_ii = point_index(ii);
+            return {
+                Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),
+                dd};
+        } else if (radius) {
+            auto [ii, dd] =
+                quiver_->nearest(position, *radius, sorted, return_squared_l2);
+            auto vec_ii = point_index(ii);
+            return {
+                Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),
+                dd};
+        } else {
+            throw std::invalid_argument("should specify k or radius");
+        }
     }
 
     const FlatBush &bush() const
