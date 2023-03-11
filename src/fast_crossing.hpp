@@ -373,18 +373,38 @@ struct FastCrossing
             for (auto &idx : hits) {
                 ret.push_back(segment_index(idx));
             }
-            return ret;
+        } else {
+            auto points = std::unordered_set<Eigen::Vector2i,
+                                             hash_eigen<Eigen::Vector2i>>{};
+            for (auto &idx : hits) {
+                auto index = segment_index(idx);
+                // first point of segment
+                points.insert(index);
+                index[1] += 1;
+                // second point of segment
+                points.insert(index);
+            }
+            for (auto &idx : points) {
+                auto &xyzs = quiver_->polyline(idx[0])->polyline();
+                double x = xyzs(idx[1], 0);
+                if (x < bbox[0] || x > bbox[2]) {
+                    continue;
+                }
+                double y = xyzs(idx[1], 1);
+                if (y < bbox[1] || y > bbox[3]) {
+                    continue;
+                }
+                ret.push_back(idx);
+            }
         }
-        std::unordered_set<Eigen::Vector2i, hash_eigen<Eigen::Vector2i>> points;
-        for (auto &idx : hits) {
-            auto index = segment_index(idx);
-            // first point of segment
-            points.insert(index);
-            index[1] += 1;
-            // second point of segment
-            points.insert(index);
-        }
-        return {};
+        std::sort(ret.begin(), ret.end(),
+                  [](const auto &idx1, const auto &idx2) {
+                      if (idx1[0] == idx2[0]) {
+                          return idx1[1] < idx2[1];
+                      }
+                      return idx1[0] < idx2[0];
+                  });
+        return ret;
     }
     std::vector<Eigen::Vector2i>
     within(const Eigen::Ref<const RowVectorsNx2> &polygon,
