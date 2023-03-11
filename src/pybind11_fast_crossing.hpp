@@ -88,6 +88,43 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                 double, double, bool>(&FastCrossing::intersections, py::const_),
             "polyline"_a, py::kw_only(), "z_min"_a, "z_max"_a, "dedup"_a = true,
             "crossing intersections with polyline (sorted by t ratio)")
+        // segment_index
+        .def("segment_index",
+             py::overload_cast<int>(&FastCrossing::segment_index, py::const_),
+             "index"_a)
+        .def("segment_index",
+             py::overload_cast<const Eigen::VectorXi &>(
+                 &FastCrossing::segment_index, py::const_),
+             "indexes"_a)
+        // point_index
+        .def("point_index",
+             py::overload_cast<int>(&FastCrossing::point_index, py::const_),
+             "index"_a)
+        .def("point_index",
+             py::overload_cast<const Eigen::VectorXi &>(
+                 &FastCrossing::point_index, py::const_),
+             "indexes"_a)
+        // within
+        .def("within",
+             py::overload_cast<const Eigen::Vector4d &, bool, bool>(
+                 &FastCrossing::within, py::const_),
+             py::kw_only(), //
+             "bbox"_a,
+             "segment_wise"_a = true, //
+             "sort"_a = true)
+        .def("within",
+             py::overload_cast<const RowVectorsNx2 &, bool, bool>(
+                 &FastCrossing::within, py::const_),
+             py::kw_only(), "polygon"_a,
+             "segment_wise"_a = true, //
+             "sort"_a = true)
+        .def("within",
+             py::overload_cast<const Eigen::Vector2d &, double, double, double,
+                               bool, bool>(&FastCrossing::within, py::const_),
+             py::kw_only(), "center"_a, "width"_a, "height"_a,
+             "heading"_a = 0.0,
+             "segment_wise"_a = true, //
+             "sort"_a = true)
         // coordinates
         .def("coordinates",
              py::overload_cast<int, int, double>(&FastCrossing::coordinates,

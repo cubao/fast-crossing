@@ -14,6 +14,8 @@
 
 namespace cubao
 {
+constexpr double PI = 3.14159265358979323846;
+
 // https://github.com/isl-org/Open3D/blob/88693971ae7a7c3df27546ff7c5b1d91188e39cf/cpp/open3d/utility/Helper.h#L71
 template <typename T> struct hash_eigen
 {
@@ -403,7 +405,7 @@ struct FastCrossing
     std::vector<Eigen::Vector2i>
     within(const Eigen::Vector4d &bbox,
            bool segment_wise = true, // else point-wise
-           bool sort = true)
+           bool sort = true) const
     {
         auto hits = bush().Search(bbox[0], bbox[1], bbox[2], bbox[3]);
         if (hits.empty()) {
@@ -441,10 +443,9 @@ struct FastCrossing
         }
         return ret;
     }
-    std::vector<Eigen::Vector2i>
-    within(const Eigen::Ref<const RowVectorsNx2> &polygon,
-           bool segment_wise = true, //
-           bool sort = true)
+    std::vector<Eigen::Vector2i> within(const RowVectorsNx2 &polygon,
+                                        bool segment_wise = true, //
+                                        bool sort = true) const
     {
         Eigen::Vector2d min = polygon.colwise().minCoeff();
         Eigen::Vector2d max = polygon.colwise().maxCoeff();
@@ -501,6 +502,32 @@ struct FastCrossing
             sort_indexes(ret);
         }
         return ret;
+    }
+
+    std::vector<Eigen::Vector2i> within(const Eigen::Vector2d &center,
+                                        double width, double height,
+                                        double heading = 0.0,
+                                        bool segment_wise = true, //
+                                        bool sort = true) const
+    {
+        double rad = (90.0 - heading) / 180.0 * PI;
+        Eigen::Vector2d x(std::cos(rad), std::sin(rad));
+        Eigen::Vector2d y(-x[1], x[0]);
+        RowVectorsNx2 polygon(5, 3);
+        polygon.row(0) = width / 2 * x - height / 2 * y;
+        polygon.row(1) = width / 2 * x + height / 2 * y;
+        polygon.row(2) = -width / 2 * x + height / 2 * y;
+        polygon.row(3) = -width / 2 * x - height / 2 * y;
+        polygon.row(4) = width / 2 * x - height / 2 * y;
+        if (is_wgs84_) {
+            polygon = enu2lla(to_Nx3(polygon),
+                              Eigen::Vector3d(center[0], center[1], 0.0))
+                          .leftCols(2);
+        } else {
+            polygon.col(0).array() += center[0];
+            polygon.col(1).array() += center[1];
+        }
+        return within(polygon, segment_wise, sort);
     }
 
     // nearest
