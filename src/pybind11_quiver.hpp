@@ -158,13 +158,44 @@ CUBAO_INLINE void bind_quiver(py::module &m)
     py::class_<KdQuiver, Quiver>(m, "KdQuiver", py::module_local())
         .def(py::init<>())
         .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
-        //
+        // add
         .def("add", py::overload_cast<const RowVectors &, int>(&KdQuiver::add),
              "polyline"_a, "index"_a)
         .def("add",
              py::overload_cast<const Eigen::Ref<const RowVectorsNx2> &, int>(
                  &KdQuiver::add),
              "polyline"_a, "index"_a)
+        // nearest
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, bool>(
+                 &KdQuiver::nearest, py::const_),
+             "position"_a, py::kw_only(), //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<int, bool>(&KdQuiver::nearest, py::const_),
+             "index"_a, py::kw_only(), //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, int, bool, bool>(
+                 &KdQuiver::nearest, py::const_),
+             "position"_a, py::kw_only(), //
+             "k"_a,                       //
+             "sort"_a = true,             //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, double, bool, bool>(
+                 &KdQuiver::nearest, py::const_),
+             "position"_a, py::kw_only(), //
+             "radius"_a,                  //
+             "sort"_a = true,             //
+             "return_squared_l2"_a = false)
+        // positions
+        .def("positions", &KdQuiver::positions, "indexes"_a)
+        // directions
+        .def("directions", &KdQuiver::directions, "indexes"_a)
+        // arrows
+        .def("arrows", &KdQuiver::arrows, "indexes"_a)
+        //
         .def("reset", &KdQuiver::reset)
         .def("index", py::overload_cast<int>(&KdQuiver::index, py::const_),
              "point_index"_a)

@@ -72,23 +72,23 @@ struct KdQuiver : Quiver
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             int k,                           //
-            bool sorted = true,              //
+            bool sort = true,                //
             bool return_squared_l2 = false) const
     {
         return tree().nearest(is_wgs84_ ? lla2enu(position) : position, //
                               k,                                        //
-                              sorted,                                   //
+                              sort,                                     //
                               return_squared_l2);
     }
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             double radius,                   //
-            bool sorted = true,              //
+            bool sort = true,                //
             bool return_squared_l2 = false) const
     {
         return tree().nearest(is_wgs84_ ? lla2enu(position) : position, //
                               radius,                                   //
-                              sorted,                                   //
+                              sort,                                     //
                               return_squared_l2);
     }
 
@@ -147,6 +147,19 @@ struct KdQuiver : Quiver
         return mask;
     }
 
+    static Eigen::VectorXi select_by_mask(const Eigen::VectorXi &indexes,
+                                          const Eigen::VectorXi &mask)
+    {
+        std::vector<int> ret;
+        ret.reserve(mask.sum());
+        for (int i = 0, N = indexes.size(); i < N; ++i) {
+            if (mask[i]) {
+                ret.push_back(indexes[i]);
+            }
+        }
+        return Eigen::VectorXi::Map(&ret[0], ret.size());
+    }
+
     Eigen::VectorXi
     filter(const Eigen::VectorXi &hits, const Arrow &arrow,
            std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
@@ -154,10 +167,11 @@ struct KdQuiver : Quiver
            std::optional<Eigen::VectorXd> y_slots = std::nullopt,
            std::optional<Eigen::VectorXd> z_slots = std::nullopt)
     {
-        return filter(arrows(hits), arrow,       //
-                      angle_slots,               //
-                      x_slots, y_slots, z_slots, //
-                      is_wgs84_);
+        auto mask = filter(arrows(hits), arrow,       //
+                           angle_slots,               //
+                           x_slots, y_slots, z_slots, //
+                           is_wgs84_);
+        return select_by_mask(hits, mask);
     }
 
     // helpers

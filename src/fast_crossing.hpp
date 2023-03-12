@@ -566,19 +566,19 @@ struct FastCrossing
     nearest(const Eigen::Vector3d &position, //
             std::optional<int> k = std::nullopt,
             std::optional<double> radius = std::nullopt,
-            bool sorted = true, //
+            bool sort = true, //
             bool return_squared_l2 = false) const
     {
         if (k) {
             auto [ii, dd] =
-                quiver_->nearest(position, *k, sorted, return_squared_l2);
+                quiver_->nearest(position, *k, sort, return_squared_l2);
             auto vec_ii = point_index(ii);
             return {
                 Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),
                 dd};
         } else if (radius) {
             auto [ii, dd] =
-                quiver_->nearest(position, *radius, sorted, return_squared_l2);
+                quiver_->nearest(position, *radius, sort, return_squared_l2);
             auto vec_ii = point_index(ii);
             return {
                 Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),

@@ -148,7 +148,7 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "position"_a, py::kw_only(), //
              "k"_a = std::nullopt,        //
              "radius"_a = std::nullopt,   //
-             "sorted"_a = true,           //
+             "sort"_a = true,             //
              "return_squared_l2"_a = false)
         // coordinates
         .def("coordinates",

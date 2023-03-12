@@ -57,15 +57,15 @@ CUBAO_INLINE void bind_nanoflann_kdtree(py::module &m)
              py::overload_cast<const Eigen::Vector3d &, int, bool, bool>(
                  &KdTree::nearest, py::const_),
              "position"_a, py::kw_only(),
-             "k"_a,             //
-             "sorted"_a = true, //
+             "k"_a,           //
+             "sort"_a = true, //
              "return_squared_l2"_a = false)
         .def("nearest",
              py::overload_cast<const Eigen::Vector3d &, double, bool, bool>(
                  &KdTree::nearest, py::const_),
              "position"_a, py::kw_only(),
-             "radius"_a,        //
-             "sorted"_a = true, //
+             "radius"_a,      //
+             "sort"_a = true, //
              "return_squared_l2"_a = false)
         //
         ;
