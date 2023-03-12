@@ -474,9 +474,53 @@ def test_kdquiver():
     # for arrow in arrows:
     #     print(arrow)
     assert len(ii) == len(dd) == len(arrows) == 5
+    assert np.all(ii == [6, 11, 4, 1, 3])
     ii2, dd2 = quiver.nearest([4.0, 2.5, 0.0], k=5)
     assert np.all(ii == ii2)
     assert np.all(dd == dd2)
+
+    filter = Quiver.FilterParams()
+    assert filter.x_slots() is None
+    assert filter.y_slots() is None
+    assert filter.z_slots() is None
+    assert filter.angle_slots() is None
+    filter.x_slots([1, 2, 3, 4]).angle_slots([-50, 50])
+    assert np.all(filter.x_slots() == [1, 2, 3, 4])
+    assert np.all(filter.angle_slots() == [-50, 50])
+
+    arrow = Arrow([4.0, 2.5, 0.0], [1.0, 0.0, 0.0])
+    ii, dd = quiver.nearest(arrow.position(), radius=3)
+    assert len(ii) == 5
+    # for arr in quiver.arrows(ii):
+    #     print('\n', arr, sep=';')
+    ii2 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams(),
+    )
+    assert np.all(ii == ii2)
+    ii_lefts = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().y_slots([0.0, 10]),  # only lefts
+    )
+    assert len(ii_lefts) == 4
+    ii_rights = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().y_slots([-10, 0]),  # only rights
+    )
+    assert len(ii_rights) == 1
+    assert np.all(np.sort(ii) == np.sort([*ii_lefts, *ii_rights]))
+    ii, dd = quiver.nearest(arrow.position(), radius=100)
+    assert len(ii) == 16
+    ii, dd = quiver.nearest(arrow.position(), radius=100)
+    ii = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().z_slots([9, 11]),
+    )
+    assert len(ii) == 3
 
 
 def test_within():

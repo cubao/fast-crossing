@@ -159,28 +159,24 @@ CUBAO_INLINE void bind_quiver(py::module &m)
     using FilterParams = Quiver::FilterParams;
     py::class_<FilterParams>(pyQuiver, "FilterParams", py::module_local())
         .def(py::init<>())
-        .def("x_slots", py::overload_cast<>(&FilterParams::x_slots, py::const_),
-             rvp::reference_internal)
+        .def("x_slots", py::overload_cast<>(&FilterParams::x_slots, py::const_))
         .def("x_slots",
              py::overload_cast<const std::optional<Eigen::VectorXd> &>(
                  &FilterParams::x_slots),
              rvp::reference_internal)
-        .def("y_slots", py::overload_cast<>(&FilterParams::y_slots, py::const_),
-             rvp::reference_internal)
+        .def("y_slots", py::overload_cast<>(&FilterParams::y_slots, py::const_))
         .def("y_slots",
              py::overload_cast<const std::optional<Eigen::VectorXd> &>(
                  &FilterParams::y_slots),
              rvp::reference_internal)
-        .def("z_slots", py::overload_cast<>(&FilterParams::z_slots, py::const_),
-             rvp::reference_internal)
+        .def("z_slots", py::overload_cast<>(&FilterParams::z_slots, py::const_))
         .def("z_slots",
              py::overload_cast<const std::optional<Eigen::VectorXd> &>(
                  &FilterParams::z_slots),
              rvp::reference_internal)
         .def("angle_slots",
-             py::overload_cast<>(&FilterParams::angle_slots, py::const_),
-             rvp::reference_internal)
-        .def("agnle_slots",
+             py::overload_cast<>(&FilterParams::angle_slots, py::const_))
+        .def("angle_slots",
              py::overload_cast<const std::optional<Eigen::VectorXd> &>(
                  &FilterParams::angle_slots),
              rvp::reference_internal)
@@ -240,6 +236,27 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("arrow",
              py::overload_cast<int, double>(&KdQuiver::arrow, py::const_),
              "polyline_index"_a, py::kw_only(), "range"_a)
+        // filter
+        .def_static("_filter",
+                    py::overload_cast<const std::vector<Arrow> &,   //
+                                      const Arrow &,                //
+                                      const Quiver::FilterParams &, //
+                                      bool                          //
+                                      >(&KdQuiver::filter),
+                    py::kw_only(), //
+                    "arrows"_a,    //
+                    "arrow"_a,     //
+                    "params"_a,    //
+                    "is_wgs84"_a = false)
+        .def("filter",
+             py::overload_cast<const Eigen::VectorXi &,     //
+                               const Arrow &,               //
+                               const Quiver::FilterParams & //
+                               >(&KdQuiver::filter, py::const_),
+             py::kw_only(), //
+             "hits"_a,      //
+             "arrow"_a,     //
+             "params"_a)
         //
         .def("reset", &KdQuiver::reset)
         .def("index", py::overload_cast<int>(&KdQuiver::index, py::const_),

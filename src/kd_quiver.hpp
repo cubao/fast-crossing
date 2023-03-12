@@ -118,7 +118,7 @@ struct KdQuiver : Quiver
         }
         return coords;
     }
-    std::vector<Arrow> arrows(const Eigen::VectorXi &hits)
+    std::vector<Arrow> arrows(const Eigen::VectorXi &hits) const
     {
         const int N = hits.size();
         std::vector<Arrow> arrows;
@@ -219,7 +219,7 @@ struct KdQuiver : Quiver
     }
 
     Eigen::VectorXi filter(const Eigen::VectorXi &hits, const Arrow &arrow,
-                           const Quiver::FilterParams &params)
+                           const Quiver::FilterParams &params) const
     {
         auto mask = filter(arrows(hits), arrow, //
                            params, is_wgs84_);

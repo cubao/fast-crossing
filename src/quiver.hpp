@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <Eigen/Core>
+#include <dbg.h>
 
 namespace cubao
 {
@@ -262,24 +263,24 @@ struct Quiver
 
     struct FilterParams
     {
-        // getter
-        const Eigen::VectorXd *x_slots() const
+        FilterParams() = default;
+        // fluent API
+        const std::optional<Eigen::VectorXd> &x_slots() const
         {
-            return x_slots_ ? &*x_slots_ : nullptr;
+            return x_slots_;
         }
-        const Eigen::VectorXd *y_slots() const
+        const std::optional<Eigen::VectorXd> &y_slots() const
         {
-            return y_slots_ ? &*y_slots_ : nullptr;
+            return y_slots_;
         }
-        const Eigen::VectorXd *z_slots() const
+        const std::optional<Eigen::VectorXd> &z_slots() const
         {
-            return z_slots_ ? &*z_slots_ : nullptr;
+            return z_slots_;
         }
-        const Eigen::VectorXd *angle_slots() const
+        const std::optional<Eigen::VectorXd> &angle_slots() const
         {
-            return angle_slots_ ? &*angle_slots_ : nullptr;
+            return angle_slots_;
         }
-        // setter
         FilterParams &x_slots(const std::optional<Eigen::VectorXd> &slots)
         {
             x_slots_ = slots;
@@ -307,10 +308,10 @@ struct Quiver
         }
 
       private:
-        std::optional<Eigen::VectorXd> x_slots_;
-        std::optional<Eigen::VectorXd> y_slots_;
-        std::optional<Eigen::VectorXd> z_slots_;
-        std::optional<Eigen::VectorXd> angle_slots_;
+        std::optional<Eigen::VectorXd> x_slots_ = std::nullopt;
+        std::optional<Eigen::VectorXd> y_slots_ = std::nullopt;
+        std::optional<Eigen::VectorXd> z_slots_ = std::nullopt;
+        std::optional<Eigen::VectorXd> angle_slots_ = std::nullopt;
     };
 
     static bool is_in_slots(double v, const Eigen::VectorXd &slots)
@@ -359,9 +360,11 @@ struct Quiver
         xyzs.col(2).array() -= xyz[2];
         // transform to frenet
         Eigen::Matrix3d local2world = self.Frenet();
+        // dbg(xyzs);
         xyzs = (local2world.transpose() * xyzs.transpose()).transpose().eval();
+        // dbg(xyzs);
 
-        if (auto x_slots = params.x_slots()) {
+        if (const auto &x_slots = params.x_slots()) {
             for (int i = 0; i < N; ++i) {
                 if (!mask[i]) {
                     continue;
@@ -374,7 +377,7 @@ struct Quiver
         if (!mask.sum()) {
             return mask;
         }
-        if (auto y_slots = params.y_slots()) {
+        if (const auto &y_slots = params.y_slots()) {
             for (int i = 0; i < N; ++i) {
                 if (!mask[i]) {
                     continue;
@@ -387,7 +390,7 @@ struct Quiver
         if (!mask.sum()) {
             return mask;
         }
-        if (auto z_slots = params.z_slots()) {
+        if (const auto &z_slots = params.z_slots()) {
             for (int i = 0; i < N; ++i) {
                 if (!mask[i]) {
                     continue;
