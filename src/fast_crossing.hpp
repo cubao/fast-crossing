@@ -560,30 +560,30 @@ struct FastCrossing
         return nearest(point_index(index[0], index[1]), return_squared_l2);
     }
 
-    std::pair<IntNx2, Eigen::VectorXd>
-    nearest(const Eigen::Vector3d &position, //
-            std::optional<int> k = std::nullopt,
-            std::optional<double> radius = std::nullopt,
-            bool sort = true, //
-            bool return_squared_l2 = false) const
+    std::pair<IntNx2, Eigen::VectorXd> nearest(
+        const Eigen::Vector3d &position, //
+        std::optional<int> k = std::nullopt,
+        std::optional<double> radius = std::nullopt,
+        bool sort = true, //
+        bool return_squared_l2 = false,
+        std::optional<std::pair<Eigen::Vector3d, Quiver::FilterParams>> filter =
+            std::nullopt) const
     {
-        if (k) {
-            auto [ii, dd] =
-                quiver_->nearest(position, *k, sort, return_squared_l2);
-            auto vec_ii = point_index(ii);
-            return {
-                Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),
-                dd};
-        } else if (radius) {
-            auto [ii, dd] =
-                quiver_->nearest(position, *radius, sort, return_squared_l2);
-            auto vec_ii = point_index(ii);
-            return {
-                Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),
-                dd};
-        } else {
+        if (!k && !radius) {
             throw std::invalid_argument("should specify k or radius");
         }
+        auto [ii, dd] =
+            k ? quiver_->nearest(position, *k, sort, return_squared_l2)
+              : quiver_->nearest(position, *radius, sort, return_squared_l2);
+        if (filter) {
+            auto [dir, params] = *filter;
+            auto ii_dd = quiver_->filter(ii, dd, Arrow(position, dir), params);
+            ii = ii_dd.first;
+            dd = ii_dd.second;
+        }
+        auto vec_ii = point_index(ii);
+        return {Eigen::Map<const IntNx2>(vec_ii[0].data(), vec_ii.size(), 2),
+                dd};
     }
 
     bool is_wgs84() const { return is_wgs84_; }

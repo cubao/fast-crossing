@@ -217,13 +217,38 @@ struct KdQuiver : Quiver
         }
         return Eigen::VectorXi::Map(&ret[0], ret.size());
     }
+    static Eigen::VectorXd select_by_mask(const Eigen::VectorXd &norms,
+                                          const Eigen::VectorXi &mask)
+    {
+        std::vector<double> ret;
+        ret.reserve(mask.sum());
+        for (int i = 0, N = norms.size(); i < N; ++i) {
+            if (mask[i]) {
+                ret.push_back(norms[i]);
+            }
+        }
+        return Eigen::VectorXd::Map(&ret[0], ret.size());
+    }
 
-    Eigen::VectorXi filter(const Eigen::VectorXi &hits, const Arrow &arrow,
+    Eigen::VectorXi filter(const Eigen::VectorXi &hits, //
+                           const Arrow &arrow,          //
                            const Quiver::FilterParams &params) const
     {
         auto mask = filter(arrows(hits), arrow, //
                            params, is_wgs84_);
         return select_by_mask(hits, mask);
+    }
+
+    std::pair<Eigen::VectorXi, Eigen::VectorXd>
+    filter(const Eigen::VectorXi &hits,  //
+           const Eigen::VectorXd &norms, //
+           const Arrow &arrow,           //
+           const Quiver::FilterParams &params) const
+    {
+        auto mask = filter(arrows(hits), arrow, //
+                           params, is_wgs84_);
+        return {select_by_mask(hits, mask), //
+                select_by_mask(norms, mask)};
     }
 
     void reset() { reset_index(); }

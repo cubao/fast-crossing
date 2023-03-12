@@ -258,6 +258,17 @@ CUBAO_INLINE void bind_quiver(py::module &m)
              "hits"_a,      //
              "arrow"_a,     //
              "params"_a)
+        .def("filter",
+             py::overload_cast<const Eigen::VectorXi &,     //
+                               const Eigen::VectorXd &,     //
+                               const Arrow &,               //
+                               const Quiver::FilterParams & //
+                               >(&KdQuiver::filter, py::const_),
+             py::kw_only(), //
+             "hits"_a,      //
+             "norms"_a,     //
+             "arrow"_a,     //
+             "params"_a)
         //
         .def("reset", &KdQuiver::reset)
         .def("index", py::overload_cast<int>(&KdQuiver::index, py::const_),
