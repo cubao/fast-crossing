@@ -168,12 +168,16 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              py::overload_cast<int, int>(&FastCrossing::arrow, py::const_),
              py::kw_only(), "polyline_index"_a, "point_index"_a)
         //
-        .def("bush", &FastCrossing::bush, rvp::reference_internal)
         .def("is_wgs84", &FastCrossing::is_wgs84)
         .def("num_poylines", &FastCrossing::num_poylines)
-        .def("polyline_rulers", &FastCrossing::polyline_rulers)
+        .def("polyline_rulers", &FastCrossing::polyline_rulers,
+             rvp::reference_internal)
         .def("polyline_ruler", &FastCrossing::polyline_ruler, "index"_a,
              rvp::reference_internal)
+        // export
+        .def("bush", &FastCrossing::export_bush, "autobuild"_a = true,
+             rvp::reference_internal)
+        .def("quiver", &FastCrossing::export_quiver, rvp::reference_internal)
         //
         ;
 }

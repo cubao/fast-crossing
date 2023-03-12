@@ -504,6 +504,10 @@ def test_within():
 
 def test_nearst():
     fc = FastCrossing()
+    tree = fc.quiver()
+    assert tree is None
+    bush = fc.bush()
+    assert bush is None
     """
           0A      ┌────────┐
            ****   │    *2C │
@@ -549,6 +553,13 @@ def test_nearst():
     idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), radius=5 + 1e-3)
     assert np.all(idx == [[4, 0]])
     np.testing.assert_allclose(dist, [5], atol=1e-15)
+
+    tree = fc.quiver()
+    assert tree is not None
+    bush = fc.bush(autobuild=False)
+    assert bush is None
+    bush = fc.bush()
+    assert bush is not None
 
 
 def pytest_main(dir: str, *, test_file: str = None):

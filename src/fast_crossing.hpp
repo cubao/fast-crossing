@@ -76,8 +76,6 @@ struct FastCrossing
             return;
         }
         if (!quiver_) {
-            bush_ = FlatBush();
-            bush_->Finish();
             return;
         }
         auto &polylines = quiver_->polylines();
@@ -588,11 +586,6 @@ struct FastCrossing
         }
     }
 
-    const FlatBush &bush() const
-    {
-        finish();
-        return *bush_;
-    }
     bool is_wgs84() const { return is_wgs84_; }
     int num_poylines() const
     {
@@ -614,6 +607,18 @@ struct FastCrossing
         return quiver_->polyline(label);
     }
 
+    const FlatBush *export_bush(bool autobuild = true) const
+    {
+        if (autobuild) {
+            finish();
+        }
+        return bush_ ? &*bush_ : nullptr;
+    }
+    const KdQuiver *export_quiver() const
+    {
+        return quiver_ ? &*quiver_ : nullptr;
+    }
+
   private:
     const bool is_wgs84_{false};
 
@@ -631,6 +636,11 @@ struct FastCrossing
 
     // auto rebuild flatbush
     mutable std::optional<FlatBush> bush_;
+    const FlatBush &bush() const
+    {
+        finish();
+        return *bush_;
+    }
 };
 } // namespace cubao
 
