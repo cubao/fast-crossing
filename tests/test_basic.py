@@ -57,6 +57,10 @@ def test_fast_crossing():
         xyz = fc.coordinates(2, 0, 0.5)
     assert "map::at" in str(excinfo)
 
+    xyz, dir = fc.arrow(polyline_index=0, point_index=0)
+    assert np.all(xyz == [0, 0, 0])
+    assert np.all(dir == [1, 0, 0])
+
     # query all line segment intersections
     # [
     #    (array([2.5, 0. ]),
@@ -427,6 +431,124 @@ def test_quiver():
     np.testing.assert_allclose(
         updated.direction(), [sqrt2 / 2, sqrt2 / 2, 0], atol=1e-8
     )
+
+
+def test_within():
+    fc = FastCrossing()
+    """
+          0A      ┌────────┐
+           ****   │    *2C │
+                  │    *   │
+    1B  ┌─────────o    *   │
+      * │                  │
+       *│               **********3D
+        *         *        │
+        └─*───────*────────┘
+           *      *
+            *     *4E
+    """
+    polygon = np.array(
+        [[0, 0], [-10, 0], [-10, -10], [10, -10], [10, 10], [0, 10]], dtype=np.float64
+    )
+    fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
+    fc.add_polyline([[6, 0], [6, 9]])  # 2C
+    fc.add_polyline([[7, -5], [18, -5]])  # 3D
+    fc.add_polyline([[0, -5], [0, -15]])  # 4E
+    hits = np.array(fc.within(polygon=polygon))
+    assert np.all(
+        hits
+        == [
+            [1, 0],
+            [1, 1],
+            [2, 0],
+            [3, 0],
+            [4, 0],
+        ]
+    )
+    hits = np.array(fc.within(polygon=polygon, segment_wise=False))
+    assert np.all(
+        hits
+        == [
+            [1, 1],
+            [2, 0],
+            [2, 1],
+            [3, 0],
+            [4, 0],
+        ]
+    )
+
+    hits = np.array(fc.within(min=np.array([0.0, 0.0]), max=np.array([10.0, 10.0])))
+    assert np.all(hits == [[2, 0]])
+    hits = np.array(fc.within(min=np.array([-10.0, -10.0]), max=np.array([10.0, 10.0])))
+    assert np.all(
+        hits
+        == [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [2, 0],
+            [3, 0],
+            [4, 0],
+        ]
+    )
+
+    # fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    hits = np.array(fc.within(center=np.array([-5.0, 10.0]), width=6.0, height=0.5))
+    assert not len(hits)
+    hits = np.array(
+        fc.within(center=np.array([-5.0, 10.0]), width=6.0, height=0.5, heading=30.0)
+    )
+    assert np.all(hits == [[0, 0]])
+
+
+def test_nearst():
+    fc = FastCrossing()
+    """
+          0A      ┌────────┐
+           ****   │    *2C │
+                  │    *   │
+    1B  ┌─────────o    *   │
+      * │                  │
+       *│               **********3D
+        *         *        │
+        └─*───────*────────┘
+           *      *
+            *     *4E
+    """
+    polygon = np.array(
+        [[0, 0], [-10, 0], [-10, -10], [10, -10], [10, 10], [0, 10]], dtype=np.float64
+    )
+    assert len(polygon)
+    fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
+    fc.add_polyline([[6, 0], [6, 9]])  # 2C
+    fc.add_polyline([[7, -5], [18, -5]])  # 3D
+    fc.add_polyline([[0, -5], [0, -15]])  # 4E
+
+    # nearest
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]))
+    assert np.all(idx == [4, 0]) and np.fabs(dist - 5.0) < 1e-6
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), return_squared_l2=True)
+    assert np.all(idx == [4, 0]) and np.fabs(dist - 25.0) < 1e-6
+
+    # nearest
+    idx, dist = fc.nearest(np.array([0, 0]))
+    assert np.all(idx == [0, 1]) and np.fabs(dist - 6.0) < 1e-6
+    idx, dist = fc.nearest(np.array([0, 1]))
+    assert np.all(idx == [0, 0]) and np.fabs(dist - 6.0) < 1e-6
+
+    # nearest k
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), k=2)
+    assert np.all(idx == [[4, 0], [2, 0]])
+    np.testing.assert_allclose(dist, [5, 6], atol=1e-15)
+    # nearest radius
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), radius=6 + 1e-3)
+    assert np.all(idx == [[4, 0], [2, 0]])
+    np.testing.assert_allclose(dist, [5, 6], atol=1e-15)
+    idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), radius=5 + 1e-3)
+    assert np.all(idx == [[4, 0]])
+    np.testing.assert_allclose(dist, [5], atol=1e-15)
 
 
 def pytest_main(dir: str, *, test_file: str = None):

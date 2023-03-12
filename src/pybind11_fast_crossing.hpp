@@ -88,6 +88,68 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                 double, double, bool>(&FastCrossing::intersections, py::const_),
             "polyline"_a, py::kw_only(), "z_min"_a, "z_max"_a, "dedup"_a = true,
             "crossing intersections with polyline (sorted by t ratio)")
+        // segment_index
+        .def("segment_index",
+             py::overload_cast<int>(&FastCrossing::segment_index, py::const_),
+             "index"_a)
+        .def("segment_index",
+             py::overload_cast<const Eigen::VectorXi &>(
+                 &FastCrossing::segment_index, py::const_),
+             "indexes"_a)
+        // point_index
+        .def("point_index",
+             py::overload_cast<int>(&FastCrossing::point_index, py::const_),
+             "index"_a)
+        .def("point_index",
+             py::overload_cast<const Eigen::VectorXi &>(
+                 &FastCrossing::point_index, py::const_),
+             "indexes"_a)
+        // within
+        .def("within",
+             py::overload_cast<const Eigen::Vector2d &, const Eigen::Vector2d &,
+                               bool, bool>(&FastCrossing::within, py::const_),
+             py::kw_only(),           //
+             "min"_a,                 //
+             "max"_a,                 //
+             "segment_wise"_a = true, //
+             "sort"_a = true)
+        .def("within",
+             py::overload_cast<const Eigen::Ref<const RowVectorsNx2> &, bool,
+                               bool>(&FastCrossing::within, py::const_),
+             py::kw_only(),           //
+             "polygon"_a,             //
+             "segment_wise"_a = true, //
+             "sort"_a = true)
+        .def("within",
+             py::overload_cast<const Eigen::Vector2d &, double, double, double,
+                               bool, bool>(&FastCrossing::within, py::const_),
+             py::kw_only(),           //
+             "center"_a,              //
+             "width"_a,               //
+             "height"_a,              //
+             "heading"_a = 0.0,       //
+             "segment_wise"_a = true, //
+             "sort"_a = true)
+        // nearest
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, bool>(
+                 &FastCrossing::nearest, py::const_),
+             "position"_a, py::kw_only(), //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector2i &, bool>(
+                 &FastCrossing::nearest, py::const_),
+             "index"_a, py::kw_only(), //
+             "return_squared_l2"_a = false)
+        .def("nearest",
+             py::overload_cast<const Eigen::Vector3d &, std::optional<int>,
+                               std::optional<double>, bool, bool>(
+                 &FastCrossing::nearest, py::const_),
+             "position"_a, py::kw_only(), //
+             "k"_a = std::nullopt,        //
+             "radius"_a = std::nullopt,   //
+             "sorted"_a = true,           //
+             "return_squared_l2"_a = false)
         // coordinates
         .def("coordinates",
              py::overload_cast<int, int, double>(&FastCrossing::coordinates,
@@ -101,6 +163,10 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              py::overload_cast<const FastCrossing::IntersectionType &, bool>(
                  &FastCrossing::coordinates, py::const_),
              "intersection"_a, "second"_a = true)
+        // arrow
+        .def("arrow",
+             py::overload_cast<int, int>(&FastCrossing::arrow, py::const_),
+             py::kw_only(), "polyline_index"_a, "point_index"_a)
         //
         .def("bush", &FastCrossing::bush, rvp::reference_internal)
         .def("is_wgs84", &FastCrossing::is_wgs84)
