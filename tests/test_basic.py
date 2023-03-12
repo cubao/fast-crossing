@@ -456,13 +456,27 @@ def test_kdquiver():
     quiver.add([[0, y], [3.5, y], [14.0, y]][::-1])  # 3
     y -= 1
     quiver.add([[0, y, 10.0], [3.5, y, 10.0], [14.0, y, 10.0]])  # 4
+
+    # nearest
+    i, d = quiver.nearest([0.0, 5.0, 0.0])
+    a = quiver.arrow(i)
+    # print(i, d, a)
+    assert i == 0 and d == 0.0 and a.polyline_index() == 0 and a.segment_index() == 0
+
+    i, d = quiver.nearest(0)
+    a = quiver.arrow(i)
+    # print(i, d, a)
+    assert i == 3 and a.polyline_index() == 1 and a.segment_index() == 0
+
     ii, dd = quiver.nearest([4.0, 2.5, 0.0], radius=3)
-    print(ii)
-    print(dd)
-    assert len(ii) == len(dd) == 5
     arrows = quiver.arrows(ii)
-    for arrow in arrows:
-        print(arrow)
+    # print(ii, dd, arrows)
+    # for arrow in arrows:
+    #     print(arrow)
+    assert len(ii) == len(dd) == len(arrows) == 5
+    ii2, dd2 = quiver.nearest([4.0, 2.5, 0.0], k=5)
+    assert np.all(ii == ii2)
+    assert np.all(dd == dd2)
 
 
 def test_within():

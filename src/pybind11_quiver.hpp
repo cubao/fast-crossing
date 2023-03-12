@@ -196,6 +196,8 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         // arrows
         .def("arrows", &KdQuiver::arrows, "indexes"_a)
         // arrow
+        .def("arrow", py::overload_cast<int>(&KdQuiver::arrow, py::const_),
+             "point_index"_a)
         .def("arrow", py::overload_cast<int, int>(&KdQuiver::arrow, py::const_),
              "polyline_index"_a, "segment_index"_a)
         .def("arrow",
@@ -209,9 +211,6 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("index", py::overload_cast<int>(&KdQuiver::index, py::const_),
              "point_index"_a)
         .def("index", py::overload_cast<int, int>(&KdQuiver::index, py::const_),
-             "polyline_index"_a, "segment_index"_a)
-        //     void add() {
-        //
-        ;
+             "polyline_index"_a, "segment_index"_a);
 }
 } // namespace cubao

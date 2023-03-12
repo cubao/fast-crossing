@@ -153,24 +153,29 @@ struct KdQuiver : Quiver
         auto [seg_idx, t] = ruler.segment_index_t(range);
         return arrow(ruler, seg_idx, t);
     }
-    Arrow arrow(int polyline_index, int point_index) const
+    Arrow arrow(int point_index) const
+    {
+        Eigen::Vector2i ii = this->index(point_index);
+        return arrow(ii[0], ii[1]);
+    }
+    Arrow arrow(int polyline_index, int segment_index) const
     {
         auto ruler = polyline(polyline_index);
-        return Arrow(ruler->at(point_index), ruler->dir(point_index)) //
-            .polyline_index(polyline_index)                           //
-            .segment_index(point_index)                               //
-            .t(0.0)                                                   //
-            .range(ruler->range(point_index))                         //
+        return Arrow(ruler->at(segment_index), ruler->dir(segment_index)) //
+            .polyline_index(polyline_index)                               //
+            .segment_index(segment_index)                                 //
+            .t(0.0)                                                       //
+            .range(ruler->range(segment_index))                           //
             ;
     }
-    Arrow arrow(int polyline_index, int point_index, double t) const
+    Arrow arrow(int polyline_index, int segment_index, double t) const
     {
         auto ruler = polyline(polyline_index);
-        return Arrow(ruler->at(point_index, t), ruler->dir(point_index))
-            .polyline_index(polyline_index)      //
-            .segment_index(point_index)          //
-            .t(t)                                //
-            .range(ruler->range(point_index, t)) //
+        return Arrow(ruler->at(segment_index, t), ruler->dir(segment_index))
+            .polyline_index(polyline_index)        //
+            .segment_index(segment_index)          //
+            .t(t)                                  //
+            .range(ruler->range(segment_index, t)) //
             ;
     }
     Arrow arrow(int polyline_index, double range) const
