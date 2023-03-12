@@ -127,10 +127,63 @@ struct KdQuiver : Quiver
             auto _ = index(hits[i]);
             int line_idx = _[0];
             int pt_idx = _[1];
-            auto &ruler = polylines_.at(line_idx);
-            arrows.push_back(Arrow(ruler.at(pt_idx), ruler.dir(pt_idx)));
+            arrows.push_back(arrow(line_idx, pt_idx));
         }
         return arrows;
+    }
+
+    Arrow arrow(const PolylineRuler &ruler, int segment_index, double t) const
+    {
+
+        auto &polyline_ = ruler.polyline();
+        Eigen::Vector3d pos =
+            ruler.interpolate(polyline_.row(segment_index),     //
+                              polyline_.row(segment_index + 1), //
+                              t, ruler.is_wgs84());
+        Eigen::Vector3d dir = ruler.dirs().row(segment_index);
+        auto arrow = Arrow(pos, dir);
+        arrow.segment_index(segment_index).t(t);
+        if (is_wgs84_ && ruler.is_wgs84()) {
+            arrow.position(lla2enu(arrow.position()));
+        }
+        return arrow;
+    }
+    Arrow arrow(const PolylineRuler &ruler, double range) const
+    {
+        auto [seg_idx, t] = ruler.segment_index_t(range);
+        return arrow(ruler, seg_idx, t);
+    }
+    Arrow arrow(int polyline_index, int point_index) const
+    {
+        auto ruler = polyline(polyline_index);
+        return Arrow(ruler->at(point_index), ruler->dir(point_index)) //
+            .polyline_index(polyline_index)                           //
+            .segment_index(point_index)                               //
+            .t(0.0)                                                   //
+            .range(ruler->range(point_index))                         //
+            ;
+    }
+    Arrow arrow(int polyline_index, int point_index, double t) const
+    {
+        auto ruler = polyline(polyline_index);
+        return Arrow(ruler->at(point_index, t), ruler->dir(point_index))
+            .polyline_index(polyline_index)      //
+            .segment_index(point_index)          //
+            .t(t)                                //
+            .range(ruler->range(point_index, t)) //
+            ;
+    }
+    Arrow arrow(int polyline_index, double range) const
+    {
+        auto ruler = polyline(polyline_index);
+        auto [xyz, dir] = ruler->arrow(range, false);
+        auto [idx, t] = ruler->segment_index_t(range);
+        return Arrow(xyz, dir)              //
+            .polyline_index(polyline_index) //
+            .segment_index(idx)             //
+            .t(t)                           //
+            .range(range)                   //
+            ;
     }
 
     static Eigen::VectorXi
@@ -172,29 +225,6 @@ struct KdQuiver : Quiver
                            x_slots, y_slots, z_slots, //
                            is_wgs84_);
         return select_by_mask(hits, mask);
-    }
-
-    // helpers
-    Arrow arrow(const PolylineRuler &ruler, int segment_index, double t)
-    {
-
-        auto &polyline_ = ruler.polyline();
-        Eigen::Vector3d pos =
-            ruler.interpolate(polyline_.row(segment_index),     //
-                              polyline_.row(segment_index + 1), //
-                              t, ruler.is_wgs84());
-        Eigen::Vector3d dir = ruler.dirs().row(segment_index);
-        auto arrow = Arrow(pos, dir);
-        arrow.segment_index(segment_index).t(t);
-        if (is_wgs84_ && ruler.is_wgs84()) {
-            arrow.position(lla2enu(arrow.position()));
-        }
-        return arrow;
-    }
-    Arrow arrow(const PolylineRuler &ruler, double range)
-    {
-        auto [seg_idx, t] = ruler.segment_index_t(range);
-        return arrow(ruler, seg_idx, t);
     }
 
     void reset() { reset_index(); }

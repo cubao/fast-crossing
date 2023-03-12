@@ -7,6 +7,7 @@ import pytest
 from fast_crossing import (
     Arrow,
     FastCrossing,
+    KdQuiver,
     KdTree,
     Quiver,
     densify_polyline,
@@ -431,6 +432,37 @@ def test_quiver():
     np.testing.assert_allclose(
         updated.direction(), [sqrt2 / 2, sqrt2 / 2, 0], atol=1e-8
     )
+
+
+def test_kdquiver():
+    quiver = KdQuiver()
+    """
+    #  0   1   2   3   4   5   6  7   8   9   10   11  12  13   14
+    #                                                  o
+    #                                                 /
+    #0 o-------------o-------------------------------+-----------o
+    #1        o-------------o-----------------o     /
+    #2                   o-------------o----------o
+    #3 o-------------o-------------------------------------------o right-to-left
+    #4 o-------------o-------------------------------------------o z += 10
+    """
+    y = 5.0
+    quiver.add([[0, y], [3.5, y], [14.0, y]])  # 0
+    y -= 1
+    quiver.add([[1.8, y], [5.2, y], [10.0, y]])  # 1
+    y -= 1
+    quiver.add([[4.5, y], [8.2, y], [10.8, y], [12.0, y + 5]])  # 2
+    y -= 1
+    quiver.add([[0, y], [3.5, y], [14.0, y]][::-1])  # 3
+    y -= 1
+    quiver.add([[0, y, 10.0], [3.5, y, 10.0], [14.0, y, 10.0]])  # 4
+    ii, dd = quiver.nearest([4.0, 2.5, 0.0], radius=3)
+    print(ii)
+    print(dd)
+    assert len(ii) == len(dd) == 5
+    arrows = quiver.arrows(ii)
+    for arrow in arrows:
+        print(arrow)
 
 
 def test_within():

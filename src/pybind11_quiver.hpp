@@ -160,11 +160,11 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
         // add
         .def("add", py::overload_cast<const RowVectors &, int>(&KdQuiver::add),
-             "polyline"_a, "index"_a)
+             "polyline"_a, "index"_a = -1)
         .def("add",
              py::overload_cast<const Eigen::Ref<const RowVectorsNx2> &, int>(
                  &KdQuiver::add),
-             "polyline"_a, "index"_a)
+             "polyline"_a, "index"_a = -1)
         // nearest
         .def("nearest",
              py::overload_cast<const Eigen::Vector3d &, bool>(
@@ -195,6 +195,15 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         .def("directions", &KdQuiver::directions, "indexes"_a)
         // arrows
         .def("arrows", &KdQuiver::arrows, "indexes"_a)
+        // arrow
+        .def("arrow", py::overload_cast<int, int>(&KdQuiver::arrow, py::const_),
+             "polyline_index"_a, "segment_index"_a)
+        .def("arrow",
+             py::overload_cast<int, int, double>(&KdQuiver::arrow, py::const_),
+             "polyline_index"_a, "segment_index"_a, py::kw_only(), "t"_a)
+        .def("arrow",
+             py::overload_cast<int, double>(&KdQuiver::arrow, py::const_),
+             "polyline_index"_a, py::kw_only(), "range"_a)
         //
         .def("reset", &KdQuiver::reset)
         .def("index", py::overload_cast<int>(&KdQuiver::index, py::const_),
