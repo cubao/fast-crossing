@@ -221,7 +221,11 @@ CUBAO_INLINE void bind_quiver(py::module &m)
              "sort"_a = true,             //
              "return_squared_l2"_a = false)
         // positions
-        .def("positions", &KdQuiver::positions, "indexes"_a)
+        .def("positions", py::overload_cast<>(&KdQuiver::positions, py::const_))
+        .def("positions",
+             py::overload_cast<const Eigen::VectorXi &>(&KdQuiver::positions,
+                                                        py::const_),
+             "indexes"_a)
         // directions
         .def("directions", &KdQuiver::directions, "indexes"_a)
         // arrows

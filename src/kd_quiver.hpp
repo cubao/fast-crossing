@@ -92,6 +92,8 @@ struct KdQuiver : Quiver
                               return_squared_l2);
     }
 
+    Eigen::Map<const RowVectors> positions() const { return tree().points(); }
+
     RowVectors positions(const Eigen::VectorXi &hits) const
     {
         const int N = hits.size();

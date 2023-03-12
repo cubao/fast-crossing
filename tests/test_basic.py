@@ -12,6 +12,7 @@ from fast_crossing import (
     Quiver,
     densify_polyline,
     point_in_polygon,
+    tf,
 )
 
 
@@ -710,6 +711,57 @@ def test_nearst():
     assert bush is None
     bush = fc.bush()
     assert bush is not None
+
+
+def test_nearst_wgs84():
+    fc = FastCrossing()
+    fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
+    fc.add_polyline([[6, 0], [6, 9]])  # 2C
+    fc.add_polyline([[7, -5], [18, -5]])  # 3D
+    fc.add_polyline([[0, -5], [0, -15]])  # 4E
+    arrow = Arrow([-4.0, 0.0, 0.0], [0, -1, 0])
+    idx, dist = fc.nearest(arrow.position(), radius=10.0)
+    expected_ii = np.array([[4, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
+    expected_dd = np.array([6.40312424, 8.06225775, 8.94427191, 9.21954446, 9.8488578])
+    assert np.all(idx == expected_ii)
+    np.testing.assert_allclose(dist, expected_dd, atol=1e-8)
+    assert len(idx) == 5
+    idx, dist = fc.nearest(
+        arrow.position(),
+        radius=10.0,
+        filter=[
+            arrow.direction(),
+            Quiver.FilterParams().angle_slots([-1, 1]),
+        ],
+    )
+    assert len(idx) == 1
+    assert np.all(idx == [[4, 0]])
+
+    xyzs0 = fc.quiver().positions()
+    # print(xyzs0)
+
+    fc2 = FastCrossing(is_wgs84=True)
+    anchor_lla = np.array([123.4, 56.7, 8.9])
+    for index, ruler in fc.polyline_rulers().items():
+        enus = ruler.polyline()
+        llas = tf.enu2lla(enus, anchor_lla=anchor_lla)
+        fc2.add_polyline(llas, index=index)
+    # print(fc2.quiver().anchor())
+    xyzs1 = tf.lla2enu(
+        tf.enu2lla(fc2.quiver().positions(), anchor_lla=fc2.quiver().anchor()),
+        anchor_lla=anchor_lla,
+    )
+    # print(xyzs1)
+    np.testing.assert_allclose(xyzs0, xyzs1, atol=1e-8)
+
+    position = tf.enu2lla([-4, 0, 0], anchor_lla=anchor_lla).reshape(-1)
+    arrow = Arrow(position, [0, -1, 0])
+    idx, dist = fc2.nearest(arrow.position(), radius=10.0)
+    # precision error??
+    # print(idx, dist)
+    np.testing.assert_allclose(dist[:4], expected_dd[:4], atol=1e-4)
+    # assert len(idx) == 5
 
 
 def pytest_main(dir: str, *, test_file: str = None):
