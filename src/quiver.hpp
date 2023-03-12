@@ -200,7 +200,8 @@ struct Quiver
     Arrow upwards(const Arrow &cur, double delta) const
     {
         auto copy = cur;
-        copy.position_[2] += delta; // * k_[2];
+        copy.position_.array() +=
+            delta * inv_k_.array() * copy.upward().array();
         return copy;
     }
     Arrow towards(const Arrow &cur, const Eigen::Vector3d &delta,
