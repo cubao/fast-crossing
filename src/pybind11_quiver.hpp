@@ -115,42 +115,76 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         ;
 
     using Quiver = cubao::Quiver;
-    py::class_<Quiver>(m, "Quiver", py::module_local())
+    auto pyQuiver =
+        py::class_<Quiver>(m, "Quiver", py::module_local())
+            //
+            .def(py::init<>())
+            .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
+            //
+            .def_static("_k", &Quiver::k)
+            .def("k", [](const Quiver &self) { return self.k_; })
+            .def("inv_k", [](const Quiver &self) { return self.inv_k_; })
+            .def("anchor", [](const Quiver &self) { return self.anchor_; })
+            .def("is_wgs84", [](const Quiver &self) { return self.is_wgs84_; })
+            //
+            .def("forwards", &Quiver::forwards, "arrow"_a, "delta_x"_a)
+            .def("leftwards", &Quiver::leftwards, "arrow"_a, "delta_y"_a)
+            .def("upwards", &Quiver::upwards, "arrow"_a, "delta_z"_a)
+            .def("towards", &Quiver::towards, "arrow"_a, "delta_frenet"_a,
+                 py::kw_only(), "update_direction"_a = true)
+            //
+            .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a,
+                 py::kw_only(), "update_direction"_a = true)
+            //
+            .def("enu2lla",
+                 py::overload_cast<const Eigen::Vector3d &>(&Quiver::enu2lla,
+                                                            py::const_),
+                 "coords"_a)
+            .def("enu2lla",
+                 py::overload_cast<const RowVectors &>(&Quiver::enu2lla,
+                                                       py::const_),
+                 "coords"_a)
+            .def("lla2enu",
+                 py::overload_cast<const Eigen::Vector3d &>(&Quiver::lla2enu,
+                                                            py::const_),
+                 "coords"_a)
+            .def("lla2enu",
+                 py::overload_cast<const RowVectors &>(&Quiver::lla2enu,
+                                                       py::const_),
+                 "coords"_a)
         //
+        ;
+
+    // FilterParams
+    using FilterParams = Quiver::FilterParams;
+    py::class_<FilterParams>(pyQuiver, "FilterParams", py::module_local())
         .def(py::init<>())
-        .def(py::init<const Eigen::Vector3d &>(), "anchor_lla"_a)
-        //
-        .def_static("_k", &Quiver::k)
-        .def("k", [](const Quiver &self) { return self.k_; })
-        .def("inv_k", [](const Quiver &self) { return self.inv_k_; })
-        .def("anchor", [](const Quiver &self) { return self.anchor_; })
-        .def("is_wgs84", [](const Quiver &self) { return self.is_wgs84_; })
-        //
-        .def("forwards", &Quiver::forwards, "arrow"_a, "delta_x"_a)
-        .def("leftwards", &Quiver::leftwards, "arrow"_a, "delta_y"_a)
-        .def("upwards", &Quiver::upwards, "arrow"_a, "delta_z"_a)
-        .def("towards", &Quiver::towards, "arrow"_a, "delta_frenet"_a,
-             py::kw_only(), "update_direction"_a = true)
-        //
-        .def("update", &Quiver::update, "arrow"_a, "delta_enu"_a, py::kw_only(),
-             "update_direction"_a = true)
-        //
-        .def("enu2lla",
-             py::overload_cast<const Eigen::Vector3d &>(&Quiver::enu2lla,
-                                                        py::const_),
-             "coords"_a)
-        .def(
-            "enu2lla",
-            py::overload_cast<const RowVectors &>(&Quiver::enu2lla, py::const_),
-            "coords"_a)
-        .def("lla2enu",
-             py::overload_cast<const Eigen::Vector3d &>(&Quiver::lla2enu,
-                                                        py::const_),
-             "coords"_a)
-        .def(
-            "lla2enu",
-            py::overload_cast<const RowVectors &>(&Quiver::lla2enu, py::const_),
-            "coords"_a)
+        .def("x_slots", py::overload_cast<>(&FilterParams::x_slots, py::const_),
+             rvp::reference_internal)
+        .def("x_slots",
+             py::overload_cast<const std::optional<Eigen::VectorXd> &>(
+                 &FilterParams::x_slots),
+             rvp::reference_internal)
+        .def("y_slots", py::overload_cast<>(&FilterParams::y_slots, py::const_),
+             rvp::reference_internal)
+        .def("y_slots",
+             py::overload_cast<const std::optional<Eigen::VectorXd> &>(
+                 &FilterParams::y_slots),
+             rvp::reference_internal)
+        .def("z_slots", py::overload_cast<>(&FilterParams::z_slots, py::const_),
+             rvp::reference_internal)
+        .def("z_slots",
+             py::overload_cast<const std::optional<Eigen::VectorXd> &>(
+                 &FilterParams::z_slots),
+             rvp::reference_internal)
+        .def("angle_slots",
+             py::overload_cast<>(&FilterParams::angle_slots, py::const_),
+             rvp::reference_internal)
+        .def("agnle_slots",
+             py::overload_cast<const std::optional<Eigen::VectorXd> &>(
+                 &FilterParams::angle_slots),
+             rvp::reference_internal)
+        .def("is_trivial", &FilterParams::is_trivial)
         //
         ;
 

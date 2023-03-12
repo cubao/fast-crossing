@@ -191,18 +191,18 @@ struct KdQuiver : Quiver
             ;
     }
 
-    static Eigen::VectorXi
-    filter(const std::vector<Arrow> &arrows, const Arrow &arrow,
-           // angle
-           std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
-           // positions
-           std::optional<Eigen::VectorXd> x_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> y_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> z_slots = std::nullopt,
-           bool is_wgs84 = false)
+    static Eigen::VectorXi filter(const std::vector<Arrow> &arrows,
+                                  const Arrow &arrow,
+                                  const Quiver::FilterParams &params,
+                                  bool is_wgs84 = false)
     {
-        Eigen::VectorXi mask(arrows.size());
-        return mask;
+        if (is_wgs84) {
+            Quiver quiver(arrow.position());
+            return quiver.filter(arrows, arrow, params);
+        } else {
+            Quiver quiver;
+            return quiver.filter(arrows, arrow, params);
+        }
     }
 
     static Eigen::VectorXi select_by_mask(const Eigen::VectorXi &indexes,
@@ -218,17 +218,11 @@ struct KdQuiver : Quiver
         return Eigen::VectorXi::Map(&ret[0], ret.size());
     }
 
-    Eigen::VectorXi
-    filter(const Eigen::VectorXi &hits, const Arrow &arrow,
-           std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> x_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> y_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> z_slots = std::nullopt)
+    Eigen::VectorXi filter(const Eigen::VectorXi &hits, const Arrow &arrow,
+                           const Quiver::FilterParams &params)
     {
-        auto mask = filter(arrows(hits), arrow,       //
-                           angle_slots,               //
-                           x_slots, y_slots, z_slots, //
-                           is_wgs84_);
+        auto mask = filter(arrows(hits), arrow, //
+                           params, is_wgs84_);
         return select_by_mask(hits, mask);
     }
 
