@@ -543,7 +543,9 @@ struct FastCrossing
     nearest(const Eigen::Vector3d &position, //
             bool return_squared_l2 = false) const
     {
-        auto [idx, dist] = quiver_->nearest(position, return_squared_l2);
+        auto [idx, dist] =
+            quiver_->nearest(is_wgs84_ ? lla2enu(position) : position, //
+                             return_squared_l2);
         return {point_index(idx), dist};
     }
     std::pair<Eigen::Vector2i, double>
@@ -572,12 +574,13 @@ struct FastCrossing
         if (!k && !radius) {
             throw std::invalid_argument("should specify k or radius");
         }
+        Eigen::Vector3d xyz = is_wgs84_ ? lla2enu(position) : position;
         auto [ii, dd] =
-            k ? quiver_->nearest(position, *k, sort, return_squared_l2)
-              : quiver_->nearest(position, *radius, sort, return_squared_l2);
+            k ? quiver_->nearest(xyz, *k, sort, return_squared_l2)
+              : quiver_->nearest(xyz, *radius, sort, return_squared_l2);
         if (filter) {
             auto [dir, params] = *filter;
-            auto ii_dd = quiver_->filter(ii, dd, Arrow(position, dir), params);
+            auto ii_dd = quiver_->filter(ii, dd, Arrow(xyz, dir), params);
             ii = ii_dd.first;
             dd = ii_dd.second;
         }
