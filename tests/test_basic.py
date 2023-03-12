@@ -523,6 +523,50 @@ def test_kdquiver():
     assert len(ii) == 3
 
 
+def test_kdquiver_filter_by_angle():
+
+    quiver = KdQuiver()
+    vecs = {}
+    headings = [0, 30, 60, 90, 120]
+    for heading in headings:
+        rad = np.radians(90.0 - heading)
+        vec = np.array([np.cos(rad), np.sin(rad), 0.0])
+        vecs[heading] = vec
+        polyline = np.array([vec * 80, vec * 100])
+        quiver.add(polyline, index=heading)
+    np.testing.assert_allclose(30, Arrow._angle(vecs[30], ref=vecs[60]), atol=1e-15)
+    np.testing.assert_allclose(-30, Arrow._angle(vecs[90], ref=vecs[60]), atol=1e-15)
+
+    arrow = Arrow([0, 0, 0]).heading(60)
+    ii, dd = quiver.nearest(arrow.position(), radius=90)
+    assert len(ii) == len(headings)
+    np.testing.assert_allclose(dd, [80.0] * len(ii), atol=1e-15)
+
+    ii60 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().angle_slots([-1, 1]),
+    )
+    hits = np.array([a.heading() for a in quiver.arrows(ii60)])
+    np.testing.assert_allclose(hits, [60.0], atol=1e-15)
+
+    ii30_60 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().angle_slots([-1, 31]),
+    )
+    hits = np.array([a.heading() for a in quiver.arrows(ii30_60)])
+    np.testing.assert_allclose(hits, [30.0, 60.0], atol=1e-15)
+
+    ii30_60_120 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().angle_slots([-1, 31, -61, -59]),
+    )
+    hits = np.array([a.heading() for a in quiver.arrows(ii30_60_120)])
+    np.testing.assert_allclose(hits, [30.0, 60.0, 120.0], atol=1e-15)
+
+
 def test_within():
     fc = FastCrossing()
     """

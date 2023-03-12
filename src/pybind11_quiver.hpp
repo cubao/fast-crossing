@@ -92,6 +92,7 @@ CUBAO_INLINE void bind_quiver(py::module &m)
         //
         .def_static("_unit_vector", &Arrow::_unit_vector, "vector"_a,
                     "with_eps"_a = true)
+        .def_static("_angle", &Arrow::_angle, "vec"_a, py::kw_only(), "ref"_a)
         //
         .def("__repr__",
              [](const Arrow &self) {

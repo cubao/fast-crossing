@@ -3,7 +3,6 @@
 
 #include <optional>
 #include <Eigen/Core>
-#include <dbg.h>
 
 namespace cubao
 {
@@ -132,6 +131,14 @@ struct Arrow
         Eigen::Vector3d d = vector;
         d /= (d.norm() + (with_eps ? NormEps : 0.0));
         return d;
+    }
+
+    static double _angle(const Eigen::Vector3d &dir, const Eigen::Vector3d &ref)
+    {
+        constexpr double PI = 3.14159265358979323846;
+        Eigen::Vector3d cross = ref.cross(dir);
+        double deg = std::asin(cross.norm()) * 180.0 / PI;
+        return cross[2] > 0 ? deg : -deg;
     }
 
     // directly expose some non-invariant values on c++ side
@@ -360,9 +367,7 @@ struct Quiver
         xyzs.col(2).array() -= xyz[2];
         // transform to frenet
         Eigen::Matrix3d local2world = self.Frenet();
-        // dbg(xyzs);
         xyzs = (local2world.transpose() * xyzs.transpose()).transpose().eval();
-        // dbg(xyzs);
 
         if (const auto &x_slots = params.x_slots()) {
             for (int i = 0; i < N; ++i) {
@@ -402,6 +407,17 @@ struct Quiver
         }
         if (!mask.sum()) {
             return mask;
+        }
+        if (const auto &angle_slots = params.angle_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                double angle = Arrow::_angle(dirs.row(i), dir);
+                if (!is_in_slots(angle, *angle_slots)) {
+                    mask[i] = 0;
+                }
+            }
         }
 
         return mask;
