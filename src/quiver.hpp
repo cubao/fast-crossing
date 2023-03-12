@@ -2,6 +2,7 @@
 #define CUBAO_QUIVER_HPP
 
 #include <optional>
+#include <Eigen/Core>
 
 namespace cubao
 {
@@ -259,14 +260,149 @@ struct Quiver
         return ret;
     }
 
-    // handles center,
-    // searches
+    struct FilterParams
+    {
+        // getter
+        const Eigen::VectorXd *x_slots() const
+        {
+            return x_slots_ ? &*x_slots_ : nullptr;
+        }
+        const Eigen::VectorXd *y_slots() const
+        {
+            return y_slots_ ? &*y_slots_ : nullptr;
+        }
+        const Eigen::VectorXd *z_slots() const
+        {
+            return z_slots_ ? &*z_slots_ : nullptr;
+        }
+        const Eigen::VectorXd *angle_slots() const
+        {
+            return angle_slots_ ? &*angle_slots_ : nullptr;
+        }
+        // setter
+        FilterParams &x_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            x_slots_ = slots;
+            return *this;
+        }
+        FilterParams &y_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            y_slots_ = slots;
+            return *this;
+        }
+        FilterParams &z_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            z_slots_ = slots;
+            return *this;
+        }
+        FilterParams &angle_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            angle_slots_ = slots;
+            return *this;
+        }
 
-    // query arrows
-    // filter arrows
-    // aggregate arrows
-    // label: polyline_index, seg_index, float
-    // position, direction
+        bool is_trivial() const
+        {
+            return !x_slots_ && !y_slots_ && !z_slots_ && !angle_slots_;
+        }
+
+      private:
+        std::optional<Eigen::VectorXd> x_slots_;
+        std::optional<Eigen::VectorXd> y_slots_;
+        std::optional<Eigen::VectorXd> z_slots_;
+        std::optional<Eigen::VectorXd> angle_slots_;
+    };
+
+    static bool is_in_slots(double v, const Eigen::VectorXd &slots)
+    {
+        for (int i = 0, N = slots.size(); i + 1 < N; i += 2) {
+            if (slots[i] <= v && v <= slots[i + 1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Eigen::VectorXi filter(const std::vector<Arrow> &arrows, //
+                           const Arrow &self,                //
+                           const FilterParams &params)
+    {
+        const int N = arrows.size();
+        Eigen::VectorXi mask(N);
+        if (N == 0) {
+            return mask;
+        }
+        mask.setOnes();
+        if (params.is_trivial()) {
+            return mask;
+        }
+
+        Eigen::Vector3d xyz = self.position();
+        Eigen::Vector3d dir = self.direction();
+        dir[2] = 0.0;
+        dir = Arrow::_unit_vector(dir);
+
+        RowVectors xyzs(N, 3);
+        RowVectors dirs(N, 3);
+        for (int i = 0; i < N; ++i) {
+            xyzs.row(i) = arrows[i].position();
+            Eigen::Vector3d dir = arrows[i].direction();
+            dir[2] = 0.0;
+            dirs.row(i) = Arrow::_unit_vector(dir);
+        }
+        if (is_wgs84_) {
+            xyzs = lla2enu(xyzs);
+            xyz = lla2enu(xyz);
+        }
+        xyzs.col(0).array() -= xyz[0];
+        xyzs.col(1).array() -= xyz[1];
+        xyzs.col(2).array() -= xyz[2];
+        // transform to frenet
+        Eigen::Matrix3d local2world = self.Frenet();
+        xyzs = (local2world.transpose() * xyzs.transpose()).transpose().eval();
+
+        if (auto x_slots = params.x_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                if (!is_in_slots(xyzs(i, 0), *x_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+        if (!mask.sum()) {
+            return mask;
+        }
+        if (auto y_slots = params.y_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                if (!is_in_slots(xyzs(i, 1), *y_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+        if (!mask.sum()) {
+            return mask;
+        }
+        if (auto z_slots = params.z_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                if (!is_in_slots(xyzs(i, 2), *z_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+        if (!mask.sum()) {
+            return mask;
+        }
+
+        return mask;
+    }
 };
 } // namespace cubao
 #endif
