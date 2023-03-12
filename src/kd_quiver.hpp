@@ -72,25 +72,27 @@ struct KdQuiver : Quiver
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             int k,                           //
-            bool sorted = true,              //
+            bool sort = true,                //
             bool return_squared_l2 = false) const
     {
         return tree().nearest(is_wgs84_ ? lla2enu(position) : position, //
                               k,                                        //
-                              sorted,                                   //
+                              sort,                                     //
                               return_squared_l2);
     }
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             double radius,                   //
-            bool sorted = true,              //
+            bool sort = true,                //
             bool return_squared_l2 = false) const
     {
         return tree().nearest(is_wgs84_ ? lla2enu(position) : position, //
                               radius,                                   //
-                              sorted,                                   //
+                              sort,                                     //
                               return_squared_l2);
     }
+
+    Eigen::Map<const RowVectors> positions() const { return tree().points(); }
 
     RowVectors positions(const Eigen::VectorXi &hits) const
     {
@@ -118,7 +120,7 @@ struct KdQuiver : Quiver
         }
         return coords;
     }
-    std::vector<Arrow> arrows(const Eigen::VectorXi &hits)
+    std::vector<Arrow> arrows(const Eigen::VectorXi &hits) const
     {
         const int N = hits.size();
         std::vector<Arrow> arrows;
@@ -127,41 +129,12 @@ struct KdQuiver : Quiver
             auto _ = index(hits[i]);
             int line_idx = _[0];
             int pt_idx = _[1];
-            auto &ruler = polylines_.at(line_idx);
-            arrows.push_back(Arrow(ruler.at(pt_idx), ruler.dir(pt_idx)));
+            arrows.push_back(arrow(line_idx, pt_idx));
         }
         return arrows;
     }
 
-    static Eigen::VectorXi
-    filter(const std::vector<Arrow> &arrows, const Arrow &arrow,
-           // angle
-           std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
-           // positions
-           std::optional<Eigen::VectorXd> x_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> y_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> z_slots = std::nullopt,
-           bool is_wgs84 = false)
-    {
-        Eigen::VectorXi mask(arrows.size());
-        return mask;
-    }
-
-    Eigen::VectorXi
-    filter(const Eigen::VectorXi &hits, const Arrow &arrow,
-           std::optional<Eigen::VectorXd> angle_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> x_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> y_slots = std::nullopt,
-           std::optional<Eigen::VectorXd> z_slots = std::nullopt)
-    {
-        return filter(arrows(hits), arrow,       //
-                      angle_slots,               //
-                      x_slots, y_slots, z_slots, //
-                      is_wgs84_);
-    }
-
-    // helpers
-    Arrow arrow(const PolylineRuler &ruler, int segment_index, double t)
+    Arrow arrow(const PolylineRuler &ruler, int segment_index, double t) const
     {
 
         auto &polyline_ = ruler.polyline();
@@ -177,10 +150,107 @@ struct KdQuiver : Quiver
         }
         return arrow;
     }
-    Arrow arrow(const PolylineRuler &ruler, double range)
+    Arrow arrow(const PolylineRuler &ruler, double range) const
     {
         auto [seg_idx, t] = ruler.segment_index_t(range);
         return arrow(ruler, seg_idx, t);
+    }
+    Arrow arrow(int point_index) const
+    {
+        Eigen::Vector2i ii = this->index(point_index);
+        return arrow(ii[0], ii[1]);
+    }
+    Arrow arrow(int polyline_index, int segment_index) const
+    {
+        auto ruler = polyline(polyline_index);
+        return Arrow(ruler->at(segment_index), ruler->dir(segment_index)) //
+            .polyline_index(polyline_index)                               //
+            .segment_index(segment_index)                                 //
+            .t(0.0)                                                       //
+            .range(ruler->range(segment_index))                           //
+            ;
+    }
+    Arrow arrow(int polyline_index, int segment_index, double t) const
+    {
+        auto ruler = polyline(polyline_index);
+        return Arrow(ruler->at(segment_index, t), ruler->dir(segment_index))
+            .polyline_index(polyline_index)        //
+            .segment_index(segment_index)          //
+            .t(t)                                  //
+            .range(ruler->range(segment_index, t)) //
+            ;
+    }
+    Arrow arrow(int polyline_index, double range) const
+    {
+        auto ruler = polyline(polyline_index);
+        auto [xyz, dir] = ruler->arrow(range, false);
+        auto [idx, t] = ruler->segment_index_t(range);
+        return Arrow(xyz, dir)              //
+            .polyline_index(polyline_index) //
+            .segment_index(idx)             //
+            .t(t)                           //
+            .range(range)                   //
+            ;
+    }
+
+    static Eigen::VectorXi filter(const std::vector<Arrow> &arrows,
+                                  const Arrow &arrow,
+                                  const Quiver::FilterParams &params,
+                                  bool is_wgs84 = false)
+    {
+        if (is_wgs84) {
+            Quiver quiver(arrow.position());
+            return quiver.filter(arrows, arrow, params);
+        } else {
+            Quiver quiver;
+            return quiver.filter(arrows, arrow, params);
+        }
+    }
+
+    static Eigen::VectorXi select_by_mask(const Eigen::VectorXi &indexes,
+                                          const Eigen::VectorXi &mask)
+    {
+        std::vector<int> ret;
+        ret.reserve(mask.sum());
+        for (int i = 0, N = indexes.size(); i < N; ++i) {
+            if (mask[i]) {
+                ret.push_back(indexes[i]);
+            }
+        }
+        return Eigen::VectorXi::Map(&ret[0], ret.size());
+    }
+    static Eigen::VectorXd select_by_mask(const Eigen::VectorXd &norms,
+                                          const Eigen::VectorXi &mask)
+    {
+        std::vector<double> ret;
+        ret.reserve(mask.sum());
+        for (int i = 0, N = norms.size(); i < N; ++i) {
+            if (mask[i]) {
+                ret.push_back(norms[i]);
+            }
+        }
+        return Eigen::VectorXd::Map(&ret[0], ret.size());
+    }
+
+    Eigen::VectorXi filter(const Eigen::VectorXi &hits, //
+                           const Arrow &arrow,          //
+                           const Quiver::FilterParams &params) const
+    {
+        auto mask = filter(arrows(hits), arrow, //
+                           params, is_wgs84_);
+        return select_by_mask(hits, mask);
+    }
+
+    std::pair<Eigen::VectorXi, Eigen::VectorXd>
+    filter(const Eigen::VectorXi &hits,  //
+           const Eigen::VectorXd &norms, //
+           const Arrow &arrow,           //
+           const Quiver::FilterParams &params) const
+    {
+        auto mask = filter(arrows(hits), arrow, //
+                           params, is_wgs84_);
+        return {select_by_mask(hits, mask), //
+                select_by_mask(norms, mask)};
     }
 
     void reset() { reset_index(); }

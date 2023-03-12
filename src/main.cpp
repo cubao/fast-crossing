@@ -21,7 +21,10 @@
 #include "pybind11_nanoflann_kdtree.hpp"
 #include "pybind11_quiver.hpp"
 
+#define CUBAO_ARGV_DEFAULT_NONE(argv) py::arg_v(#argv, std::nullopt, "None")
+
 #include "pybind11_polyline_ruler.hpp"
+#include "pybind11_crs_transform.hpp"
 
 #include "point_in_polygon.hpp"
 #include "densify_polyline.hpp"
@@ -39,6 +42,9 @@ PYBIND11_MODULE(_pybind11_fast_crossing, m)
     cubao::bind_nanoflann_kdtree(m);
     cubao::bind_quiver(m);
     cubao::bind_polyline_ruler(m);
+
+    auto tf = m.def_submodule("tf");
+    cubao::bind_crs_transform(tf);
 
     m.def("point_in_polygon", &cubao::point_in_polygon, //
           py::kw_only(), "points"_a, "polygon"_a,

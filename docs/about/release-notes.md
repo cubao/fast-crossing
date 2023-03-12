@@ -10,6 +10,10 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.0.6 (2023-03-12)
+
+*   Integrate KdQuiver (kdtree + dirs)
+
 ## Version 0.0.5 (2023-03-08)
 
 *   Add nanaflann KdTree, use identical interface to `scipy.spatial.cKDTree`

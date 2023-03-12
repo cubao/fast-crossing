@@ -2,6 +2,7 @@
 #define CUBAO_QUIVER_HPP
 
 #include <optional>
+#include <Eigen/Core>
 
 namespace cubao
 {
@@ -132,6 +133,14 @@ struct Arrow
         return d;
     }
 
+    static double _angle(const Eigen::Vector3d &dir, const Eigen::Vector3d &ref)
+    {
+        constexpr double PI = 3.14159265358979323846;
+        Eigen::Vector3d cross = ref.cross(dir);
+        double deg = std::asin(cross.norm()) * 180.0 / PI;
+        return cross[2] > 0 ? deg : -deg;
+    }
+
     // directly expose some non-invariant values on c++ side
     int polyline_index_ = -1;
     int segment_index_ = -1;
@@ -191,7 +200,8 @@ struct Quiver
     Arrow upwards(const Arrow &cur, double delta) const
     {
         auto copy = cur;
-        copy.position_[2] += delta; // * k_[2];
+        copy.position_.array() +=
+            delta * inv_k_.array() * copy.upward().array();
         return copy;
     }
     Arrow towards(const Arrow &cur, const Eigen::Vector3d &delta,
@@ -259,14 +269,160 @@ struct Quiver
         return ret;
     }
 
-    // handles center,
-    // searches
+    struct FilterParams
+    {
+        FilterParams() = default;
+        // fluent API
+        const std::optional<Eigen::VectorXd> &x_slots() const
+        {
+            return x_slots_;
+        }
+        const std::optional<Eigen::VectorXd> &y_slots() const
+        {
+            return y_slots_;
+        }
+        const std::optional<Eigen::VectorXd> &z_slots() const
+        {
+            return z_slots_;
+        }
+        const std::optional<Eigen::VectorXd> &angle_slots() const
+        {
+            return angle_slots_;
+        }
+        FilterParams &x_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            x_slots_ = slots;
+            return *this;
+        }
+        FilterParams &y_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            y_slots_ = slots;
+            return *this;
+        }
+        FilterParams &z_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            z_slots_ = slots;
+            return *this;
+        }
+        FilterParams &angle_slots(const std::optional<Eigen::VectorXd> &slots)
+        {
+            angle_slots_ = slots;
+            return *this;
+        }
 
-    // query arrows
-    // filter arrows
-    // aggregate arrows
-    // label: polyline_index, seg_index, float
-    // position, direction
+        bool is_trivial() const
+        {
+            return !x_slots_ && !y_slots_ && !z_slots_ && !angle_slots_;
+        }
+
+      private:
+        std::optional<Eigen::VectorXd> x_slots_ = std::nullopt;
+        std::optional<Eigen::VectorXd> y_slots_ = std::nullopt;
+        std::optional<Eigen::VectorXd> z_slots_ = std::nullopt;
+        std::optional<Eigen::VectorXd> angle_slots_ = std::nullopt;
+    };
+
+    static bool is_in_slots(double v, const Eigen::VectorXd &slots)
+    {
+        for (int i = 0, N = slots.size(); i + 1 < N; i += 2) {
+            if (slots[i] <= v && v <= slots[i + 1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Eigen::VectorXi filter(const std::vector<Arrow> &arrows, //
+                           const Arrow &self,                //
+                           const FilterParams &params)
+    {
+        const int N = arrows.size();
+        Eigen::VectorXi mask(N);
+        if (N == 0) {
+            return mask;
+        }
+        mask.setOnes();
+        if (params.is_trivial()) {
+            return mask;
+        }
+
+        Eigen::Vector3d xyz = self.position();
+        Eigen::Vector3d dir = self.direction();
+        dir[2] = 0.0;
+        dir = Arrow::_unit_vector(dir);
+
+        RowVectors xyzs(N, 3);
+        RowVectors dirs(N, 3);
+        for (int i = 0; i < N; ++i) {
+            xyzs.row(i) = arrows[i].position();
+            Eigen::Vector3d dir = arrows[i].direction();
+            dir[2] = 0.0;
+            dirs.row(i) = Arrow::_unit_vector(dir);
+        }
+        if (is_wgs84_) {
+            xyzs = lla2enu(xyzs);
+            xyz = lla2enu(xyz);
+        }
+        xyzs.col(0).array() -= xyz[0];
+        xyzs.col(1).array() -= xyz[1];
+        xyzs.col(2).array() -= xyz[2];
+        // transform to frenet
+        Eigen::Matrix3d local2world = self.Frenet();
+        xyzs = (local2world.transpose() * xyzs.transpose()).transpose().eval();
+
+        if (const auto &x_slots = params.x_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                if (!is_in_slots(xyzs(i, 0), *x_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+        if (!mask.sum()) {
+            return mask;
+        }
+        if (const auto &y_slots = params.y_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                if (!is_in_slots(xyzs(i, 1), *y_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+        if (!mask.sum()) {
+            return mask;
+        }
+        if (const auto &z_slots = params.z_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                if (!is_in_slots(xyzs(i, 2), *z_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+        if (!mask.sum()) {
+            return mask;
+        }
+        if (const auto &angle_slots = params.angle_slots()) {
+            for (int i = 0; i < N; ++i) {
+                if (!mask[i]) {
+                    continue;
+                }
+                double angle = Arrow::_angle(dirs.row(i), dir);
+                if (!is_in_slots(angle, *angle_slots)) {
+                    mask[i] = 0;
+                }
+            }
+        }
+
+        return mask;
+    }
 };
 } // namespace cubao
 #endif

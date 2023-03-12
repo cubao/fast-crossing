@@ -122,7 +122,7 @@ struct KdTree : PointCloud
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             int k,                           //
-            bool sorted = true,              //
+            bool sort = true,                //
             bool return_squared_l2 = false) const
     {
         auto indexes = std::vector<int>(k);
@@ -130,7 +130,7 @@ struct KdTree : PointCloud
         auto resultSet = nanoflann::KNNResultSet<double, int, int>(k);
         resultSet.init(&indexes[0], &distances[0]);
         auto params = nanoflann::SearchParams();
-        params.sorted = sorted;
+        params.sorted = sort;
         index().findNeighbors(resultSet, position.data(), params);
         const int N = resultSet.size();
         return std::make_pair(
@@ -142,11 +142,11 @@ struct KdTree : PointCloud
     std::pair<Eigen::VectorXi, Eigen::VectorXd>
     nearest(const Eigen::Vector3d &position, //
             double radius,                   //
-            bool sorted = true,              //
+            bool sort = true,                //
             bool return_squared_l2 = false) const
     {
         auto params = nanoflann::SearchParams();
-        params.sorted = sorted;
+        params.sorted = sort;
         std::vector<std::pair<int, double>> indices_dists;
         index().radiusSearch(position.data(), //
                              radius * radius, //

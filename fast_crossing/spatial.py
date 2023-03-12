@@ -71,8 +71,8 @@ class KDTree:
             ii, dd = self.tree.nearest(
                 xyz,
                 radius=r,
+                sort=return_sorted,
                 return_squared_l2=True,
-                sorted=return_sorted,
             )
             if return_length:
                 return len(ii)
@@ -87,8 +87,8 @@ class KDTree:
             ii, dd = self.tree.nearest(
                 xyz,
                 radius=rr,
+                sort=return_sorted,
                 return_squared_l2=True,
-                sorted=return_sorted,
             )
             ret_ii.append(ii.tolist())
         if return_length:

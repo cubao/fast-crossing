@@ -7,10 +7,12 @@ import pytest
 from fast_crossing import (
     Arrow,
     FastCrossing,
+    KdQuiver,
     KdTree,
     Quiver,
     densify_polyline,
     point_in_polygon,
+    tf,
 )
 
 
@@ -433,6 +435,139 @@ def test_quiver():
     )
 
 
+def test_kdquiver():
+    quiver = KdQuiver()
+    """
+    #  0   1   2   3   4   5   6  7   8   9   10   11  12  13   14
+    #                                                  o
+    #                                                 /
+    #0 o-------------o-------------------------------+-----------o
+    #1        o-------------o-----------------o     /
+    #2                   o-------------o----------o
+    #3 o-------------o-------------------------------------------o right-to-left
+    #4 o-------------o-------------------------------------------o z += 10
+    """
+    y = 5.0
+    quiver.add([[0, y], [3.5, y], [14.0, y]])  # 0
+    y -= 1
+    quiver.add([[1.8, y], [5.2, y], [10.0, y]])  # 1
+    y -= 1
+    quiver.add([[4.5, y], [8.2, y], [10.8, y], [12.0, y + 5]])  # 2
+    y -= 1
+    quiver.add([[0, y], [3.5, y], [14.0, y]][::-1])  # 3
+    y -= 1
+    quiver.add([[0, y, 10.0], [3.5, y, 10.0], [14.0, y, 10.0]])  # 4
+
+    # nearest
+    i, d = quiver.nearest([0.0, 5.0, 0.0])
+    a = quiver.arrow(i)
+    # print(i, d, a)
+    assert i == 0 and d == 0.0 and a.polyline_index() == 0 and a.segment_index() == 0
+
+    i, d = quiver.nearest(0)
+    a = quiver.arrow(i)
+    # print(i, d, a)
+    assert i == 3 and a.polyline_index() == 1 and a.segment_index() == 0
+
+    ii, dd = quiver.nearest([4.0, 2.5, 0.0], radius=3)
+    arrows = quiver.arrows(ii)
+    # print(ii, dd, arrows)
+    # for arrow in arrows:
+    #     print(arrow)
+    assert len(ii) == len(dd) == len(arrows) == 5
+    assert np.all(ii == [6, 11, 4, 1, 3])
+    ii2, dd2 = quiver.nearest([4.0, 2.5, 0.0], k=5)
+    assert np.all(ii == ii2)
+    assert np.all(dd == dd2)
+
+    filter = Quiver.FilterParams()
+    assert filter.x_slots() is None
+    assert filter.y_slots() is None
+    assert filter.z_slots() is None
+    assert filter.angle_slots() is None
+    filter.x_slots([1, 2, 3, 4]).angle_slots([-50, 50])
+    assert np.all(filter.x_slots() == [1, 2, 3, 4])
+    assert np.all(filter.angle_slots() == [-50, 50])
+
+    arrow = Arrow([4.0, 2.5, 0.0], [1.0, 0.0, 0.0])
+    ii, dd = quiver.nearest(arrow.position(), radius=3)
+    assert len(ii) == 5
+    # for arr in quiver.arrows(ii):
+    #     print('\n', arr, sep=';')
+    ii2 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams(),
+    )
+    assert np.all(ii == ii2)
+    ii_lefts = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().y_slots([0.0, 10]),  # only lefts
+    )
+    assert len(ii_lefts) == 4
+    ii_rights = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().y_slots([-10, 0]),  # only rights
+    )
+    assert len(ii_rights) == 1
+    assert np.all(np.sort(ii) == np.sort([*ii_lefts, *ii_rights]))
+    ii, dd = quiver.nearest(arrow.position(), radius=100)
+    assert len(ii) == 16
+    ii, dd = quiver.nearest(arrow.position(), radius=100)
+    ii = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().z_slots([9, 11]),
+    )
+    assert len(ii) == 3
+
+
+def test_kdquiver_filter_by_angle():
+
+    quiver = KdQuiver()
+    vecs = {}
+    headings = [0, 30, 60, 90, 120]
+    for heading in headings:
+        rad = np.radians(90.0 - heading)
+        vec = np.array([np.cos(rad), np.sin(rad), 0.0])
+        vecs[heading] = vec
+        polyline = np.array([vec * 80, vec * 100])
+        quiver.add(polyline, index=heading)
+    np.testing.assert_allclose(30, Arrow._angle(vecs[30], ref=vecs[60]), atol=1e-15)
+    np.testing.assert_allclose(-30, Arrow._angle(vecs[90], ref=vecs[60]), atol=1e-15)
+
+    arrow = Arrow([0, 0, 0]).heading(60)
+    ii, dd = quiver.nearest(arrow.position(), radius=90)
+    assert len(ii) == len(headings)
+    np.testing.assert_allclose(dd, [80.0] * len(ii), atol=1e-15)
+
+    ii60 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().angle_slots([-1, 1]),
+    )
+    hits = np.array([a.heading() for a in quiver.arrows(ii60)])
+    np.testing.assert_allclose(hits, [60.0], atol=1e-15)
+
+    ii30_60 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().angle_slots([-1, 31]),
+    )
+    hits = np.array([a.heading() for a in quiver.arrows(ii30_60)])
+    np.testing.assert_allclose(sorted(hits), [30.0, 60.0], atol=1e-15)
+
+    ii30_60_120 = quiver.filter(
+        hits=ii,
+        arrow=arrow,
+        params=Quiver.FilterParams().angle_slots([-1, 31, -61, -59]),
+    )
+    hits = np.array([a.heading() for a in quiver.arrows(ii30_60_120)])
+    np.testing.assert_allclose(sorted(hits), [30.0, 60.0, 120.0], atol=1e-15)
+
+
 def test_within():
     fc = FastCrossing()
     """
@@ -504,6 +639,10 @@ def test_within():
 
 def test_nearst():
     fc = FastCrossing()
+    tree = fc.quiver()
+    assert tree is None
+    bush = fc.bush()
+    assert bush is None
     """
           0A      ┌────────┐
            ****   │    *2C │
@@ -549,6 +688,80 @@ def test_nearst():
     idx, dist = fc.nearest(np.array([0.0, 0.0, 0.0]), radius=5 + 1e-3)
     assert np.all(idx == [[4, 0]])
     np.testing.assert_allclose(dist, [5], atol=1e-15)
+
+    arrow = Arrow([-4.0, 0.0, 0.0], [0, -1, 0])
+    idx, dist = fc.nearest(arrow.position(), radius=10.0)
+    # print(idx, dist)
+    assert len(idx) == 5
+    idx, dist = fc.nearest(
+        arrow.position(),
+        radius=10.0,
+        filter=[
+            arrow.direction(),
+            Quiver.FilterParams().angle_slots([-1, 1]),
+        ],
+    )
+    # print(idx, dist)
+    assert len(idx) == 1
+    assert np.all(idx == [[4, 0]])
+
+    tree = fc.quiver()
+    assert tree is not None
+    bush = fc.bush(autobuild=False)
+    assert bush is None
+    bush = fc.bush()
+    assert bush is not None
+
+
+def test_nearst_wgs84():
+    fc = FastCrossing()
+    fc.add_polyline([[-8, 9], [-2, 9]])  # 0A
+    fc.add_polyline([[-12, -1], [-8, -8], [-5, -15]])  # 1B
+    fc.add_polyline([[6, 0], [6, 9]])  # 2C
+    fc.add_polyline([[7, -5], [18, -5]])  # 3D
+    fc.add_polyline([[0, -5], [0, -15]])  # 4E
+    arrow = Arrow([-4.0, 0.0, 0.0], [0, -1, 0])
+    idx, dist = fc.nearest(arrow.position(), radius=10.0)
+    expected_ii = np.array([[4, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
+    expected_dd = np.array([6.40312424, 8.06225775, 8.94427191, 9.21954446, 9.8488578])
+    assert np.all(idx == expected_ii)
+    np.testing.assert_allclose(dist, expected_dd, atol=1e-8)
+    assert len(idx) == 5
+    idx, dist = fc.nearest(
+        arrow.position(),
+        radius=10.0,
+        filter=[
+            arrow.direction(),
+            Quiver.FilterParams().angle_slots([-1, 1]),
+        ],
+    )
+    assert len(idx) == 1
+    assert np.all(idx == [[4, 0]])
+
+    xyzs0 = fc.quiver().positions()
+    # print(xyzs0)
+
+    fc2 = FastCrossing(is_wgs84=True)
+    anchor_lla = np.array([123.4, 56.7, 8.9])
+    for index, ruler in fc.polyline_rulers().items():
+        enus = ruler.polyline()
+        llas = tf.enu2lla(enus, anchor_lla=anchor_lla)
+        fc2.add_polyline(llas, index=index)
+    # print(fc2.quiver().anchor())
+    xyzs1 = tf.lla2enu(
+        tf.enu2lla(fc2.quiver().positions(), anchor_lla=fc2.quiver().anchor()),
+        anchor_lla=anchor_lla,
+    )
+    # print(xyzs1)
+    np.testing.assert_allclose(xyzs0, xyzs1, atol=1e-8)
+
+    position = tf.enu2lla([-4, 0, 0], anchor_lla=anchor_lla).reshape(-1)
+    arrow = Arrow(position, [0, -1, 0])
+    idx, dist = fc2.nearest(arrow.position(), radius=10.0)
+    # precision error??
+    # print(idx, dist)
+    np.testing.assert_allclose(dist[:4], expected_dd[:4], atol=1e-4)
+    # assert len(idx) == 5
 
 
 def pytest_main(dir: str, *, test_file: str = None):
