@@ -688,6 +688,22 @@ def test_nearst():
     assert np.all(idx == [[4, 0]])
     np.testing.assert_allclose(dist, [5], atol=1e-15)
 
+    arrow = Arrow([-4.0, 0.0, 0.0], [0, -1, 0])
+    idx, dist = fc.nearest(arrow.position(), radius=10.0)
+    # print(idx, dist)
+    assert len(idx) == 5
+    idx, dist = fc.nearest(
+        arrow.position(),
+        radius=10.0,
+        filter=[
+            arrow.direction(),
+            Quiver.FilterParams().angle_slots([-1, 1]),
+        ],
+    )
+    # print(idx, dist)
+    assert len(idx) == 1
+    assert np.all(idx == [[4, 0]])
+
     tree = fc.quiver()
     assert tree is not None
     bush = fc.bush(autobuild=False)
