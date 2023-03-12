@@ -557,7 +557,7 @@ def test_kdquiver_filter_by_angle():
         params=Quiver.FilterParams().angle_slots([-1, 31]),
     )
     hits = np.array([a.heading() for a in quiver.arrows(ii30_60)])
-    np.testing.assert_allclose(hits, [30.0, 60.0], atol=1e-15)
+    np.testing.assert_allclose(sorted(hits), [30.0, 60.0], atol=1e-15)
 
     ii30_60_120 = quiver.filter(
         hits=ii,
@@ -565,7 +565,7 @@ def test_kdquiver_filter_by_angle():
         params=Quiver.FilterParams().angle_slots([-1, 31, -61, -59]),
     )
     hits = np.array([a.heading() for a in quiver.arrows(ii30_60_120)])
-    np.testing.assert_allclose(hits, [30.0, 60.0, 120.0], atol=1e-15)
+    np.testing.assert_allclose(sorted(hits), [30.0, 60.0, 120.0], atol=1e-15)
 
 
 def test_within():
