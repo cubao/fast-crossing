@@ -12,6 +12,7 @@ from fast_crossing import (
     Quiver,
     densify_polyline,
     point_in_polygon,
+    polyline_in_polygon,
     tf,
 )
 
@@ -762,6 +763,43 @@ def test_nearst_wgs84():
     # print(idx, dist)
     np.testing.assert_allclose(dist[:4], expected_dd[:4], atol=1e-4)
     # assert len(idx) == 5
+
+
+def test_polyline_in_polygon():
+    """
+           2    4
+           *    *
+      A   /|   /|
+       o---+--/-+--------------o D
+       |/  | /  |              |
+       /   |/   |              |
+      /|   *    *              |
+    1* |   3    5              |
+      Bo-----------------------o
+                               C
+    """
+    polygon_ABCD = np.array(
+        [
+            [0.0, 0.0],  # A
+            [0.0, -10.0],  # B
+            [20.0, -10.0],  # C
+            [20.0, 0.0],  # D
+            [0.0, 0.0],  # A
+        ]
+    )
+    polyline_12345 = np.array(
+        [
+            [-2.0, -9.0, 0.0],  # 1
+            [3.0, 7.0, 1.0],  # 2
+            [3.0, -7.0, 2.0],  # 3
+            [8.0, 7.0, 3.0],  # 4
+            [8.0, -7.0, 4.0],  # 5
+        ]
+    )
+    chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
+    for idx, polyline in chunks.items():
+        print(idx)
+        print(polyline)
 
 
 def pytest_main(dir: str, *, test_file: str = None):
