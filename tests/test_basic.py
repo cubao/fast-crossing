@@ -797,11 +797,28 @@ def test_polyline_in_polygon():
         ]
     )
     chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
+    ranges = []
     for (seg1, t1, r1, seg2, t2, r2), polyline in chunks.items():
+        ranges.append(r2 - r1)
         print(f"\n#length: {r2 - r1:.3f}")
         print(seg1, t1, r1)
         print(seg2, t2, r2)
         print(polyline)
+    expected_ranges = [2.72883, 14.4676666, 7.01783]
+    np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
+
+    anchor_lla = [123.4, 56.7, 8.9]
+    chunks = polyline_in_polygon(
+        tf.enu2lla(polyline_12345, anchor_lla=anchor_lla),
+        tf.enu2lla(
+            np.c_[polygon_ABCD, np.zeros(len(polygon_ABCD))], anchor_lla=anchor_lla
+        )[:, :2],
+        is_wgs84=True,
+    )
+    ranges = []
+    for _, _, r1, _, _, r2 in chunks.keys():
+        ranges.append(r2 - r1)
+    np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
 
 
 def pytest_main(dir: str, *, test_file: str = None):
