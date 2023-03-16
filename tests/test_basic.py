@@ -797,8 +797,10 @@ def test_polyline_in_polygon():
         ]
     )
     chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
-    for idx, polyline in chunks.items():
-        print(idx)
+    for (seg1, t1, r1, seg2, t2, r2), polyline in chunks.items():
+        print(f"\n#length: {r2 - r1:.3f}")
+        print(seg1, t1, r1)
+        print(seg2, t2, r2)
         print(polyline)
 
 
@@ -820,5 +822,6 @@ def pytest_main(dir: str, *, test_file: str = None):
 
 
 if __name__ == "__main__":
+    np.set_printoptions(suppress=True)
     pwd = os.path.abspath(os.path.dirname(__file__))
     pytest_main(pwd, test_file=os.path.basename(__file__))
