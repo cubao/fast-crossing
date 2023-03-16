@@ -16,6 +16,7 @@
 #include <pybind11/pybind11.h>
 
 #include "fast_crossing.hpp"
+#include "polyline_in_polygon.hpp"
 #include "pybind11_fast_crossing.hpp"
 #include "pybind11_flatbush.hpp"
 #include "pybind11_nanoflann_kdtree.hpp"
@@ -52,6 +53,8 @@ PYBIND11_MODULE(_pybind11_fast_crossing, m)
     m.def("densify_polyline", &cubao::densify_polyline, //
           "polyline"_a, py::kw_only(), "max_gap"_a,
           "densify polyline, interpolate to satisfy max_gap");
+    m.def("polyline_in_polygon", &cubao::polyline_in_polygon, //
+          "polyline"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
