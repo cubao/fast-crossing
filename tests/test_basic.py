@@ -12,6 +12,7 @@ from fast_crossing import (
     Quiver,
     densify_polyline,
     point_in_polygon,
+    polyline_in_polygon,
     tf,
 )
 
@@ -764,6 +765,62 @@ def test_nearst_wgs84():
     # assert len(idx) == 5
 
 
+def test_polyline_in_polygon():
+    """
+           2    4
+           *    *
+      A   /|   /|
+       o---+--/-+--------------o D
+       |/  | /  |              |
+       /   |/   |              |
+      /|   *    *              |
+    1* |   3    5              |
+      Bo-----------------------o
+                               C
+    """
+    polygon_ABCD = np.array(
+        [
+            [0.0, 0.0],  # A
+            [0.0, -10.0],  # B
+            [20.0, -10.0],  # C
+            [20.0, 0.0],  # D
+            [0.0, 0.0],  # A
+        ]
+    )
+    polyline_12345 = np.array(
+        [
+            [-2.0, -9.0, 0.0],  # 1
+            [3.0, 7.0, 1.0],  # 2
+            [3.0, -7.0, 2.0],  # 3
+            [8.0, 7.0, 3.0],  # 4
+            [8.0, -7.0, 4.0],  # 5
+        ]
+    )
+    chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
+    ranges = []
+    for (seg1, t1, r1, seg2, t2, r2), polyline in chunks.items():
+        ranges.append(r2 - r1)
+        print(f"\n#length: {r2 - r1:.3f}")
+        print(seg1, t1, r1)
+        print(seg2, t2, r2)
+        print(polyline)
+    expected_ranges = [2.72883, 14.4676666, 7.01783]
+    np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
+
+    anchor_lla = [123.4, 56.7, 8.9]
+    chunks = polyline_in_polygon(
+        tf.enu2lla(polyline_12345, anchor_lla=anchor_lla),
+        tf.enu2lla(
+            np.c_[polygon_ABCD, np.zeros(len(polygon_ABCD))], anchor_lla=anchor_lla
+        )[:, :2],
+        is_wgs84=True,
+    )
+    ranges = []
+    for _, _, r1, _, _, r2 in chunks.keys():
+        ranges.append(r2 - r1)
+    np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
+
+
 def pytest_main(dir: str, *, test_file: str = None):
 
     os.chdir(dir)
@@ -782,5 +839,6 @@ def pytest_main(dir: str, *, test_file: str = None):
 
 
 if __name__ == "__main__":
+    np.set_printoptions(suppress=True)
     pwd = os.path.abspath(os.path.dirname(__file__))
     pytest_main(pwd, test_file=os.path.basename(__file__))
