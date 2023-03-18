@@ -9,14 +9,16 @@ from vedo.plotter import Event  # noqa
 from vedo.pointcloud import Points  # noqa
 from vedo.shapes import Line, Polygon  # noqa
 
+from fast_crossing import polyline_in_polygon
+
 
 # https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
 def generate_polygon(
     *,
     center: Tuple[float, float] = (0.0, 0.0),
     avg_radius: float = 100.0,
-    irregularity: float = 1.0,
-    spikiness: float = 0.1,
+    irregularity: float = 2.0,
+    spikiness: float = 0.3,
     num_vertices: int = 100,
     close: bool = True,
 ) -> List[Tuple[float, float]]:
@@ -81,24 +83,25 @@ def on_key_press(evt):
 
 radius = 100
 
-# Create a set of points in space
-pts = Circle(r=radius, res=8).extrude(zshift=0.5).ps(8)
-print(type(pts))
+polygon = generate_polygon(avg_radius=radius, irregularity=1.0, spikiness=0.2)
+polygon = Line(polygon)
+# print(polygon.points().shape)
 
-pts2 = generate_polygon(avg_radius=radius, irregularity=1.0, spikiness=0.2)
-# pts2 = Points(pts2)
-pts2 = Line(pts2)
-print(pts2.points().shape)
+xs = np.linspace(-radius, radius, 30)
+ys = np.sin(xs * 2) * radius / 6
+rs = np.linspace(0, np.pi, len(xs))[::-1]  # upper half circle
+xs += np.cos(rs) * radius
+ys += np.sin(rs) * radius
+ys -= radius / 3
+polyline = Line(np.c_[xs, ys, np.ones(len(xs))])
 
-# Visualize the points
-plt = show([pts, pts2], __doc__, interactive=False, axes=1)
+plt = show([polygon], __doc__, interactive=False, axes=1)
+sptool = plt.add_spline_tool(polyline, closed=False)
+print(sptool.spline().points().shape)
 
-# Add the spline tool using the same points and interact with it
-sptool = plt.add_spline_tool(pts, closed=True)
-# sptool = plt.add_spline_tool(pts2, closed=True)
-
-# spline = sptool.spline()
-# print(spline, type(spline))
+chunks = polyline_in_polygon(sptool.spline().points(), polygon.points()[:, :2])
+print(len(chunks))
+# print(chunks)
 
 
 def callback(evt: Event):
