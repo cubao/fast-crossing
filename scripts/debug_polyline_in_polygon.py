@@ -1,4 +1,8 @@
 # based on https://raw.githubusercontent.com/marcomusy/vedo/master/examples/basic/spline_tool.py
+# recorded video:
+#   -   youtube: https://www.youtube.com/watch?v=1dPJ3P84FxE
+#   -   bilibil: https://www.bilibili.com/video/BV1D24y1u7uB
+
 import math
 import random
 from typing import List, Tuple
