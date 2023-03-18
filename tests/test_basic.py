@@ -820,6 +820,11 @@ def test_polyline_in_polygon():
         ranges.append(r2 - r1)
     np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
 
+    chunks = polyline_in_polygon([[100, 0, 0], [200, 0, 0]], polygon_ABCD)
+    assert len(chunks) == 0
+
+    # TODO, test touches
+
 
 def pytest_main(dir: str, *, test_file: str = None):
 
