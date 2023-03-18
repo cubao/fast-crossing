@@ -9,7 +9,7 @@ from vedo.plotter import Event  # noqa
 from vedo.pointcloud import Points  # noqa
 from vedo.shapes import Line, Polygon  # noqa
 
-from fast_crossing import polyline_in_polygon
+from fast_crossing import PolylineRuler, polyline_in_polygon  # noqa
 
 
 # https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
@@ -94,23 +94,45 @@ xs += np.cos(rs) * radius
 ys += np.sin(rs) * radius
 ys -= radius / 3
 polyline = Line(np.c_[xs, ys, np.ones(len(xs))])
+# print(polyline.points().shape)
+
+sptool = None
+
+
+def update_polyline_segments():
+    if sptool is None:
+        coords = polyline.points()
+    else:
+        coords = sptool.spline().points()
+    chunks = polyline_in_polygon(coords, polygon.points()[:, :2])
+    layer = []
+    np.random.seed(0)
+    for label, coords in chunks.items():
+        l1, l2 = label[:3], label[3:]  # noqa
+        coords[:, 2] += radius / 50
+        seg = Line(coords).linewidth(10)
+        seg.color((np.random.random(3) * 200 + 55).astype(np.uint8).tolist())
+        # length = l2[-1] - l1[-1]
+        # ruler = PolylineRuler(coords)
+        # ranges = (np.copy(ruler.ranges()) + l1[-1]).round(3).tolist()
+        # seg.labels(ranges, ratio=100)
+        layer.append(seg)
+    return layer
+
 
 plt = show([polygon], __doc__, interactive=False, axes=1)
 sptool = plt.add_spline_tool(polyline, closed=False)
-print(sptool.spline().points().shape)
-
-chunks = polyline_in_polygon(sptool.spline().points(), polygon.points()[:, :2])
-print(len(chunks))
-# print(chunks)
+layer = update_polyline_segments()
+plt.add(layer)
 
 
-def callback(evt: Event):
-    if not evt.actor:
-        return
-    print("point coords =", evt.picked3d)
-    sptool.spline()
+def on_sptool(obj, evt):
+    global layer
+    plt.remove(layer)
+    layer = update_polyline_segments()
+    plt.add(layer)
 
 
-plt.add_callback("mouse hovering", callback)
+sptool.AddObserver("InteractionEvent", on_sptool)
 
 plt.interactive()
