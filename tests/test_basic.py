@@ -843,6 +843,14 @@ def pytest_main(dir: str, *, test_file: str = None):
     )
 
 
+def test_duplicates():
+    fc = FastCrossing()
+    fc.add_polyline(np.array([[0.0, 0.0], [5.0, 0.0]]))
+    assert len(fc.intersections()) == 0
+    fc.add_polyline(np.array([[0.0, 0.0], [5.0, 0.0]]))
+    assert len(fc.intersections()) == 1
+
+
 if __name__ == "__main__":
     np.set_printoptions(suppress=True)
     pwd = os.path.abspath(os.path.dirname(__file__))
