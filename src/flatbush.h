@@ -39,8 +39,8 @@ template <typename TCoord> class FlatBush
         TCoord MaxY;
         bool PositiveUnion(const Box &b) const
         {
-            return b.MaxX >= MinX && b.MinX <= MaxX && b.MaxY >= MinY &&
-                   b.MinY <= MaxY;
+            return b.MaxX >= MinX && b.MinX <= MaxX && //
+                   b.MaxY >= MinY && b.MinY <= MaxY;
         }
     };
 
@@ -50,14 +50,16 @@ template <typename TCoord> class FlatBush
     FlatBush(int N) { Reserve(N); }
     void Reserve(int size); // Calling this before calling
                             // add(),add()...finish() is an optimization
-    int Add(TCoord minX, TCoord minY, TCoord maxX, TCoord maxY, int label0 = -1,
+    int Add(TCoord minX, TCoord minY, TCoord maxX, TCoord maxY, //
+            int label0 = -1,
             int label1 = -1); // Add an item, and return it's index
     int Add(const Eigen::Ref<const PolylineType> &polyline, int label0 = -1);
-    void Finish(); // Build the index
-    void Search(TCoord minX, TCoord minY, TCoord maxX, TCoord maxY,
-                std::vector<int> &results) const; // Search for items
-    std::vector<int> Search(TCoord minX, TCoord minY, TCoord maxX,
-                            TCoord maxY) const; // Search for items
+    void Finish();                        // Build the index
+    void Search(TCoord minX, TCoord minY, //
+                TCoord maxX, TCoord maxY,
+                std::vector<int> &results) const;     // Search for items
+    std::vector<int> Search(TCoord minX, TCoord minY, // Search for items
+                            TCoord maxX, TCoord maxY) const;
     int Size() const { return NumItems; }
 
     Eigen::Map<const BoxesType> boxes() const
@@ -204,8 +206,8 @@ template <typename TCoord> void FlatBush<TCoord>::Finish()
 }
 
 template <typename TCoord>
-std::vector<int> FlatBush<TCoord>::Search(TCoord minX, TCoord minY, TCoord maxX,
-                                          TCoord maxY) const
+std::vector<int> FlatBush<TCoord>::Search(TCoord minX, TCoord minY, //
+                                          TCoord maxX, TCoord maxY) const
 {
     std::vector<int> results;
     Search(minX, minY, maxX, maxY, results);
@@ -213,8 +215,9 @@ std::vector<int> FlatBush<TCoord>::Search(TCoord minX, TCoord minY, TCoord maxX,
 }
 
 template <typename TCoord>
-void FlatBush<TCoord>::Search(TCoord minX, TCoord minY, TCoord maxX,
-                              TCoord maxY, std::vector<int> &results) const
+void FlatBush<TCoord>::Search(TCoord minX, TCoord minY, //
+                              TCoord maxX, TCoord maxY,
+                              std::vector<int> &results) const
 {
     if (LevelBounds.size() == 0) {
         // Must call Finish()
