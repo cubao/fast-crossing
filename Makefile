@@ -38,7 +38,6 @@ test_in_linux:
 
 DEV_CONTAINER_NAME ?= $(USER)_$(subst /,_,$(PROJECT_NAME)____$(PROJECT_SOURCE_DIR))
 DEV_CONTAINER_IMAG ?= $(DOCKER_TAG_LINUX)
-test_in_container:
 test_in_dev_container:
 	docker ps | grep $(DEV_CONTAINER_NAME) \
 		&& docker exec -it $(DEV_CONTAINER_NAME) bash \
