@@ -116,9 +116,17 @@ benchmark_point_in_polygon:
 
 SYNC_OUTPUT_DIR ?= headers/include/cubao
 sync_headers:
+	cp src/densify_polyline.hpp $(SYNC_OUTPUT_DIR)
 	cp src/fast_crossing.hpp $(SYNC_OUTPUT_DIR)
+	cp src/flatbush.h $(SYNC_OUTPUT_DIR)
+	cp src/kd_quiver.hpp $(SYNC_OUTPUT_DIR)
+	cp src/nanoflann_kdtree.hpp $(SYNC_OUTPUT_DIR)
+	cp src/polyline_in_polygon.hpp $(SYNC_OUTPUT_DIR)
 	cp src/pybind11_fast_crossing.hpp $(SYNC_OUTPUT_DIR)
 	cp src/pybind11_flatbush.hpp $(SYNC_OUTPUT_DIR)
+	cp src/pybind11_nanoflann_kdtree.hpp $(SYNC_OUTPUT_DIR)
+	cp src/pybind11_quiver.hpp $(SYNC_OUTPUT_DIR)
+	cp src/quiver.hpp $(SYNC_OUTPUT_DIR)
 
 # https://stackoverflow.com/a/25817631
 echo-%  : ; @echo -n $($*)
