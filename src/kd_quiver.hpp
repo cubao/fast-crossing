@@ -1,3 +1,8 @@
+// should sync
+// - https://github.com/cubao/fast-crossing/blob/master/src/kd_quiver.hpp
+// -
+// https://github.com/cubao/headers/tree/main/include/cubao/kd_quiver.hpp
+
 #ifndef CUBAO_KD_QUIVER_HPP
 #define CUBAO_KD_QUIVER_HPP
 
@@ -141,7 +146,7 @@ struct KdQuiver : Quiver
         Eigen::Vector3d pos =
             ruler.interpolate(polyline_.row(segment_index),     //
                               polyline_.row(segment_index + 1), //
-                              t, ruler.is_wgs84());
+                              t);
         Eigen::Vector3d dir = ruler.dirs().row(segment_index);
         auto arrow = Arrow(pos, dir);
         arrow.segment_index(segment_index).t(t);

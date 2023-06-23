@@ -10,6 +10,10 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.0.8 (2023-06-23)
+
+*   Sync with headers
+
 ## Version 0.0.7 (2023-03-18)
 
 *   Add polyline-in-polygon test, [youtube](https://www.youtube.com/watch?v=1dPJ3P84FxE), [bilibili](https://www.bilibili.com/video/BV1D24y1u7uB)

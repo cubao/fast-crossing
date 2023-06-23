@@ -7,6 +7,7 @@ import pytest
 from fast_crossing import (
     Arrow,
     FastCrossing,
+    FlatBush,
     KdQuiver,
     KdTree,
     Quiver,
@@ -841,6 +842,80 @@ def pytest_main(dir: str, *, test_file: str = None):
             ]
         )
     )
+
+
+def test_duplicates():
+    fc = FastCrossing()
+    fc.add_polyline(np.array([[0.0, 0.0], [5.0, 0.0]]))
+    assert len(fc.intersections()) == 0
+    fc.add_polyline(np.array([[0.0, 0.0], [5.0, 0.0]]))
+    assert len(fc.intersections()) == 1
+
+
+def test_flatbush():
+    polyline = [
+        [0, 0],
+        [10, 0],
+        [10, 5],
+        [20, 5],
+    ]
+    fb = FlatBush()
+    fb.add(polyline)
+    fb.add(polyline[::-1])
+    assert np.all(
+        fb.labels()
+        == [
+            [-1, 0],
+            [-1, 1],
+            [-1, 2],
+            [-1, 0],
+            [-1, 1],
+            [-1, 2],
+        ]
+    )
+    assert np.all(
+        fb.boxes()
+        == [
+            [0.0, 0.0, 10.0, 0.0],
+            [10.0, 0.0, 10.0, 5.0],
+            [10.0, 5.0, 20.0, 5.0],
+            [20.0, 5.0, 10.0, 5.0],
+            [10.0, 5.0, 10.0, 0.0],
+            [10.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    assert not fb.search([0, 0], [10, 10])
+    fb.finish()
+    assert fb.search([0, 0], [10, 10])
+
+    assert sorted(
+        fb.search(
+            [
+                0,
+                0,
+            ],
+            [0, 0],
+        )
+    ) == [0, 5]
+    assert np.all(fb.box(0)[:2] == fb.box(5)[-2:])
+    assert np.all(fb.box(0)[-2:] == fb.box(5)[:2])
+
+    fb = FlatBush()
+    fb.add(polyline)
+    fb.add(polyline[::-1])
+    fb.add(polyline)
+    fb.add(polyline[::-1])
+    fb.finish()
+    assert sorted(
+        fb.search(
+            [
+                0,
+                0,
+            ],
+            [0, 0],
+        )
+    ) == [0, 5, 6, 11]
 
 
 if __name__ == "__main__":

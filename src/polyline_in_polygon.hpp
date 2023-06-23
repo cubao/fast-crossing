@@ -1,3 +1,9 @@
+// should sync
+// -
+// https://github.com/cubao/fast-crossing/blob/master/src/polyline_in_polygon.hpp
+// -
+// https://github.com/cubao/headers/tree/main/include/cubao/polyline_in_polygon.hpp
+
 #ifndef CUBAO_POLYLINE_IN_POLYGON
 #define CUBAO_POLYLINE_IN_POLYGON
 
@@ -14,7 +20,7 @@ using PolylineChunks = std::map<std::tuple<int,    // seg_idx
                                            double  // range
                                            >,
                                 RowVectors>;
-PolylineChunks
+inline PolylineChunks
 polyline_in_polygon(const RowVectors &polyline, //
                     const Eigen::Ref<const RowVectorsNx2> &polygon,
                     bool is_wgs84 = false)

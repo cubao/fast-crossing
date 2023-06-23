@@ -1,3 +1,8 @@
+// should sync
+// - https://github.com/cubao/fast-crossing/blob/master/src/fast_crossing.hpp
+// -
+// https://github.com/cubao/headers/tree/main/include/cubao/fast_crossing.hpp
+
 #ifndef CUBAO_FAST_CROSSING_HPP
 #define CUBAO_FAST_CROSSING_HPP
 

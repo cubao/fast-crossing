@@ -1,3 +1,8 @@
+// should sync
+// - https://github.com/cubao/fast-crossing/blob/master/src/nanoflann_kdtree.hpp
+// -
+// https://github.com/cubao/headers/tree/main/include/cubao/nanoflann_kdtree.hpp
+
 #ifndef CUBAO_NANO_KDTREE_HPP
 #define CUBAO_NANO_KDTREE_HPP
 
