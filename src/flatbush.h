@@ -1,10 +1,10 @@
-#pragma once
-
-// based on https://github.com/IMQS/flatbush/blob/master/flatbush.h
-
 // should sync
 // - https://github.com/cubao/fast-crossing/blob/master/src/flatbush.h
 // - https://github.com/cubao/headers/tree/main/include/cubao/flatbush.h
+
+#pragma once
+
+// based on https://github.com/IMQS/flatbush/blob/master/flatbush.h
 
 #include <vector>
 #include <algorithm>

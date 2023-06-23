@@ -1,3 +1,8 @@
+// should sync
+// - https://github.com/cubao/fast-crossing/blob/master/src/kd_quiver.hpp
+// -
+// https://github.com/cubao/headers/tree/main/include/cubao/kd_quiver.hpp
+
 #ifndef CUBAO_KD_QUIVER_HPP
 #define CUBAO_KD_QUIVER_HPP
 

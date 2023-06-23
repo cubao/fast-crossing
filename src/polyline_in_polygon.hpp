@@ -1,3 +1,9 @@
+// should sync
+// -
+// https://github.com/cubao/fast-crossing/blob/master/src/polyline_in_polygon.hpp
+// -
+// https://github.com/cubao/headers/tree/main/include/cubao/polyline_in_polygon.hpp
+
 #ifndef CUBAO_POLYLINE_IN_POLYGON
 #define CUBAO_POLYLINE_IN_POLYGON
 
