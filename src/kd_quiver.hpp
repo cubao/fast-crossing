@@ -141,7 +141,7 @@ struct KdQuiver : Quiver
         Eigen::Vector3d pos =
             ruler.interpolate(polyline_.row(segment_index),     //
                               polyline_.row(segment_index + 1), //
-                              t, ruler.is_wgs84());
+                              t);
         Eigen::Vector3d dir = ruler.dirs().row(segment_index);
         auto arrow = Arrow(pos, dir);
         arrow.segment_index(segment_index).t(t);
