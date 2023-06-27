@@ -2,6 +2,8 @@
 
 ![](fast-crossing.png)
 
+![](https://cubao.readthedocs.io/en/latest/notebooks/fast-crossing.gif)
+
 (See jupyter notebook [here](https://github.com/cubao/index/blob/master/docs/notebooks/fast-crossing.ipynb))
 
 {%
