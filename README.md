@@ -101,14 +101,14 @@ def test_fast_crossing():
     # print(ret)
     assert len(ret) == 1
     for xy, ts, label1, label2 in ret:
-        # xy 是交点，即图中的 o 点坐标
-        # t,s 是分位点，(0.5, 0.33)
-        #        0.5  ->   o 在 AB 1/2 处
-        #        0.33 ->   o 在 DE 1/3 处
-        # label1 是 line segment 索引，(polyline_index, point_index)
-        #        e.g. (0, 0)，polyline AB 的第一段
-        # label2 是另一个条 line seg 的索引
-        #        e.g. (1, 1)，polyline CDE 的第二段（DE 段）
+        # xy: intersection point, 2D ('o' in previous illustration)
+        # t,s: interpolation ratio (0.5, 0.33)
+        #        0.5  ->   o at AB t=1/2
+        #        0.33 ->   o at DE s=1/3
+        # label1: line segment index, (polyline_index, point_index)
+        #        e.g. (0, 0)，first segment of polyline AB (AB is the first polyline)
+        # label2: line segment index
+        #        e.g. (1, 1)，second segment of polyline CDE
         # print(xy)
         # print(ts)
         # print(label1)
@@ -121,11 +121,11 @@ def test_fast_crossing():
     # query intersections against provided polyline
     polyline = np.array([[-6.0, -1.0], [-5.0, 1.0], [5.0, -1.0]])
     ret = fc.intersections(polyline)
-    ret = np.array(ret)  # 还是转化成 numpy 比较好用
-    xy = ret[:, 0]  # 直接取出所有交点
-    ts = ret[:, 1]  # 所有分位点
-    label1 = ret[:, 2]  # 所有 label1（当前 polyline 的 label）
-    label2 = ret[:, 3]  # tree 中 line segs 的 label
+    ret = np.array(ret)  # convert to numpy
+    xy = ret[:, 0]  # take all intersection points (2D)
+    ts = ret[:, 1]  # all interpolation ratios
+    label1 = ret[:, 2]  # all labels (of current polyline）
+    label2 = ret[:, 3]  # all labels in tree
     # print(ret, xy, ts, label1, label2)
     assert np.all(xy[0] == [0, 0])
     assert np.all(xy[1] == [2.5, -0.5])
