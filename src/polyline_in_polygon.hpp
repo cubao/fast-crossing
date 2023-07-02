@@ -23,12 +23,11 @@ using PolylineChunks = std::map<std::tuple<int,    // seg_idx
 inline PolylineChunks
 polyline_in_polygon(const RowVectors &polyline, //
                     const Eigen::Ref<const RowVectorsNx2> &polygon,
-                    const FastCrossing &fc, //
-                    bool is_wgs84 = false)
+                    const FastCrossing &fc)
 {
     auto intersections = fc.intersections(polyline);
     // pt, (t, s), cur_label=(poly1, seg1), tree_label=(poly2, seg2)
-    auto ruler = PolylineRuler(polyline, is_wgs84);
+    auto ruler = PolylineRuler(polyline, fc.is_wgs84());
     // 0.0, [r1, r2, ..., length]
     const int N = intersections.size() + 1;
     Eigen::VectorXd ranges(N);
@@ -78,7 +77,7 @@ polyline_in_polygon(const RowVectors &polyline, //
     auto fc = FastCrossing(is_wgs84);
     fc.add_polyline(polygon);
     fc.finish();
-    return polyline_in_polygon(polyline, polygon, fc, is_wgs84);
+    return polyline_in_polygon(polyline, polygon, fc);
 }
 
 } // namespace cubao

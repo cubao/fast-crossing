@@ -53,7 +53,16 @@ PYBIND11_MODULE(_pybind11_fast_crossing, m)
     m.def("densify_polyline", &cubao::densify_polyline, //
           "polyline"_a, py::kw_only(), "max_gap"_a,
           "densify polyline, interpolate to satisfy max_gap");
-    m.def("polyline_in_polygon", &cubao::polyline_in_polygon, //
+    m.def("polyline_in_polygon",
+          py::overload_cast<const cubao::RowVectors &, //
+                            const Eigen::Ref<const cubao::RowVectorsNx2> &,
+                            const cubao::FastCrossing &>(
+              &cubao::polyline_in_polygon), //
+          "polyline"_a, "polygon"_a, py::kw_only(), "fc"_a);
+    m.def("polyline_in_polygon",
+          py::overload_cast<const cubao::RowVectors &, //
+                            const Eigen::Ref<const cubao::RowVectorsNx2> &,
+                            bool>(&cubao::polyline_in_polygon), //
           "polyline"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false);
 
 #ifdef VERSION_INFO
