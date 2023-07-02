@@ -2,7 +2,7 @@
 
 code:
 
--   https://github.com/cubao/fast-crossing/blob/master/scripts/debug_polyline_in_polygon.py
+-   <https://github.com/cubao/fast-crossing/blob/master/scripts/debug_polyline_in_polygon.py>
 
 video:
 
@@ -12,5 +12,6 @@ video:
 ```python
 {%
    include-markdown "../scripts/debug_polyline_in_polygon.py"
+   comments=false
 %}
 ```
