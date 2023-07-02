@@ -3,6 +3,7 @@ import sys
 
 import numpy as np
 import pytest
+import time
 
 from fast_crossing import (
     Arrow,
@@ -795,6 +796,22 @@ def test_polyline_in_polygon():
         print(polyline)
     expected_ranges = [2.72883, 14.4676666, 7.01783]
     np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
+
+    # test fc
+    fc = FastCrossing()
+    fc.add_polyline(polygon_ABCD)
+    chunks2 = polyline_in_polygon(polyline_12345, polygon_ABCD, fc=fc)
+    assert list(chunks.keys()) == list(chunks2.keys())
+    N = 1000
+    tick = time.time()
+    for _ in range(N):
+        polyline_in_polygon(polyline_12345, polygon_ABCD)
+    delta1 = time.time() - tick
+    tick = time.time()
+    for _ in range(N):
+        polyline_in_polygon(polyline_12345, polygon_ABCD, fc=fc)
+    delta2 = time.time() - tick
+    assert delta2 < delta1
 
     anchor_lla = [123.4, 56.7, 8.9]
     chunks = polyline_in_polygon(
