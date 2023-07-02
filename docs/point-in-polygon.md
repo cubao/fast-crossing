@@ -93,5 +93,5 @@ python3 benchmarks/benchmark_point_in_polygon.py cubao \
 | implementation | time (seconds) | speed up |
 | :-- | :-- | :-- |
 | shapely | 0.114556074 | |
-| matplotlib | 0.001869917 | x61 |
-| cubao | 0.001556635 | x73 |
+| matplotlib | 0.001869917 | 61x |
+| cubao | 0.001556635 | 73x |
