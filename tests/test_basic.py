@@ -1,9 +1,9 @@
 import os
 import sys
+import time
 
 import numpy as np
 import pytest
-import time
 
 from fast_crossing import (
     Arrow,
