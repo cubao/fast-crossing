@@ -49,13 +49,13 @@ jobs:
       with:
         platforms: all
 
-    - uses: pypa/cibuildwheel@v2.12.0
+    - uses: pypa/cibuildwheel@v2.17.0
       env:
         # CIBW_ARCHS: auto64
         CIBW_ARCHS_LINUX: x86_64 aarch64
         CIBW_ARCHS_WINDOWS: AMD64 # ARM64
         CIBW_ARCHS_MACOS: x86_64 arm64
-        CIBW_BEFORE_BUILD: pip install numpy scipy fire --prefer-binary
+        CIBW_BEFORE_BUILD: pip install numpy fire --prefer-binary
         # https://cibuildwheel.readthedocs.io/en/stable/options/#build-skip
         CIBW_SKIP: pp* *i686 *musllinux*
         CIBW_TEST_SKIP: "*macosx* *win* *aarch64"
