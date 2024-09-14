@@ -10,6 +10,10 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.0.9 (2024-09-07)
+
+*   Update pybind11 (for python 3.11, 3.12), ditch python 3.6, 3.7
+
 ## Version 0.0.8 (2023-06-23)
 
 *   Sync with headers
