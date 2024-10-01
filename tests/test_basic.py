@@ -791,11 +791,18 @@ def test_polyline_in_polygon():
     for (seg1, t1, r1, seg2, t2, r2), polyline in chunks.items():
         ranges.append(r2 - r1)
         print(f"\n#length: {r2 - r1:.3f}")
-        print(seg1, t1, r1)
-        print(seg2, t2, r2)
-        print(polyline)
+        print(f"seg={seg1},t={t1:.3f}, r={r1:.2f}")
+        print(f"seg={seg2},t={t2:.3f}, r={r2:.2f}")
+        print(polyline.round(2).tolist())
     expected_ranges = [2.72883, 14.4676666, 7.01783]
     np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
+
+    # test inside
+    polyline = next(iter(chunks.values()))
+    polyline_updated = np.copy(polyline_12345)
+    polyline_updated[0] = polyline.mean(axis=0)
+    chunks2 = polyline_in_polygon(polyline_updated, polygon_ABCD)
+    print()
 
     # test fc
     fc = FastCrossing()
@@ -925,6 +932,8 @@ def test_flatbush():
 
 
 if __name__ == "__main__":
+    test_polyline_in_polygon()
+
     np.set_printoptions(suppress=True)
     pwd = os.path.abspath(os.path.dirname(__file__))
     pytest_main(pwd, test_file=os.path.basename(__file__))

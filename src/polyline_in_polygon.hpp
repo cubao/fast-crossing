@@ -9,6 +9,7 @@
 
 #include "fast_crossing.hpp"
 #include "point_in_polygon.hpp"
+#include "dbg.h"
 
 namespace cubao
 {
@@ -26,36 +27,45 @@ polyline_in_polygon(const RowVectors &polyline, //
                     const FastCrossing &fc)
 {
     auto intersections = fc.intersections(polyline);
-    // pt, (t, s), cur_label=(poly1, seg1), tree_label=(poly2, seg2)
     auto ruler = PolylineRuler(polyline, fc.is_wgs84());
-    // 0.0, [r1, r2, ..., length]
-    const int N = intersections.size() + 1;
+    if (intersections.empty()) {
+        int inside = point_in_polygon(polyline.block(0, 0, 1, 2), polygon)[0];
+        if (!inside) {
+            return {};
+        }
+        return {{0, 0.0, 0.0, ruler.N() - 2, 1.0, ruler.length()}, polyline};
+    }
+    // pt, (t, s), cur_label=(poly1, seg1), tree_label=(poly2, seg2)
+    const int N = intersections.size() + 2;
+    // init ranges
+    std::vector<double> ranges;
     Eigen::VectorXd ranges(N);
-    int idx = -1;
+    ranges.reserve(N);
+    ranges.push_back(0.0);
     for (auto &inter : intersections) {
         int seg_idx = std::get<2>(inter)[1];
         double t = std::get<1>(inter)[0];
         double r = ruler.range(seg_idx, t);
-        ranges[++idx] = r;
+        ranges.push_back(r);
     }
-    ranges[++idx] = ruler.length();
-    RowVectorsNx2 midpoints(N, 3);
-    {
-        idx = 0;
-        double r = 0.0;
-        while (idx < N) {
-            double rr = ranges[idx];
-            midpoints.row(idx) = ruler.at((r + rr) / 2.0).head(2);
-            r = rr;
-            ++idx;
-        }
+    ranges.push_back(ruler.length());
+    // ranges o------o--------o-----------------o
+    // midpts     ^       ^             ^
+    std::vector<Eigen::Vector2d> midpoints;
+    midpoints.reserve(ranges.size() - 1);
+    for (int i = 0; i < N - 1; ++i) {
+        double rr = (ranges[i] + ranges[i + 1]) / 2.0;
+        midpoints.push_back(ruler.at(rr).head(2));
     }
-    auto mask = point_in_polygon(midpoints, polygon);
+    auto mask = point_in_polygon(Eigen::Map<const RowVectorsNx2>(
+                                     midpoints[0].data(), midpoints.size(), 2),
+                                 polygon);
     PolylineChunks ret;
     {
-        idx = 0;
+        /*
         double r = 0.0;
         while (idx < N) {
+            // mask && length
             if (mask[idx] && ranges[idx] > r) {
                 auto [seg1, t1] = ruler.segment_index_t(r);
                 auto [seg2, t2] = ruler.segment_index_t(ranges[idx]);
@@ -65,6 +75,7 @@ polyline_in_polygon(const RowVectors &polyline, //
             r = ranges[idx];
             ++idx;
         }
+        */
     }
     return ret;
 }
