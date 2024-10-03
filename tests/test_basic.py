@@ -13,6 +13,7 @@ from fast_crossing import (
     FlatBush,
     KdQuiver,
     KdTree,
+    PolylineRuler,
     Quiver,
     densify_polyline,
     point_in_polygon,
@@ -755,6 +756,15 @@ def test_nearst_wgs84():
     # assert len(idx) == 5
 
 
+def __print_chunks(chunks):
+    for cidx, ((seg1, t1, r1, seg2, t2, r2), polyline) in enumerate(chunks.items()):
+        print(f"\nchunk index: {cidx}", sep=", ")
+        print(f"length: {r2 - r1:.3f}")
+        print(f"seg={seg1},t={t1:.3f}, r={r1:.2f}", sep="; ")
+        print(f"seg={seg2},t={t2:.3f}, r={r2:.2f}")
+        print(polyline.round(2).tolist())
+
+
 def test_polyline_in_polygon():
     """
            2    4
@@ -786,14 +796,11 @@ def test_polyline_in_polygon():
             [8.0, -7.0, 4.0],  # 5
         ]
     )
+    ruler = PolylineRuler(polyline_12345, is_wgs84=False)
     chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
     ranges = []
-    for (seg1, t1, r1, seg2, t2, r2), polyline in chunks.items():
+    for _, _, r1, _, _, r2 in chunks:
         ranges.append(r2 - r1)
-        print(f"\n#length: {r2 - r1:.3f}")
-        print(f"seg={seg1},t={t1:.3f}, r={r1:.2f}")
-        print(f"seg={seg2},t={t2:.3f}, r={r2:.2f}")
-        print(polyline.round(2).tolist())
     expected_ranges = [2.72883, 14.4676666, 7.01783]
     np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
 
@@ -802,7 +809,20 @@ def test_polyline_in_polygon():
     polyline_updated = np.copy(polyline_12345)
     polyline_updated[0] = polyline.mean(axis=0)
     chunks2 = polyline_in_polygon(polyline_updated, polygon_ABCD)
-    print()
+    __print_chunks(chunks)
+    __print_chunks(chunks2)
+
+    chunks = list(chunks.items())
+    chunks2 = list(chunks2.items())
+    assert len(chunks) == len(chunks2)
+    assert np.fabs(chunks[0][1][-1] - chunks2[0][1][-1]).max() == 0.0
+    assert np.fabs(chunks[1][1] - chunks2[1][1]).sum() < 1e-6
+    assert np.fabs(chunks[2][1] - chunks2[2][1]).sum() < 1e-6
+
+    chunks = polyline_in_polygon(ruler.lineSliceAlong(1, 2), polygon_ABCD)
+    assert len(chunks) == 0
+    chunks = polyline_in_polygon(ruler.lineSliceAlong(7, 8), polygon_ABCD)
+    assert len(chunks) == 1
 
     # test fc
     fc = FastCrossing()
