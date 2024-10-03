@@ -1,2 +1,2 @@
-from _pybind11_fast_crossing import *  # noqa
-from _pybind11_fast_crossing import __version__  # noqa
+from ._core import *  # noqa: PGH004
+from ._core import __version__  # noqa: PGH004

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from _pybind11_fast_crossing import KdTree as _KdTree
 
@@ -24,7 +26,7 @@ class KDTree:
         if isinstance(k, (int, np.integer)):
             ret_ii, ret_dd = [], []
             for xyz in x:
-                xyz = self.vec3(xyz)
+                xyz = self.vec3(xyz)  # noqa: PLW2901
                 if k == 1:
                     ii, dd = self.tree.nearest(xyz)
                 else:
@@ -37,7 +39,7 @@ class KDTree:
         K = max(k)
         ret_ii, ret_dd = [], []
         for xyz in x:
-            xyz = self.vec3(xyz)
+            xyz = self.vec3(xyz)  # noqa: PLW2901
             ii, dd = self.tree.nearest(xyz, k=K)
             ii = [ii[kk - 1] for kk in k]
             dd = [dd[kk - 1] for kk in k]
@@ -68,7 +70,7 @@ class KDTree:
             return_sorted = x.ndim != 1
         if x.ndim == 1:
             xyz = self.vec3(x)
-            ii, dd = self.tree.nearest(
+            ii, _ = self.tree.nearest(
                 xyz,
                 radius=r,
                 sort=return_sorted,
@@ -82,9 +84,9 @@ class KDTree:
         if isinstance(r, (int, float, np.number)):
             r = [r] * len(x)
         ret_ii = []
-        for pp, rr in zip(x, r):  # noqa
+        for pp, rr in zip(x, r):
             xyz = self.vec3(pp)
-            ii, dd = self.tree.nearest(
+            ii, _ = self.tree.nearest(
                 xyz,
                 radius=rr,
                 sort=return_sorted,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from vedo import Picture, dataurl
 from vedo.applications import SplinePlotter  # ready to use class!
 

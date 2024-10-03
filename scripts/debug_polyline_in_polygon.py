@@ -2,10 +2,10 @@
 # recorded video:
 #   -   youtube: https://www.youtube.com/watch?v=1dPJ3P84FxE
 #   -   bilibil: https://www.bilibili.com/video/BV1D24y1u7uB
+from __future__ import annotations
 
 import math
 import random
-from typing import List, Tuple
 
 import numpy as np
 from vedo import Circle, show  # noqa
@@ -19,13 +19,13 @@ from fast_crossing import PolylineRuler, polyline_in_polygon  # noqa
 # https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
 def generate_polygon(
     *,
-    center: Tuple[float, float] = (0.0, 0.0),
+    center: tuple[float, float] = (0.0, 0.0),
     avg_radius: float = 100.0,
     irregularity: float = 2.0,
     spikiness: float = 0.3,
     num_vertices: int = 100,
     close: bool = True,
-) -> List[Tuple[float, float]]:
+) -> list[tuple[float, float]]:
     if irregularity < 0 or irregularity > 1:
         raise ValueError("Irregularity must be between 0 and 1.")
     if spikiness < 0 or spikiness > 1:
@@ -35,7 +35,7 @@ def generate_polygon(
     irregularity *= 2 * math.pi / num_vertices
     spikiness *= avg_radius
 
-    def random_angle_steps(steps: int, irregularity: float) -> List[float]:
+    def random_angle_steps(steps: int, irregularity: float) -> list[float]:
         angles = []
         lower = (2 * math.pi / steps) - irregularity
         upper = (2 * math.pi / steps) + irregularity
