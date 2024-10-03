@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 import time
@@ -11,6 +13,7 @@ from fast_crossing import (
     FlatBush,
     KdQuiver,
     KdTree,
+    PolylineRuler,
     Quiver,
     densify_polyline,
     point_in_polygon,
@@ -40,7 +43,7 @@ def test_fast_crossing():
     fc.finish()
 
     # num_poylines
-    assert 2 == fc.num_poylines()
+    assert fc.num_poylines() == 2
     rulers = fc.polyline_rulers()
     assert len(rulers) == 2
     ruler0 = fc.polyline_ruler(0)
@@ -167,7 +170,7 @@ def test_fast_crossing_filter_by_z():
     assert fc.coordinates(ret[0])[2] == 10
     assert fc.coordinates(ret[1])[2] == 20
 
-    assert 3 == len(fc.intersections())  # 3 == C(3,2): choose 2 from 3
+    assert len(fc.intersections()) == 3  # 3 == C(3,2): choose 2 from 3
     # for row in fc.intersections():
     #     print(row)
 
@@ -229,8 +232,8 @@ def test_densify():
     assert len(dense) == 4
     dense = densify_polyline(coords, max_gap=3.0)
     assert len(dense) == 3
-    assert 3 == len(densify_polyline(coords, max_gap=3.0 + 1e-3))
-    assert 4 == len(densify_polyline(coords, max_gap=3.0 - 1e-3))
+    assert len(densify_polyline(coords, max_gap=3.0 + 1e-3)) == 3
+    assert len(densify_polyline(coords, max_gap=3.0 - 1e-3)) == 4
 
 
 def test_point_in_polygon():
@@ -264,7 +267,7 @@ def _test_cKDTree_query(KDTree):
 
     expected_k1 = [[2.0, 0.2236068], [0, 13]]
     expected_k2 = [[[2.0, 2.23606798], [0.2236068, 0.80622577]], [[0, 6], [13, 19]]]
-    for k, expected in zip([1, 2], [expected_k1, expected_k2]):  # noqa
+    for k, expected in zip([1, 2], [expected_k1, expected_k2]):
         dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=k)
         DD, II = expected
         np.testing.assert_allclose(dd, DD, atol=1e-6)
@@ -282,7 +285,7 @@ def _test_cKDTree_query(KDTree):
         [[2.0, 2.23606797749979], [0.22360679774997916, 0.8062257748298548]],
         [[0, 6], [13, 19]],
     ]
-    for k, expected in zip(  # noqa
+    for k, expected in zip(
         [[1], [2], [1, 2]], [expected_k1, expected_k2, expected_k1_k2]
     ):
         dd, ii = tree.query([[0, 0], [2.2, 2.9]], k=k)
@@ -294,14 +297,14 @@ def _test_cKDTree_query(KDTree):
     points = np.c_[x.ravel(), y.ravel()]
     tree = KDTree(points)
     ret = sorted(tree.query_ball_point([2 + 1e-15, 1e-15], 1 + 1e-9))
-    assert np.all([4, 8, 9, 12] == np.array(ret))
+    assert np.all(np.array(ret) == [4, 8, 9, 12])
 
     ret = tree.query_ball_point([[2, 0], [3, 0]], 1 + 1e-9)
-    assert np.all([4, 8, 9, 12] == np.array(sorted(ret[0])))
-    assert np.all([8, 12, 13] == np.array(sorted(ret[1])))
+    assert np.all(np.array(sorted(ret[0])) == [4, 8, 9, 12])
+    assert np.all(np.array(sorted(ret[1])) == [8, 12, 13])
 
     ret = tree.query_ball_point([[2, 0], [3, 0]], 1 + 1e-9, return_length=True)
-    assert np.all([4, 3] == np.array(ret))
+    assert np.all(np.array(ret) == [4, 3])
 
 
 def test_scipy_cKDTree():
@@ -413,7 +416,6 @@ def test_quiver():
     # update (delta in EUN, x->east, y->north, z->up)
     updated = quiver.update(arrow, [2, 0, 0])
     np.testing.assert_allclose(updated.position(), [2, 1, 0], atol=1e-8)
-    #
     arrow = Arrow([0, 1, 0], direction=Arrow._unit_vector([1, 1, 0]))
     updated = quiver.towards(arrow, [3, 3, 0])
     sqrt2 = np.sqrt(2)
@@ -516,7 +518,6 @@ def test_kdquiver():
 
 
 def test_kdquiver_filter_by_angle():
-
     quiver = KdQuiver()
     vecs = {}
     headings = [0, 30, 60, 90, 120]
@@ -755,6 +756,15 @@ def test_nearst_wgs84():
     # assert len(idx) == 5
 
 
+def __print_chunks(chunks):
+    for cidx, ((seg1, t1, r1, seg2, t2, r2), polyline) in enumerate(chunks.items()):
+        print(f"\nchunk index: {cidx}", sep=", ")
+        print(f"length: {r2 - r1:.3f}")
+        print(f"seg={seg1},t={t1:.3f}, r={r1:.2f}", sep="; ")
+        print(f"seg={seg2},t={t2:.3f}, r={r2:.2f}")
+        print(polyline.round(2).tolist())
+
+
 def test_polyline_in_polygon():
     """
            2    4
@@ -786,16 +796,33 @@ def test_polyline_in_polygon():
             [8.0, -7.0, 4.0],  # 5
         ]
     )
+    ruler = PolylineRuler(polyline_12345, is_wgs84=False)
     chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
     ranges = []
-    for (seg1, t1, r1, seg2, t2, r2), polyline in chunks.items():
+    for _, _, r1, _, _, r2 in chunks:
         ranges.append(r2 - r1)
-        print(f"\n#length: {r2 - r1:.3f}")
-        print(seg1, t1, r1)
-        print(seg2, t2, r2)
-        print(polyline)
     expected_ranges = [2.72883, 14.4676666, 7.01783]
     np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
+
+    # test inside
+    polyline = next(iter(chunks.values()))
+    polyline_updated = np.copy(polyline_12345)
+    polyline_updated[0] = polyline.mean(axis=0)
+    chunks2 = polyline_in_polygon(polyline_updated, polygon_ABCD)
+    __print_chunks(chunks)
+    __print_chunks(chunks2)
+
+    chunks1 = list(chunks.items())
+    chunks2 = list(chunks2.items())
+    assert len(chunks1) == len(chunks2)
+    assert np.fabs(chunks1[0][1][-1] - chunks2[0][1][-1]).max() == 0.0
+    assert np.fabs(chunks1[1][1] - chunks2[1][1]).sum() < 1e-6
+    assert np.fabs(chunks1[2][1] - chunks2[2][1]).sum() < 1e-6
+
+    chunks3 = polyline_in_polygon(ruler.lineSliceAlong(1, 2), polygon_ABCD)
+    assert len(chunks3) == 0
+    chunks3 = polyline_in_polygon(ruler.lineSliceAlong(7, 8), polygon_ABCD)
+    assert len(chunks3) == 1
 
     # test fc
     fc = FastCrossing()
@@ -823,7 +850,7 @@ def test_polyline_in_polygon():
         is_wgs84=True,
     )
     ranges = []
-    for _, _, r1, _, _, r2 in chunks.keys():
+    for _, _, r1, _, _, r2 in chunks:
         ranges.append(r2 - r1)
     np.testing.assert_allclose(ranges, expected_ranges, atol=1e-4)
 
@@ -834,7 +861,6 @@ def test_polyline_in_polygon():
 
 
 def pytest_main(dir: str, *, test_file: str = None):
-
     os.chdir(dir)
     sys.exit(
         pytest.main(

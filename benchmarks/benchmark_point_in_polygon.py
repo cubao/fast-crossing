@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import math
 import os
 import random
 import time
-from typing import List, Tuple
 
 import numpy as np
 from loguru import logger
@@ -44,8 +45,7 @@ def point_in_polygon_polygons(points: np.ndarray, polygon: np.ndarray) -> np.nda
     num_edges_children = 4
     num_nodes_children = 4
     tree = polygons.build_search_tree(polygon, num_edges_children, num_nodes_children)
-    mask = polygons.points_are_inside(tree, points).astype(np.int32)
-    return mask
+    return polygons.points_are_inside(tree, points).astype(np.int32)
 
 
 def point_in_polygon_shapely(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
@@ -68,8 +68,7 @@ def load_points(path: str):
 
 def load_polygon(path: str):
     if path.endswith((".npy", ".pcd")):
-        return load_points(path)
-    pass
+        load_points(path)
 
 
 def write_mask(mask: np.ndarray, path: str):
@@ -90,12 +89,12 @@ def wrapping(fn):
 
 # https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
 def generate_polygon(
-    center: Tuple[float, float],
+    center: tuple[float, float],
     avg_radius: float,
     irregularity: float,
     spikiness: float,
     num_vertices: int,
-) -> List[Tuple[float, float]]:
+) -> list[tuple[float, float]]:
     """
     Start with the center of the polygon at center, then creates the
     polygon by sampling points on a circle around the center.
@@ -147,7 +146,7 @@ def generate_polygon(
     return points
 
 
-def random_angle_steps(steps: int, irregularity: float) -> List[float]:
+def random_angle_steps(steps: int, irregularity: float) -> list[float]:
     """Generates the division of a circumference in random angles.
 
     Args:
