@@ -1,15 +1,35 @@
 from __future__ import annotations
-
-import typing
-
 import numpy
-
+import typing
 from . import tf
 
-__all__ = ['Arrow', 'FastCrossing', 'FlatBush', 'KdQuiver', 'KdTree', 'LineSegment', 'PolylineRuler', 'Quiver', 'densify_polyline', 'douglas_simplify', 'douglas_simplify_indexes', 'douglas_simplify_mask', 'intersect_segments', 'point_in_polygon', 'polyline_in_polygon', 'snap_onto_2d', 'tf']
+__all__ = [
+    "Arrow",
+    "FastCrossing",
+    "FlatBush",
+    "KdQuiver",
+    "KdTree",
+    "LineSegment",
+    "PolylineRuler",
+    "Quiver",
+    "densify_polyline",
+    "douglas_simplify",
+    "douglas_simplify_indexes",
+    "douglas_simplify_mask",
+    "intersect_segments",
+    "point_in_polygon",
+    "polyline_in_polygon",
+    "snap_onto_2d",
+    "tf",
+]
+
 class Arrow:
     @staticmethod
-    def _angle(vec: numpy.ndarray[numpy.float64[3, 1]], *, ref: numpy.ndarray[numpy.float64[3, 1]]) -> float:
+    def _angle(
+        vec: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        ref: numpy.ndarray[numpy.float64[3, 1]],
+    ) -> float:
         """
         Calculate angle between two vectors
         """
@@ -26,7 +46,9 @@ class Arrow:
         Convert east and north components to heading
         """
     @staticmethod
-    def _unit_vector(vector: numpy.ndarray[numpy.float64[3, 1]], with_eps: bool = True) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def _unit_vector(
+        vector: numpy.ndarray[numpy.float64[3, 1]], with_eps: bool = True
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Normalize a vector to unit length
         """
@@ -49,12 +71,15 @@ class Arrow:
         Constructor for Arrow with position
         """
     @typing.overload
-    def __init__(self, position: numpy.ndarray[numpy.float64[3, 1]], direction: numpy.ndarray[numpy.float64[3, 1]]) -> None:
+    def __init__(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        direction: numpy.ndarray[numpy.float64[3, 1]],
+    ) -> None:
         """
         Constructor for Arrow with position and direction
         """
-    def __repr__(self) -> str:
-        ...
+    def __repr__(self) -> str: ...
     def copy(self) -> Arrow:
         """
         Create a copy of the Arrow
@@ -98,7 +123,14 @@ class Arrow:
         Set the label of the Arrow
         """
     @typing.overload
-    def label(self, polyline_index: int, segment_index: int, *, t: float | None = None, range: float | None = None) -> Arrow:
+    def label(
+        self,
+        polyline_index: int,
+        segment_index: int,
+        *,
+        t: float | None = None,
+        range: float | None = None,
+    ) -> Arrow:
         """
         Set the label of the Arrow with polyline and segment indices
         """
@@ -164,6 +196,7 @@ class Arrow:
         """
         Get the upward direction of the Arrow
         """
+
 class FastCrossing:
     def __init__(self, *, is_wgs84: bool = False) -> None:
         """
@@ -172,7 +205,9 @@ class FastCrossing:
         :param is_wgs84: Whether coordinates are in WGS84 format, defaults to false
         """
     @typing.overload
-    def add_polyline(self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, index: int = -1) -> int:
+    def add_polyline(
+        self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, index: int = -1
+    ) -> int:
         """
         Add polyline to the tree.
 
@@ -181,7 +216,12 @@ class FastCrossing:
         :return: The index of the added polyline
         """
     @typing.overload
-    def add_polyline(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, index: int = -1) -> int:
+    def add_polyline(
+        self,
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        *,
+        index: int = -1,
+    ) -> int:
         """
         Add polyline to the tree (alternative format).
 
@@ -189,7 +229,9 @@ class FastCrossing:
         :param index: Custom polyline index, defaults to -1
         :return: The index of the added polyline
         """
-    def arrow(self, *, polyline_index: int, point_index: int) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
+    def arrow(
+        self, *, polyline_index: int, point_index: int
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get an arrow (position and direction) at a specific point on a polyline.
 
@@ -205,7 +247,9 @@ class FastCrossing:
         :return: FlatBush index
         """
     @typing.overload
-    def coordinates(self, polyline_index: int, segment_index: int, ratio: float) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def coordinates(
+        self, polyline_index: int, segment_index: int, ratio: float
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates at a specific position on a polyline.
 
@@ -215,7 +259,9 @@ class FastCrossing:
         :return: Coordinates at the specified position
         """
     @typing.overload
-    def coordinates(self, index: numpy.ndarray[numpy.int32[2, 1]], ratio: float) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def coordinates(
+        self, index: numpy.ndarray[numpy.int32[2, 1]], ratio: float
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates at a specific position on a polyline (alternative format).
 
@@ -224,7 +270,16 @@ class FastCrossing:
         :return: Coordinates at the specified position
         """
     @typing.overload
-    def coordinates(self, intersection: tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]], second: bool = True) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def coordinates(
+        self,
+        intersection: tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ],
+        second: bool = True,
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates of an intersection.
 
@@ -237,12 +292,30 @@ class FastCrossing:
         Finalize indexing after adding all polylines
         """
     @typing.overload
-    def intersections(self) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self,
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
         Get all segment intersections in the tree
         """
     @typing.overload
-    def intersections(self, *, z_offset_range: tuple[float, float], self_intersection: int = 2) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self, *, z_offset_range: tuple[float, float], self_intersection: int = 2
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
         Get segment intersections in the tree, filtered by conditions.
 
@@ -250,9 +323,22 @@ class FastCrossing:
         :param self_intersection: Self-intersection parameter, defaults to 2
         """
     @typing.overload
-    def intersections(self, from: numpy.ndarray[numpy.float64[2, 1]], to: numpy.ndarray[numpy.float64[2, 1]], *, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self,
+        start: numpy.ndarray[numpy.float64[2, 1]],
+        to: numpy.ndarray[numpy.float64[2, 1]],
+        *,
+        dedup: bool = True,
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
-        Get crossing intersections with [from, to] segment.
+        Get crossing intersections with [start, to] segment.
 
         :param from: Start point of the segment
         :param to: End point of the segment
@@ -260,7 +346,16 @@ class FastCrossing:
         :return: Sorted intersections by t ratio
         """
     @typing.overload
-    def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, dedup: bool = True
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
         Get crossing intersections with a polyline.
 
@@ -269,7 +364,19 @@ class FastCrossing:
         :return: Sorted intersections by t ratio
         """
     @typing.overload
-    def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self,
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        *,
+        dedup: bool = True,
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
         Get crossing intersections with a polyline (alternative format).
 
@@ -278,7 +385,21 @@ class FastCrossing:
         :return: Sorted intersections by t ratio
         """
     @typing.overload
-    def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, z_min: float, z_max: float, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self,
+        polyline: numpy.ndarray[numpy.float64[m, 3]],
+        *,
+        z_min: float,
+        z_max: float,
+        dedup: bool = True,
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
         Get crossing intersections with a polyline, filtered by Z range.
 
@@ -289,7 +410,21 @@ class FastCrossing:
         :return: Sorted intersections by t ratio
         """
     @typing.overload
-    def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, z_min: float, z_max: float, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
+    def intersections(
+        self,
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        *,
+        z_min: float,
+        z_max: float,
+        dedup: bool = True,
+    ) -> list[
+        tuple[
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+        ]
+    ]:
         """
         Get crossing intersections with a polyline, filtered by Z range (alternative format).
 
@@ -306,7 +441,12 @@ class FastCrossing:
         :return: True if coordinates are in WGS84 format, False otherwise
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        return_squared_l2: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
         """
         Find the nearest point to a given position.
 
@@ -315,7 +455,12 @@ class FastCrossing:
         :return: Nearest point information
         """
     @typing.overload
-    def nearest(self, index: numpy.ndarray[numpy.int32[2, 1]], *, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
+    def nearest(
+        self,
+        index: numpy.ndarray[numpy.int32[2, 1]],
+        *,
+        return_squared_l2: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
         """
         Find the nearest point to a given index.
 
@@ -324,7 +469,16 @@ class FastCrossing:
         :return: Nearest point information
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, k: int | None = None, radius: float | None = None, sort: bool = True, return_squared_l2: bool = False, filter: tuple[numpy.ndarray[numpy.float64[3, 1]], ...] | None = None) -> tuple[numpy.ndarray[numpy.int32[m, 2]], numpy.ndarray[numpy.float64[m, 1]]]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        k: int | None = None,
+        radius: float | None = None,
+        sort: bool = True,
+        return_squared_l2: bool = False,
+        filter: tuple[numpy.ndarray[numpy.float64[3, 1]], ...] | None = None,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 2]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to a given position with optional filtering.
 
@@ -351,7 +505,9 @@ class FastCrossing:
         :return: The point index
         """
     @typing.overload
-    def point_index(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
+    def point_index(
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Get point indexes for given indexes.
 
@@ -386,7 +542,9 @@ class FastCrossing:
         :return: The segment index
         """
     @typing.overload
-    def segment_index(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
+    def segment_index(
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Get segment indexes for given indexes.
 
@@ -394,7 +552,14 @@ class FastCrossing:
         :return: The segment indexes
         """
     @typing.overload
-    def within(self, *, min: numpy.ndarray[numpy.float64[2, 1]], max: numpy.ndarray[numpy.float64[2, 1]], segment_wise: bool = True, sort: bool = True) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
+    def within(
+        self,
+        *,
+        min: numpy.ndarray[numpy.float64[2, 1]],
+        max: numpy.ndarray[numpy.float64[2, 1]],
+        segment_wise: bool = True,
+        sort: bool = True,
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a bounding box.
 
@@ -405,7 +570,13 @@ class FastCrossing:
         :return: Polylines within the bounding box
         """
     @typing.overload
-    def within(self, *, polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], segment_wise: bool = True, sort: bool = True) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
+    def within(
+        self,
+        *,
+        polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        segment_wise: bool = True,
+        sort: bool = True,
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a polygon.
 
@@ -415,7 +586,16 @@ class FastCrossing:
         :return: Polylines within the polygon
         """
     @typing.overload
-    def within(self, *, center: numpy.ndarray[numpy.float64[2, 1]], width: float, height: float, heading: float = 0.0, segment_wise: bool = True, sort: bool = True) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
+    def within(
+        self,
+        *,
+        center: numpy.ndarray[numpy.float64[2, 1]],
+        width: float,
+        height: float,
+        heading: float = 0.0,
+        segment_wise: bool = True,
+        sort: bool = True,
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a rotated rectangle.
 
@@ -427,6 +607,7 @@ class FastCrossing:
         :param sort: Whether to sort the results, defaults to true
         :return: Polylines within the rotated rectangle
         """
+
 class FlatBush:
     @typing.overload
     def __init__(self) -> None:
@@ -441,7 +622,16 @@ class FlatBush:
         :param reserve: Number of items to reserve space for
         """
     @typing.overload
-    def add(self, minX: float, minY: float, maxX: float, maxY: float, *, label0: int = -1, label1: int = -1) -> int:
+    def add(
+        self,
+        minX: float,
+        minY: float,
+        maxX: float,
+        maxY: float,
+        *,
+        label0: int = -1,
+        label1: int = -1,
+    ) -> int:
         """
         Add a bounding box to the index.
 
@@ -454,7 +644,12 @@ class FlatBush:
         :return: Index of the added item
         """
     @typing.overload
-    def add(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, label0: int = -1) -> int:
+    def add(
+        self,
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        *,
+        label0: int = -1,
+    ) -> int:
         """
         Add a polyline to the index.
 
@@ -463,7 +658,13 @@ class FlatBush:
         :return: Index of the added item
         """
     @typing.overload
-    def add(self, box: numpy.ndarray[numpy.float64[4, 1]], *, label0: int = -1, label1: int = -1) -> int:
+    def add(
+        self,
+        box: numpy.ndarray[numpy.float64[4, 1]],
+        *,
+        label0: int = -1,
+        label1: int = -1,
+    ) -> int:
         """
         Add a bounding box to the index using a vector.
 
@@ -479,7 +680,9 @@ class FlatBush:
         :param index: Index of the item
         :return: Bounding box of the item
         """
-    def boxes(self) -> numpy.ndarray[numpy.float64[m, 4], numpy.ndarray.flags.c_contiguous]:
+    def boxes(
+        self,
+    ) -> numpy.ndarray[numpy.float64[m, 4], numpy.ndarray.flags.c_contiguous]:
         """
         Get all bounding boxes in the index.
 
@@ -496,7 +699,9 @@ class FlatBush:
         :param index: Index of the item
         :return: Label of the item
         """
-    def labels(self) -> numpy.ndarray[numpy.int32[m, 2], numpy.ndarray.flags.c_contiguous]:
+    def labels(
+        self,
+    ) -> numpy.ndarray[numpy.int32[m, 2], numpy.ndarray.flags.c_contiguous]:
         """
         Get all labels in the index.
 
@@ -528,7 +733,11 @@ class FlatBush:
         :return: Vector of indices of items within the search box
         """
     @typing.overload
-    def search(self, min: numpy.ndarray[numpy.float64[2, 1]], max: numpy.ndarray[numpy.float64[2, 1]]) -> list[int]:
+    def search(
+        self,
+        min: numpy.ndarray[numpy.float64[2, 1]],
+        max: numpy.ndarray[numpy.float64[2, 1]],
+    ) -> list[int]:
         """
         Search for items within a bounding box using min and max vectors.
 
@@ -542,9 +751,16 @@ class FlatBush:
 
         :return: Number of items in the index
         """
+
 class KdQuiver(Quiver):
     @staticmethod
-    def _filter(*, arrows: list[Arrow], arrow: Arrow, params: Quiver.FilterParams, is_wgs84: bool = False) -> numpy.ndarray[numpy.int32[m, 1]]:
+    def _filter(
+        *,
+        arrows: list[Arrow],
+        arrow: Arrow,
+        params: Quiver.FilterParams,
+        is_wgs84: bool = False,
+    ) -> numpy.ndarray[numpy.int32[m, 1]]:
         """
         Filter arrows based on the given parameters
         """
@@ -564,7 +780,11 @@ class KdQuiver(Quiver):
         Add a polyline to the KdQuiver
         """
     @typing.overload
-    def add(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], index: int = -1) -> int:
+    def add(
+        self,
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        index: int = -1,
+    ) -> int:
         """
         Add a 2D polyline to the KdQuiver
         """
@@ -592,17 +812,32 @@ class KdQuiver(Quiver):
         """
         Get arrows for the given indexes
         """
-    def directions(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def directions(
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Get directions for the given indexes
         """
     @typing.overload
-    def filter(self, *, hits: numpy.ndarray[numpy.int32[m, 1]], arrow: Arrow, params: Quiver.FilterParams) -> numpy.ndarray[numpy.int32[m, 1]]:
+    def filter(
+        self,
+        *,
+        hits: numpy.ndarray[numpy.int32[m, 1]],
+        arrow: Arrow,
+        params: Quiver.FilterParams,
+    ) -> numpy.ndarray[numpy.int32[m, 1]]:
         """
         Filter hits based on the given parameters
         """
     @typing.overload
-    def filter(self, *, hits: numpy.ndarray[numpy.int32[m, 1]], norms: numpy.ndarray[numpy.float64[m, 1]], arrow: Arrow, params: Quiver.FilterParams) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
+    def filter(
+        self,
+        *,
+        hits: numpy.ndarray[numpy.int32[m, 1]],
+        norms: numpy.ndarray[numpy.float64[m, 1]],
+        arrow: Arrow,
+        params: Quiver.FilterParams,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Filter hits and norms based on the given parameters
         """
@@ -617,32 +852,57 @@ class KdQuiver(Quiver):
         Get the index for the given polyline and segment indices
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, return_squared_l2: bool = False) -> tuple[int, float]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        return_squared_l2: bool = False,
+    ) -> tuple[int, float]:
         """
         Find the nearest point to the given position
         """
     @typing.overload
-    def nearest(self, index: int, *, return_squared_l2: bool = False) -> tuple[int, float]:
+    def nearest(
+        self, index: int, *, return_squared_l2: bool = False
+    ) -> tuple[int, float]:
         """
         Find the nearest point to the point at the given index
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, k: int, sort: bool = True, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        k: int,
+        sort: bool = True,
+        return_squared_l2: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to the given position
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, radius: float, sort: bool = True, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        radius: float,
+        sort: bool = True,
+        return_squared_l2: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find all points within a given radius of the query position
         """
     @typing.overload
-    def positions(self) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
+    def positions(
+        self,
+    ) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
         """
         Get all positions in the KdQuiver
         """
     @typing.overload
-    def positions(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def positions(
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Get positions for the given indexes
         """
@@ -650,6 +910,7 @@ class KdQuiver(Quiver):
         """
         Reset the KdQuiver
         """
+
 class KdTree:
     @typing.overload
     def __init__(self, leafsize: int = 10) -> None:
@@ -666,7 +927,10 @@ class KdTree:
         :param points: 3D points to initialize the tree
         """
     @typing.overload
-    def __init__(self, points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous]) -> None:
+    def __init__(
+        self,
+        points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    ) -> None:
         """
         Initialize KdTree with 2D points.
 
@@ -680,7 +944,10 @@ class KdTree:
         :param points: 3D points to add
         """
     @typing.overload
-    def add(self, points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous]) -> None:
+    def add(
+        self,
+        points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    ) -> None:
         """
         Add 2D points to the KdTree.
 
@@ -699,7 +966,12 @@ class KdTree:
         :return: Current leaf size
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, return_squared_l2: bool = False) -> tuple[int, float]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        return_squared_l2: bool = False,
+    ) -> tuple[int, float]:
         """
         Find the nearest point to the given position.
 
@@ -708,7 +980,9 @@ class KdTree:
         :return: Tuple of (index, distance)
         """
     @typing.overload
-    def nearest(self, index: int, *, return_squared_l2: bool = False) -> tuple[int, float]:
+    def nearest(
+        self, index: int, *, return_squared_l2: bool = False
+    ) -> tuple[int, float]:
         """
         Find the nearest point to the point at the given index.
 
@@ -717,7 +991,14 @@ class KdTree:
         :return: Tuple of (index, distance)
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, k: int, sort: bool = True, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        k: int,
+        sort: bool = True,
+        return_squared_l2: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to the given position.
 
@@ -728,7 +1009,14 @@ class KdTree:
         :return: Tuple of (indices, distances)
         """
     @typing.overload
-    def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, radius: float, sort: bool = True, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
+    def nearest(
+        self,
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        radius: float,
+        sort: bool = True,
+        return_squared_l2: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find all points within a given radius of the query position.
 
@@ -738,7 +1026,9 @@ class KdTree:
         :param return_squared_l2: If true, return squared L2 distances, defaults to false
         :return: Tuple of (indices, distances)
         """
-    def points(self) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
+    def points(
+        self,
+    ) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
         """
         Get the points in the KdTree.
 
@@ -758,8 +1048,13 @@ class KdTree:
 
         :param value: New leaf size value
         """
+
 class LineSegment:
-    def __init__(self, A: numpy.ndarray[numpy.float64[3, 1]], B: numpy.ndarray[numpy.float64[3, 1]]) -> None:
+    def __init__(
+        self,
+        A: numpy.ndarray[numpy.float64[3, 1]],
+        B: numpy.ndarray[numpy.float64[3, 1]],
+    ) -> None:
         """
         Initialize a LineSegment with two 3D points.
         """
@@ -771,7 +1066,9 @@ class LineSegment:
         """
         Calculate the squared distance from a point to the line segment.
         """
-    def intersects(self, other: LineSegment) -> tuple[numpy.ndarray[numpy.float64[3, 1]], float, float, float] | None:
+    def intersects(
+        self, other: LineSegment
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], float, float, float] | None:
         """
         Check if this line segment intersects with another.
         """
@@ -800,59 +1097,115 @@ class LineSegment:
         """
         Get the squared length of the line segment.
         """
+
 class PolylineRuler:
     @staticmethod
-    def _along(line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], dist: float, *, is_wgs84: bool = False) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def _along(
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        dist: float,
+        *,
+        is_wgs84: bool = False,
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Find a point at a specified distance along a polyline.
         """
     @staticmethod
-    def _dirs(polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def _dirs(
+        polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        *,
+        is_wgs84: bool = False,
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Calculate direction vectors for each segment of a polyline.
         """
     @staticmethod
-    def _distance(a: numpy.ndarray[numpy.float64[3, 1]], b: numpy.ndarray[numpy.float64[3, 1]], *, is_wgs84: bool = False) -> float:
+    def _distance(
+        a: numpy.ndarray[numpy.float64[3, 1]],
+        b: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        is_wgs84: bool = False,
+    ) -> float:
         """
         Calculate the distance between two points.
         """
     @staticmethod
-    def _interpolate(A: numpy.ndarray[numpy.float64[3, 1]], B: numpy.ndarray[numpy.float64[3, 1]], *, t: float) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def _interpolate(
+        A: numpy.ndarray[numpy.float64[3, 1]],
+        B: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        t: float,
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Interpolate between two points.
         """
     @staticmethod
-    def _lineDistance(line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> float:
+    def _lineDistance(
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        *,
+        is_wgs84: bool = False,
+    ) -> float:
         """
         Calculate the total length of a polyline.
         """
     @staticmethod
-    def _lineSlice(start: numpy.ndarray[numpy.float64[3, 1]], stop: numpy.ndarray[numpy.float64[3, 1]], line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def _lineSlice(
+        start: numpy.ndarray[numpy.float64[3, 1]],
+        stop: numpy.ndarray[numpy.float64[3, 1]],
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        *,
+        is_wgs84: bool = False,
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of a polyline between two points.
         """
     @staticmethod
-    def _lineSliceAlong(start: float, stop: float, line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def _lineSliceAlong(
+        start: float,
+        stop: float,
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        *,
+        is_wgs84: bool = False,
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of a polyline between two distances along it.
         """
     @staticmethod
-    def _pointOnLine(line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], P: numpy.ndarray[numpy.float64[3, 1]], *, is_wgs84: bool = False) -> tuple[numpy.ndarray[numpy.float64[3, 1]], int, float]:
+    def _pointOnLine(
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        P: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        is_wgs84: bool = False,
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], int, float]:
         """
         Find the closest point on a polyline to a given point.
         """
     @staticmethod
-    def _pointToSegmentDistance(P: numpy.ndarray[numpy.float64[3, 1]], A: numpy.ndarray[numpy.float64[3, 1]], B: numpy.ndarray[numpy.float64[3, 1]], *, is_wgs84: bool = False) -> float:
+    def _pointToSegmentDistance(
+        P: numpy.ndarray[numpy.float64[3, 1]],
+        A: numpy.ndarray[numpy.float64[3, 1]],
+        B: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        is_wgs84: bool = False,
+    ) -> float:
         """
         Calculate the distance from a point to a line segment.
         """
     @staticmethod
-    def _ranges(polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> numpy.ndarray[numpy.float64[m, 1]]:
+    def _ranges(
+        polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        *,
+        is_wgs84: bool = False,
+    ) -> numpy.ndarray[numpy.float64[m, 1]]:
         """
         Calculate cumulative distances along a polyline.
         """
     @staticmethod
-    def _squareDistance(a: numpy.ndarray[numpy.float64[3, 1]], b: numpy.ndarray[numpy.float64[3, 1]], *, is_wgs84: bool = False) -> float:
+    def _squareDistance(
+        a: numpy.ndarray[numpy.float64[3, 1]],
+        b: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        is_wgs84: bool = False,
+    ) -> float:
         """
         Calculate the squared distance between two points.
         """
@@ -860,7 +1213,12 @@ class PolylineRuler:
         """
         Get the number of points in the polyline.
         """
-    def __init__(self, coords: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> None:
+    def __init__(
+        self,
+        coords: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        *,
+        is_wgs84: bool = False,
+    ) -> None:
         """
         Initialize a PolylineRuler with coordinates and coordinate system.
         """
@@ -869,22 +1227,38 @@ class PolylineRuler:
         Find a point at a specified distance along the polyline.
         """
     @typing.overload
-    def arrow(self, *, index: int, t: float) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
+    def arrow(
+        self, *, index: int, t: float
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get the arrow (point and direction) at a specific segment index and interpolation factor.
         """
     @typing.overload
-    def arrow(self, range: float, *, smooth_joint: bool = True) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
+    def arrow(
+        self, range: float, *, smooth_joint: bool = True
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get the arrow (point and direction) at a specific cumulative distance.
         """
     @typing.overload
-    def arrows(self, ranges: numpy.ndarray[numpy.float64[m, 1]], *, smooth_joint: bool = True) -> tuple[numpy.ndarray[numpy.float64[m, 1]], numpy.ndarray[numpy.float64[m, 3]], numpy.ndarray[numpy.float64[m, 3]]]:
+    def arrows(
+        self, ranges: numpy.ndarray[numpy.float64[m, 1]], *, smooth_joint: bool = True
+    ) -> tuple[
+        numpy.ndarray[numpy.float64[m, 1]],
+        numpy.ndarray[numpy.float64[m, 3]],
+        numpy.ndarray[numpy.float64[m, 3]],
+    ]:
         """
         Get arrows (points and directions) at multiple cumulative distances.
         """
     @typing.overload
-    def arrows(self, step: float, *, with_last: bool = True, smooth_joint: bool = True) -> tuple[numpy.ndarray[numpy.float64[m, 1]], numpy.ndarray[numpy.float64[m, 3]], numpy.ndarray[numpy.float64[m, 3]]]:
+    def arrows(
+        self, step: float, *, with_last: bool = True, smooth_joint: bool = True
+    ) -> tuple[
+        numpy.ndarray[numpy.float64[m, 1]],
+        numpy.ndarray[numpy.float64[m, 3]],
+        numpy.ndarray[numpy.float64[m, 3]],
+    ]:
         """
         Get arrows (points and directions) at regular intervals along the polyline.
         """
@@ -909,7 +1283,9 @@ class PolylineRuler:
         Get the direction vector at a specific point index.
         """
     @typing.overload
-    def dir(self, *, range: float, smooth_joint: bool = True) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def dir(
+        self, *, range: float, smooth_joint: bool = True
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the direction vector at a specific cumulative distance.
         """
@@ -937,19 +1313,29 @@ class PolylineRuler:
         """
         Get the total length of the polyline.
         """
-    def lineSlice(self, start: numpy.ndarray[numpy.float64[3, 1]], stop: numpy.ndarray[numpy.float64[3, 1]]) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def lineSlice(
+        self,
+        start: numpy.ndarray[numpy.float64[3, 1]],
+        stop: numpy.ndarray[numpy.float64[3, 1]],
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of the polyline between two points.
         """
-    def lineSliceAlong(self, start: float, stop: float) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def lineSliceAlong(
+        self, start: float, stop: float
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of the polyline between two distances along it.
         """
-    def local_frame(self, range: float, *, smooth_joint: bool = True) -> numpy.ndarray[numpy.float64[4, 4]]:
+    def local_frame(
+        self, range: float, *, smooth_joint: bool = True
+    ) -> numpy.ndarray[numpy.float64[4, 4]]:
         """
         Get the local coordinate frame at a specific cumulative distance.
         """
-    def pointOnLine(self, P: numpy.ndarray[numpy.float64[3, 1]]) -> tuple[numpy.ndarray[numpy.float64[3, 1]], int, float]:
+    def pointOnLine(
+        self, P: numpy.ndarray[numpy.float64[3, 1]]
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], int, float]:
         """
         Find the closest point on the polyline to a given point.
         """
@@ -971,7 +1357,9 @@ class PolylineRuler:
         """
         Get cumulative distances along the polyline.
         """
-    def scanline(self, range: float, *, min: float, max: float, smooth_joint: bool = True) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
+    def scanline(
+        self, range: float, *, min: float, max: float, smooth_joint: bool = True
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Generate a scanline perpendicular to the polyline at a specific cumulative distance.
         """
@@ -983,6 +1371,7 @@ class PolylineRuler:
         """
         Get the segment index and interpolation factor for a given cumulative distance.
         """
+
 class Quiver:
     class FilterParams:
         def __init__(self) -> None:
@@ -995,7 +1384,9 @@ class Quiver:
             Get the angle slots of the FilterParams
             """
         @typing.overload
-        def angle_slots(self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None) -> Quiver.FilterParams:
+        def angle_slots(
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
+        ) -> Quiver.FilterParams:
             """
             Set the angle slots of the FilterParams
             """
@@ -1009,7 +1400,9 @@ class Quiver:
             Get the x slots of the FilterParams
             """
         @typing.overload
-        def x_slots(self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None) -> Quiver.FilterParams:
+        def x_slots(
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
+        ) -> Quiver.FilterParams:
             """
             Set the x slots of the FilterParams
             """
@@ -1019,7 +1412,9 @@ class Quiver:
             Get the y slots of the FilterParams
             """
         @typing.overload
-        def y_slots(self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None) -> Quiver.FilterParams:
+        def y_slots(
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
+        ) -> Quiver.FilterParams:
             """
             Set the y slots of the FilterParams
             """
@@ -1029,10 +1424,13 @@ class Quiver:
             Get the z slots of the FilterParams
             """
         @typing.overload
-        def z_slots(self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None) -> Quiver.FilterParams:
+        def z_slots(
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
+        ) -> Quiver.FilterParams:
             """
             Set the z slots of the FilterParams
             """
+
     @staticmethod
     def _k(arg0: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
@@ -1053,12 +1451,16 @@ class Quiver:
         Get the anchor point of the Quiver
         """
     @typing.overload
-    def enu2lla(self, coords: numpy.ndarray[numpy.float64[3, 1]]) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def enu2lla(
+        self, coords: numpy.ndarray[numpy.float64[3, 1]]
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Convert ENU coordinates to LLA
         """
     @typing.overload
-    def enu2lla(self, coords: numpy.ndarray[numpy.float64[m, 3]]) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def enu2lla(
+        self, coords: numpy.ndarray[numpy.float64[m, 3]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Convert multiple ENU coordinates to LLA
         """
@@ -1083,20 +1485,36 @@ class Quiver:
         Move the Arrow leftward by delta_y
         """
     @typing.overload
-    def lla2enu(self, coords: numpy.ndarray[numpy.float64[3, 1]]) -> numpy.ndarray[numpy.float64[3, 1]]:
+    def lla2enu(
+        self, coords: numpy.ndarray[numpy.float64[3, 1]]
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Convert LLA coordinates to ENU
         """
     @typing.overload
-    def lla2enu(self, coords: numpy.ndarray[numpy.float64[m, 3]]) -> numpy.ndarray[numpy.float64[m, 3]]:
+    def lla2enu(
+        self, coords: numpy.ndarray[numpy.float64[m, 3]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Convert multiple LLA coordinates to ENU
         """
-    def towards(self, arrow: Arrow, delta_frenet: numpy.ndarray[numpy.float64[3, 1]], *, update_direction: bool = True) -> Arrow:
+    def towards(
+        self,
+        arrow: Arrow,
+        delta_frenet: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        update_direction: bool = True,
+    ) -> Arrow:
         """
         Move the Arrow in Frenet coordinates
         """
-    def update(self, arrow: Arrow, delta_enu: numpy.ndarray[numpy.float64[3, 1]], *, update_direction: bool = True) -> Arrow:
+    def update(
+        self,
+        arrow: Arrow,
+        delta_enu: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        update_direction: bool = True,
+    ) -> Arrow:
         """
         Update the Arrow's position and optionally direction
         """
@@ -1104,62 +1522,144 @@ class Quiver:
         """
         Move the Arrow upward by delta_z
         """
-def densify_polyline(polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous], *, max_gap: float) -> numpy.ndarray[numpy.float64[m, 3]]:
+
+def densify_polyline(
+    polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+    *,
+    max_gap: float,
+) -> numpy.ndarray[numpy.float64[m, 3]]:
     """
     densify polyline, interpolate to satisfy max_gap
     """
+
 @typing.overload
-def douglas_simplify(coords: numpy.ndarray[numpy.float64[m, 3]], epsilon: float, *, is_wgs84: bool = False, recursive: bool = True) -> numpy.ndarray[numpy.float64[m, 3]]:
+def douglas_simplify(
+    coords: numpy.ndarray[numpy.float64[m, 3]],
+    epsilon: float,
+    *,
+    is_wgs84: bool = False,
+    recursive: bool = True,
+) -> numpy.ndarray[numpy.float64[m, 3]]:
     """
     Simplify a polyline using the Douglas-Peucker algorithm.
     """
+
 @typing.overload
-def douglas_simplify(coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], epsilon: float, *, is_wgs84: bool = False, recursive: bool = True) -> numpy.ndarray[numpy.float64[m, 2]]:
+def douglas_simplify(
+    coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    epsilon: float,
+    *,
+    is_wgs84: bool = False,
+    recursive: bool = True,
+) -> numpy.ndarray[numpy.float64[m, 2]]:
     """
     Simplify a 2D polyline using the Douglas-Peucker algorithm.
     """
+
 @typing.overload
-def douglas_simplify_indexes(coords: numpy.ndarray[numpy.float64[m, 3]], epsilon: float, *, is_wgs84: bool = False, recursive: bool = True) -> numpy.ndarray[numpy.int32[m, 1]]:
+def douglas_simplify_indexes(
+    coords: numpy.ndarray[numpy.float64[m, 3]],
+    epsilon: float,
+    *,
+    is_wgs84: bool = False,
+    recursive: bool = True,
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get indexes of points to keep when simplifying a polyline using the Douglas-Peucker algorithm.
     """
+
 @typing.overload
-def douglas_simplify_indexes(coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], epsilon: float, *, is_wgs84: bool = False, recursive: bool = True) -> numpy.ndarray[numpy.int32[m, 1]]:
+def douglas_simplify_indexes(
+    coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    epsilon: float,
+    *,
+    is_wgs84: bool = False,
+    recursive: bool = True,
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get indexes of points to keep when simplifying a 2D polyline using the Douglas-Peucker algorithm.
     """
+
 @typing.overload
-def douglas_simplify_mask(coords: numpy.ndarray[numpy.float64[m, 3]], epsilon: float, *, is_wgs84: bool = False, recursive: bool = True) -> numpy.ndarray[numpy.int32[m, 1]]:
+def douglas_simplify_mask(
+    coords: numpy.ndarray[numpy.float64[m, 3]],
+    epsilon: float,
+    *,
+    is_wgs84: bool = False,
+    recursive: bool = True,
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get a mask of points to keep when simplifying a polyline using the Douglas-Peucker algorithm.
     """
+
 @typing.overload
-def douglas_simplify_mask(coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], epsilon: float, *, is_wgs84: bool = False, recursive: bool = True) -> numpy.ndarray[numpy.int32[m, 1]]:
+def douglas_simplify_mask(
+    coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    epsilon: float,
+    *,
+    is_wgs84: bool = False,
+    recursive: bool = True,
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get a mask of points to keep when simplifying a 2D polyline using the Douglas-Peucker algorithm.
     """
+
 @typing.overload
-def intersect_segments(a1: numpy.ndarray[numpy.float64[2, 1]], a2: numpy.ndarray[numpy.float64[2, 1]], b1: numpy.ndarray[numpy.float64[2, 1]], b2: numpy.ndarray[numpy.float64[2, 1]]) -> tuple[numpy.ndarray[numpy.float64[2, 1]], float, float] | None:
+def intersect_segments(
+    a1: numpy.ndarray[numpy.float64[2, 1]],
+    a2: numpy.ndarray[numpy.float64[2, 1]],
+    b1: numpy.ndarray[numpy.float64[2, 1]],
+    b2: numpy.ndarray[numpy.float64[2, 1]],
+) -> tuple[numpy.ndarray[numpy.float64[2, 1]], float, float] | None:
     """
     Intersect two 2D line segments.
     """
+
 @typing.overload
-def intersect_segments(a1: numpy.ndarray[numpy.float64[3, 1]], a2: numpy.ndarray[numpy.float64[3, 1]], b1: numpy.ndarray[numpy.float64[3, 1]], b2: numpy.ndarray[numpy.float64[3, 1]]) -> tuple[numpy.ndarray[numpy.float64[3, 1]], float, float, float] | None:
+def intersect_segments(
+    a1: numpy.ndarray[numpy.float64[3, 1]],
+    a2: numpy.ndarray[numpy.float64[3, 1]],
+    b1: numpy.ndarray[numpy.float64[3, 1]],
+    b2: numpy.ndarray[numpy.float64[3, 1]],
+) -> tuple[numpy.ndarray[numpy.float64[3, 1]], float, float, float] | None:
     """
     Intersect two 3D line segments.
     """
-def point_in_polygon(*, points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous]) -> numpy.ndarray[numpy.int32[m, 1]]:
+
+def point_in_polygon(
+    *,
+    points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     point-in-polygon test, returns 0-1 mask
     """
+
 @typing.overload
-def polyline_in_polygon(polyline: numpy.ndarray[numpy.float64[m, 3]], polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, fc: FastCrossing) -> dict[tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]]:
-    ...
+def polyline_in_polygon(
+    polyline: numpy.ndarray[numpy.float64[m, 3]],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    fc: FastCrossing,
+) -> dict[
+    tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]
+]: ...
 @typing.overload
-def polyline_in_polygon(polyline: numpy.ndarray[numpy.float64[m, 3]], polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, is_wgs84: bool = False) -> dict[tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]]:
-    ...
-def snap_onto_2d(P: numpy.ndarray[numpy.float64[2, 1]], A: numpy.ndarray[numpy.float64[2, 1]], B: numpy.ndarray[numpy.float64[2, 1]]) -> tuple[numpy.ndarray[numpy.float64[2, 1]], float, float]:
+def polyline_in_polygon(
+    polyline: numpy.ndarray[numpy.float64[m, 3]],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    is_wgs84: bool = False,
+) -> dict[
+    tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]
+]: ...
+def snap_onto_2d(
+    P: numpy.ndarray[numpy.float64[2, 1]],
+    A: numpy.ndarray[numpy.float64[2, 1]],
+    B: numpy.ndarray[numpy.float64[2, 1]],
+) -> tuple[numpy.ndarray[numpy.float64[2, 1]], float, float]:
     """
     Snap P onto line segment AB
     """
-__version__: str = '0.1.0'
+
+__version__: str = "0.1.0"

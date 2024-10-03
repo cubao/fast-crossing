@@ -81,6 +81,8 @@ extend-select = [
 ]
 ignore = [
   "ARG002",
+  "EM101",
+  "NPY002",
   "PLR09",    # Too many X
   "PLR2004",  # Magic comparison
   "PT018",
@@ -89,8 +91,6 @@ ignore = [
   "PTH119",
   "PTH120",
   "RUF013",
-  "NPY002",
-  "EM101",
 ]
 isort.required-imports = ["from __future__ import annotations"]
 

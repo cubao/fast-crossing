@@ -1,8 +1,6 @@
 from __future__ import annotations
-
-import typing
-
 import numpy
+import typing
 
 __all__ = [
     "R_ecef_enu",
