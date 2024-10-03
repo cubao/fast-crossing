@@ -59,8 +59,8 @@ pytest:
 .PHONY: build
 
 restub:
-	pybind11-stubgen naive_svg._core -o stubs
-	cp stubs/naive_svg/_core.pyi src/naive_svg
+	pybind11-stubgen fast_crossing._core -o stubs
+	cp -rf stubs/fast_crossing/_core src/fast_crossing
 
 # conda create -y -n py38 python=3.8
 # conda create -y -n py39 python=3.9
