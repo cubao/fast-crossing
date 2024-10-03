@@ -9,7 +9,6 @@
 
 #include "fast_crossing.hpp"
 #include "point_in_polygon.hpp"
-#include "dbg.h"
 
 namespace cubao
 {
