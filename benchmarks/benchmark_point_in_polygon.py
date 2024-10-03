@@ -45,8 +45,7 @@ def point_in_polygon_polygons(points: np.ndarray, polygon: np.ndarray) -> np.nda
     num_edges_children = 4
     num_nodes_children = 4
     tree = polygons.build_search_tree(polygon, num_edges_children, num_nodes_children)
-    mask = polygons.points_are_inside(tree, points).astype(np.int32)
-    return mask
+    return polygons.points_are_inside(tree, points).astype(np.int32)
 
 
 def point_in_polygon_shapely(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
@@ -69,7 +68,7 @@ def load_points(path: str):
 
 def load_polygon(path: str):
     if path.endswith((".npy", ".pcd")):
-        return load_points(path)
+        load_points(path)
 
 
 def write_mask(mask: np.ndarray, path: str):

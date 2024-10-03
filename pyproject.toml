@@ -55,7 +55,7 @@ build-verbosity = 1
 src = ["src"]
 
 [tool.ruff.lint]
-exclude = ["*.pyi"]
+exclude = ["*.pyi", "scripts/*.py"]
 extend-select = [
   "B",           # flake8-bugbear
   "I",           # isort
@@ -89,6 +89,8 @@ ignore = [
   "PTH119",
   "PTH120",
   "RUF013",
+  "NPY002",
+  "EM101",
 ]
 isort.required-imports = ["from __future__ import annotations"]
 

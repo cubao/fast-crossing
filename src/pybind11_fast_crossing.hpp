@@ -70,8 +70,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
         .def("intersections",
              py::overload_cast<const Eigen::Vector2d &, const Eigen::Vector2d &,
                                bool>(&FastCrossing::intersections, py::const_),
-             "from"_a, "to"_a, py::kw_only(), "dedup"_a = true,
-             "Get crossing intersections with [from, to] segment.\n\n"
+             "start"_a, "to"_a, py::kw_only(), "dedup"_a = true,
+             "Get crossing intersections with [start, to] segment.\n\n"
              ":param from: Start point of the segment\n"
              ":param to: End point of the segment\n"
              ":param dedup: Whether to remove duplicates, defaults to true\n"
