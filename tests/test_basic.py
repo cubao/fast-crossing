@@ -812,17 +812,17 @@ def test_polyline_in_polygon():
     __print_chunks(chunks)
     __print_chunks(chunks2)
 
-    chunks = list(chunks.items())
+    chunks1 = list(chunks.items())
     chunks2 = list(chunks2.items())
-    assert len(chunks) == len(chunks2)
-    assert np.fabs(chunks[0][1][-1] - chunks2[0][1][-1]).max() == 0.0
-    assert np.fabs(chunks[1][1] - chunks2[1][1]).sum() < 1e-6
-    assert np.fabs(chunks[2][1] - chunks2[2][1]).sum() < 1e-6
+    assert len(chunks1) == len(chunks2)
+    assert np.fabs(chunks1[0][1][-1] - chunks2[0][1][-1]).max() == 0.0
+    assert np.fabs(chunks1[1][1] - chunks2[1][1]).sum() < 1e-6
+    assert np.fabs(chunks1[2][1] - chunks2[2][1]).sum() < 1e-6
 
-    chunks = polyline_in_polygon(ruler.lineSliceAlong(1, 2), polygon_ABCD)
-    assert len(chunks) == 0
-    chunks = polyline_in_polygon(ruler.lineSliceAlong(7, 8), polygon_ABCD)
-    assert len(chunks) == 1
+    chunks3 = polyline_in_polygon(ruler.lineSliceAlong(1, 2), polygon_ABCD)
+    assert len(chunks3) == 0
+    chunks3 = polyline_in_polygon(ruler.lineSliceAlong(7, 8), polygon_ABCD)
+    assert len(chunks3) == 1
 
     # test fc
     fc = FastCrossing()

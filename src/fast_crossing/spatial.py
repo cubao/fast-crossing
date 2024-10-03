@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-from _pybind11_fast_crossing import KdTree as _KdTree
+
+from ._core import KdTree as _KdTree
 
 
 class KDTree:
