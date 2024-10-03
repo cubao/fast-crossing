@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         platform: [ubuntu-20.04, windows-2019, macos-13]
         python-version: ["3.9"]

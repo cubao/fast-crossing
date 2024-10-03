@@ -10,13 +10,6 @@ on:
     types:
       - published
 
-env:
-  FORCE_COLOR: 3
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build_sdist:
     name: Build SDist
@@ -41,7 +34,7 @@ jobs:
     name: Wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
@@ -50,7 +43,7 @@ jobs:
       with:
         submodules: true
 
-    - uses: pypa/cibuildwheel@v2.17
+    - uses: pypa/cibuildwheel@v2.17.0
       env:
         # CIBW_ARCHS: auto64
         CIBW_ARCHS_LINUX: x86_64 aarch64
