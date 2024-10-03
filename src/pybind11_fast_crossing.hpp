@@ -26,7 +26,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
     py::class_<FastCrossing>(m, "FastCrossing", py::module_local())
         .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a = false,
              "Initialize FastCrossing object.\n\n"
-             ":param is_wgs84: Whether coordinates are in WGS84 format, defaults to false")
+             ":param is_wgs84: Whether coordinates are in WGS84 format, "
+             "defaults to false")
 
         // add polyline
         .def("add_polyline",
@@ -56,13 +57,15 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              py::overload_cast<>(&FastCrossing::intersections, py::const_),
              "Get all segment intersections in the tree")
 
-        .def("intersections",
-             py::overload_cast<const std::tuple<double, double> &, int>(
-                 &FastCrossing::intersections, py::const_),
-             py::kw_only(), "z_offset_range"_a, "self_intersection"_a = 2,
-             "Get segment intersections in the tree, filtered by conditions.\n\n"
-             ":param z_offset_range: Z-offset range for filtering\n"
-             ":param self_intersection: Self-intersection parameter, defaults to 2")
+        .def(
+            "intersections",
+            py::overload_cast<const std::tuple<double, double> &, int>(
+                &FastCrossing::intersections, py::const_),
+            py::kw_only(), "z_offset_range"_a, "self_intersection"_a = 2,
+            "Get segment intersections in the tree, filtered by conditions.\n\n"
+            ":param z_offset_range: Z-offset range for filtering\n"
+            ":param self_intersection: Self-intersection parameter, defaults "
+            "to 2")
 
         .def("intersections",
              py::overload_cast<const Eigen::Vector2d &, const Eigen::Vector2d &,
@@ -88,7 +91,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                  const Eigen::Ref<const FastCrossing::FlatBush::PolylineType> &,
                  bool>(&FastCrossing::intersections, py::const_),
              "polyline"_a, py::kw_only(), "dedup"_a = true,
-             "Get crossing intersections with a polyline (alternative format).\n\n"
+             "Get crossing intersections with a polyline (alternative "
+             "format).\n\n"
              ":param polyline: The polyline to check intersections with\n"
              ":param dedup: Whether to remove duplicates, defaults to true\n"
              ":return: Sorted intersections by t ratio")
@@ -99,7 +103,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                                              py::const_),
              "polyline"_a, py::kw_only(), "z_min"_a, "z_max"_a,
              "dedup"_a = true,
-             "Get crossing intersections with a polyline, filtered by Z range.\n\n"
+             "Get crossing intersections with a polyline, filtered by Z "
+             "range.\n\n"
              ":param polyline: The polyline to check intersections with\n"
              ":param z_min: Minimum Z value for filtering\n"
              ":param z_max: Maximum Z value for filtering\n"
@@ -112,7 +117,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
                 const Eigen::Ref<const FastCrossing::FlatBush::PolylineType> &,
                 double, double, bool>(&FastCrossing::intersections, py::const_),
             "polyline"_a, py::kw_only(), "z_min"_a, "z_max"_a, "dedup"_a = true,
-            "Get crossing intersections with a polyline, filtered by Z range (alternative format).\n\n"
+            "Get crossing intersections with a polyline, filtered by Z range "
+            "(alternative format).\n\n"
             ":param polyline: The polyline to check intersections with\n"
             ":param z_min: Minimum Z value for filtering\n"
             ":param z_max: Maximum Z value for filtering\n"
@@ -163,7 +169,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "Find polylines within a bounding box.\n\n"
              ":param min: Minimum corner of the bounding box\n"
              ":param max: Maximum corner of the bounding box\n"
-             ":param segment_wise: Whether to return segment-wise results, defaults to true\n"
+             ":param segment_wise: Whether to return segment-wise results, "
+             "defaults to true\n"
              ":param sort: Whether to sort the results, defaults to true\n"
              ":return: Polylines within the bounding box")
 
@@ -176,7 +183,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "sort"_a = true,
              "Find polylines within a polygon.\n\n"
              ":param polygon: The polygon to check against\n"
-             ":param segment_wise: Whether to return segment-wise results, defaults to true\n"
+             ":param segment_wise: Whether to return segment-wise results, "
+             "defaults to true\n"
              ":param sort: Whether to sort the results, defaults to true\n"
              ":return: Polylines within the polygon")
 
@@ -195,7 +203,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              ":param width: Width of the rectangle\n"
              ":param height: Height of the rectangle\n"
              ":param heading: Heading angle of the rectangle, defaults to 0.0\n"
-             ":param segment_wise: Whether to return segment-wise results, defaults to true\n"
+             ":param segment_wise: Whether to return segment-wise results, "
+             "defaults to true\n"
              ":param sort: Whether to sort the results, defaults to true\n"
              ":return: Polylines within the rotated rectangle")
 
@@ -207,7 +216,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "return_squared_l2"_a = false,
              "Find the nearest point to a given position.\n\n"
              ":param position: The query position\n"
-             ":param return_squared_l2: Whether to return squared L2 distance, defaults to false\n"
+             ":param return_squared_l2: Whether to return squared L2 distance, "
+             "defaults to false\n"
              ":return: Nearest point information")
 
         .def("nearest",
@@ -217,7 +227,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "return_squared_l2"_a = false,
              "Find the nearest point to a given index.\n\n"
              ":param index: The query index\n"
-             ":param return_squared_l2: Whether to return squared L2 distance, defaults to false\n"
+             ":param return_squared_l2: Whether to return squared L2 distance, "
+             "defaults to false\n"
              ":return: Nearest point information")
 
         .def("nearest",
@@ -236,12 +247,14 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "sort"_a = true,               //
              "return_squared_l2"_a = false, //
              "filter"_a = std::nullopt,
-             "Find k nearest points to a given position with optional filtering.\n\n"
+             "Find k nearest points to a given position with optional "
+             "filtering.\n\n"
              ":param position: The query position\n"
              ":param k: Number of nearest neighbors to find (optional)\n"
              ":param radius: Search radius (optional)\n"
              ":param sort: Whether to sort the results, defaults to true\n"
-             ":param return_squared_l2: Whether to return squared L2 distance, defaults to false\n"
+             ":param return_squared_l2: Whether to return squared L2 distance, "
+             "defaults to false\n"
              ":param filter: Optional filter parameters\n"
              ":return: Nearest points information")
 
@@ -260,7 +273,8 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              py::overload_cast<const Eigen::Vector2i &, double>(
                  &FastCrossing::coordinates, py::const_),
              "index"_a, "ratio"_a,
-             "Get coordinates at a specific position on a polyline (alternative format).\n\n"
+             "Get coordinates at a specific position on a polyline "
+             "(alternative format).\n\n"
              ":param index: Combined index of polyline and segment\n"
              ":param ratio: Ratio along the segment (0 to 1)\n"
              ":return: Coordinates at the specified position")
@@ -271,22 +285,25 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "intersection"_a, "second"_a = true,
              "Get coordinates of an intersection.\n\n"
              ":param intersection: The intersection object\n"
-             ":param second: Whether to use the second polyline of the intersection, defaults to true\n"
+             ":param second: Whether to use the second polyline of the "
+             "intersection, defaults to true\n"
              ":return: Coordinates of the intersection")
 
         // arrow
         .def("arrow",
              py::overload_cast<int, int>(&FastCrossing::arrow, py::const_),
              py::kw_only(), "polyline_index"_a, "point_index"_a,
-             "Get an arrow (position and direction) at a specific point on a polyline.\n\n"
+             "Get an arrow (position and direction) at a specific point on a "
+             "polyline.\n\n"
              ":param polyline_index: Index of the polyline\n"
              ":param point_index: Index of the point within the polyline\n"
              ":return: Arrow (position and direction)")
 
         //
-        .def("is_wgs84", &FastCrossing::is_wgs84,
-             "Check if the coordinates are in WGS84 format.\n\n"
-             ":return: True if coordinates are in WGS84 format, False otherwise")
+        .def(
+            "is_wgs84", &FastCrossing::is_wgs84,
+            "Check if the coordinates are in WGS84 format.\n\n"
+            ":return: True if coordinates are in WGS84 format, False otherwise")
 
         .def("num_poylines", &FastCrossing::num_poylines,
              "Get the number of polylines in the FastCrossing object.\n\n"
@@ -307,12 +324,12 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
         .def("bush", &FastCrossing::export_bush, "autobuild"_a = true,
              rvp::reference_internal,
              "Export the internal FlatBush index.\n\n"
-             ":param autobuild: Whether to automatically build the index if not already built, defaults to true\n"
+             ":param autobuild: Whether to automatically build the index if "
+             "not already built, defaults to true\n"
              ":return: FlatBush index")
 
         .def("quiver", &FastCrossing::export_quiver, rvp::reference_internal,
              "Export the internal Quiver object.\n\n"
-             ":return: Quiver object")
-        ;
+             ":return: Quiver object");
 }
 } // namespace cubao

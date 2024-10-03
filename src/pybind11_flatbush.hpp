@@ -26,7 +26,7 @@ CUBAO_INLINE void bind_flatbush(py::module &m)
     using FlatBush = flatbush::FlatBush<double>;
     py::class_<FlatBush>(m, "FlatBush", py::module_local())
         .def(py::init<>(), "Initialize an empty FlatBush index.")
-        .def(py::init<int>(), "reserve"_a, 
+        .def(py::init<int>(), "reserve"_a,
              "Initialize a FlatBush index with a reserved capacity.\n\n"
              ":param reserve: Number of items to reserve space for")
         .def("reserve", &FlatBush::Reserve,
@@ -72,8 +72,7 @@ CUBAO_INLINE void bind_flatbush(py::module &m)
             ":param label0: First label (optional)\n"
             ":param label1: Second label (optional)\n"
             ":return: Index of the added item")
-        .def("finish", &FlatBush::Finish,
-             "Finish the index construction.")
+        .def("finish", &FlatBush::Finish, "Finish the index construction.")
         .def("boxes", &FlatBush::boxes, rvp::reference_internal,
              "Get all bounding boxes in the index.\n\n"
              ":return: Reference to the vector of bounding boxes")
@@ -120,12 +119,14 @@ CUBAO_INLINE void bind_flatbush(py::module &m)
                 return self.Search(min[0], min[1], max[0], max[1]);
             },
             "min"_a, "max"_a,
-            "Search for items within a bounding box using min and max vectors.\n\n"
+            "Search for items within a bounding box using min and max "
+            "vectors.\n\n"
             ":param min: Vector of [minX, minY]\n"
             ":param max: Vector of [maxX, maxY]\n"
             ":return: Vector of indices of items within the search box")
         .def("size", &FlatBush::Size,
              "Get the number of items in the index.\n\n"
-             ":return: Number of items in the index")
-        ;
+             ":return: Number of items in the index");
+
+}
 } // namespace cubao
