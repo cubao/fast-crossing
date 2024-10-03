@@ -33,49 +33,45 @@ polyline_in_polygon(const RowVectors &polyline, //
         if (!inside) {
             return {};
         }
-        return {{0, 0.0, 0.0, ruler.N() - 2, 1.0, ruler.length()}, polyline};
+        return PolylineChunks{
+            {{0, 0.0, 0.0, ruler.N() - 2, 1.0, ruler.length()}, polyline}};
     }
     // pt, (t, s), cur_label=(poly1, seg1), tree_label=(poly2, seg2)
     const int N = intersections.size() + 2;
     // init ranges
-    std::vector<double> ranges;
     Eigen::VectorXd ranges(N);
-    ranges.reserve(N);
-    ranges.push_back(0.0);
-    for (auto &inter : intersections) {
-        int seg_idx = std::get<2>(inter)[1];
-        double t = std::get<1>(inter)[0];
-        double r = ruler.range(seg_idx, t);
-        ranges.push_back(r);
+    {
+        int idx = -1;
+        ranges[++idx] = 0.0;
+        for (auto &inter : intersections) {
+            int seg_idx = std::get<2>(inter)[1];
+            double t = std::get<1>(inter)[0];
+            double r = ruler.range(seg_idx, t);
+            ranges[++idx] = r;
+        }
+        ranges[++idx] = ruler.length();
     }
-    ranges.push_back(ruler.length());
     // ranges o------o--------o-----------------o
     // midpts     ^       ^             ^
-    std::vector<Eigen::Vector2d> midpoints;
-    midpoints.reserve(ranges.size() - 1);
+    RowVectorsNx2 midpoints(N - 1);
     for (int i = 0; i < N - 1; ++i) {
         double rr = (ranges[i] + ranges[i + 1]) / 2.0;
-        midpoints.push_back(ruler.at(rr).head(2));
+        midpoints.row(i) = ruler.along(rr).head(2);
     }
-    auto mask = point_in_polygon(Eigen::Map<const RowVectorsNx2>(
-                                     midpoints[0].data(), midpoints.size(), 2),
-                                 polygon);
+    auto mask = point_in_polygon(midpoints, polygon);
     PolylineChunks ret;
     {
-        /*
-        double r = 0.0;
-        while (idx < N) {
-            // mask && length
-            if (mask[idx] && ranges[idx] > r) {
-                auto [seg1, t1] = ruler.segment_index_t(r);
-                auto [seg2, t2] = ruler.segment_index_t(ranges[idx]);
-                ret.emplace(std::make_tuple(seg1, t1, r, seg2, t2, ranges[idx]),
-                            ruler.lineSliceAlong(r, ranges[idx]));
+        for (int i = 0; i < N - 1; ++i) {
+            double r1 = ranges[i];
+            double r2 = ranges[i + 1];
+            if (r2 <= r1 || mask[i] == 0) {
+                continue;
             }
-            r = ranges[idx];
-            ++idx;
+            auto [seg1, t1] = ruler.segment_index_t(r1);
+            auto [seg2, t2] = ruler.segment_index_t(r2);
+            ret.emplace(std::make_tuple(seg1, t1, r1, seg2, t2, r2),
+                        ruler.lineSliceAlong(r1, r2));
         }
-        */
     }
     return ret;
 }
