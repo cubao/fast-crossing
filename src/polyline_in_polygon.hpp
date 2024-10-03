@@ -53,7 +53,7 @@ polyline_in_polygon(const RowVectors &polyline, //
     }
     // ranges o------o--------o-----------------o
     // midpts     ^       ^             ^
-    RowVectorsNx2 midpoints(N - 1);
+    RowVectorsNx2 midpoints(N - 1, 2);
     for (int i = 0; i < N - 1; ++i) {
         double rr = (ranges[i] + ranges[i + 1]) / 2.0;
         midpoints.row(i) = ruler.along(rr).head(2);
