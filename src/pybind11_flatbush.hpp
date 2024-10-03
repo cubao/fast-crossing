@@ -127,6 +127,5 @@ CUBAO_INLINE void bind_flatbush(py::module &m)
         .def("size", &FlatBush::Size,
              "Get the number of items in the index.\n\n"
              ":return: Number of items in the index");
-
 }
 } // namespace cubao

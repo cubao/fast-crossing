@@ -1,7 +1,11 @@
 from __future__ import annotations
-import numpy
+
 import typing
+
+import numpy
+
 from . import tf
+
 __all__ = ['Arrow', 'FastCrossing', 'FlatBush', 'KdQuiver', 'KdTree', 'LineSegment', 'PolylineRuler', 'Quiver', 'densify_polyline', 'douglas_simplify', 'douglas_simplify_indexes', 'douglas_simplify_mask', 'intersect_segments', 'point_in_polygon', 'polyline_in_polygon', 'snap_onto_2d', 'tf']
 class Arrow:
     @staticmethod
@@ -164,14 +168,14 @@ class FastCrossing:
     def __init__(self, *, is_wgs84: bool = False) -> None:
         """
         Initialize FastCrossing object.
-        
+
         :param is_wgs84: Whether coordinates are in WGS84 format, defaults to false
         """
     @typing.overload
     def add_polyline(self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, index: int = -1) -> int:
         """
         Add polyline to the tree.
-        
+
         :param polyline: The polyline to add
         :param index: Custom polyline index, defaults to -1
         :return: The index of the added polyline
@@ -180,7 +184,7 @@ class FastCrossing:
     def add_polyline(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, index: int = -1) -> int:
         """
         Add polyline to the tree (alternative format).
-        
+
         :param polyline: The polyline to add
         :param index: Custom polyline index, defaults to -1
         :return: The index of the added polyline
@@ -188,7 +192,7 @@ class FastCrossing:
     def arrow(self, *, polyline_index: int, point_index: int) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get an arrow (position and direction) at a specific point on a polyline.
-        
+
         :param polyline_index: Index of the polyline
         :param point_index: Index of the point within the polyline
         :return: Arrow (position and direction)
@@ -196,7 +200,7 @@ class FastCrossing:
     def bush(self, autobuild: bool = True) -> ...:
         """
         Export the internal FlatBush index.
-        
+
         :param autobuild: Whether to automatically build the index if not already built, defaults to true
         :return: FlatBush index
         """
@@ -204,7 +208,7 @@ class FastCrossing:
     def coordinates(self, polyline_index: int, segment_index: int, ratio: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates at a specific position on a polyline.
-        
+
         :param polyline_index: Index of the polyline
         :param segment_index: Index of the segment within the polyline
         :param ratio: Ratio along the segment (0 to 1)
@@ -214,7 +218,7 @@ class FastCrossing:
     def coordinates(self, index: numpy.ndarray[numpy.int32[2, 1]], ratio: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates at a specific position on a polyline (alternative format).
-        
+
         :param index: Combined index of polyline and segment
         :param ratio: Ratio along the segment (0 to 1)
         :return: Coordinates at the specified position
@@ -223,7 +227,7 @@ class FastCrossing:
     def coordinates(self, intersection: tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]], second: bool = True) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates of an intersection.
-        
+
         :param intersection: The intersection object
         :param second: Whether to use the second polyline of the intersection, defaults to true
         :return: Coordinates of the intersection
@@ -241,7 +245,7 @@ class FastCrossing:
     def intersections(self, *, z_offset_range: tuple[float, float], self_intersection: int = 2) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
         """
         Get segment intersections in the tree, filtered by conditions.
-        
+
         :param z_offset_range: Z-offset range for filtering
         :param self_intersection: Self-intersection parameter, defaults to 2
         """
@@ -249,7 +253,7 @@ class FastCrossing:
     def intersections(self, from: numpy.ndarray[numpy.float64[2, 1]], to: numpy.ndarray[numpy.float64[2, 1]], *, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
         """
         Get crossing intersections with [from, to] segment.
-        
+
         :param from: Start point of the segment
         :param to: End point of the segment
         :param dedup: Whether to remove duplicates, defaults to true
@@ -259,7 +263,7 @@ class FastCrossing:
     def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
         """
         Get crossing intersections with a polyline.
-        
+
         :param polyline: The polyline to check intersections with
         :param dedup: Whether to remove duplicates, defaults to true
         :return: Sorted intersections by t ratio
@@ -268,7 +272,7 @@ class FastCrossing:
     def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
         """
         Get crossing intersections with a polyline (alternative format).
-        
+
         :param polyline: The polyline to check intersections with
         :param dedup: Whether to remove duplicates, defaults to true
         :return: Sorted intersections by t ratio
@@ -277,7 +281,7 @@ class FastCrossing:
     def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, z_min: float, z_max: float, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
         """
         Get crossing intersections with a polyline, filtered by Z range.
-        
+
         :param polyline: The polyline to check intersections with
         :param z_min: Minimum Z value for filtering
         :param z_max: Maximum Z value for filtering
@@ -288,7 +292,7 @@ class FastCrossing:
     def intersections(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, z_min: float, z_max: float, dedup: bool = True) -> list[tuple[numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.float64[2, 1]], numpy.ndarray[numpy.int32[2, 1]], numpy.ndarray[numpy.int32[2, 1]]]]:
         """
         Get crossing intersections with a polyline, filtered by Z range (alternative format).
-        
+
         :param polyline: The polyline to check intersections with
         :param z_min: Minimum Z value for filtering
         :param z_max: Maximum Z value for filtering
@@ -298,14 +302,14 @@ class FastCrossing:
     def is_wgs84(self) -> bool:
         """
         Check if the coordinates are in WGS84 format.
-        
+
         :return: True if coordinates are in WGS84 format, False otherwise
         """
     @typing.overload
     def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
         """
         Find the nearest point to a given position.
-        
+
         :param position: The query position
         :param return_squared_l2: Whether to return squared L2 distance, defaults to false
         :return: Nearest point information
@@ -314,7 +318,7 @@ class FastCrossing:
     def nearest(self, index: numpy.ndarray[numpy.int32[2, 1]], *, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
         """
         Find the nearest point to a given index.
-        
+
         :param index: The query index
         :param return_squared_l2: Whether to return squared L2 distance, defaults to false
         :return: Nearest point information
@@ -323,7 +327,7 @@ class FastCrossing:
     def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, k: int | None = None, radius: float | None = None, sort: bool = True, return_squared_l2: bool = False, filter: tuple[numpy.ndarray[numpy.float64[3, 1]], ...] | None = None) -> tuple[numpy.ndarray[numpy.int32[m, 2]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to a given position with optional filtering.
-        
+
         :param position: The query position
         :param k: Number of nearest neighbors to find (optional)
         :param radius: Search radius (optional)
@@ -335,14 +339,14 @@ class FastCrossing:
     def num_poylines(self) -> int:
         """
         Get the number of polylines in the FastCrossing object.
-        
+
         :return: Number of polylines
         """
     @typing.overload
     def point_index(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get point index for a given index.
-        
+
         :param index: The index to query
         :return: The point index
         """
@@ -350,34 +354,34 @@ class FastCrossing:
     def point_index(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Get point indexes for given indexes.
-        
+
         :param indexes: The indexes to query
         :return: The point indexes
         """
     def polyline_ruler(self, index: int) -> ...:
         """
         Get a specific polyline ruler.
-        
+
         :param index: Index of the polyline
         :return: Polyline ruler for the specified index
         """
     def polyline_rulers(self) -> dict[int, ...]:
         """
         Get all polyline rulers.
-        
+
         :return: Dictionary of polyline rulers
         """
     def quiver(self) -> ...:
         """
         Export the internal Quiver object.
-        
+
         :return: Quiver object
         """
     @typing.overload
     def segment_index(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get segment index for a given index.
-        
+
         :param index: The index to query
         :return: The segment index
         """
@@ -385,7 +389,7 @@ class FastCrossing:
     def segment_index(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Get segment indexes for given indexes.
-        
+
         :param indexes: The indexes to query
         :return: The segment indexes
         """
@@ -393,7 +397,7 @@ class FastCrossing:
     def within(self, *, min: numpy.ndarray[numpy.float64[2, 1]], max: numpy.ndarray[numpy.float64[2, 1]], segment_wise: bool = True, sort: bool = True) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a bounding box.
-        
+
         :param min: Minimum corner of the bounding box
         :param max: Maximum corner of the bounding box
         :param segment_wise: Whether to return segment-wise results, defaults to true
@@ -404,7 +408,7 @@ class FastCrossing:
     def within(self, *, polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], segment_wise: bool = True, sort: bool = True) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a polygon.
-        
+
         :param polygon: The polygon to check against
         :param segment_wise: Whether to return segment-wise results, defaults to true
         :param sort: Whether to sort the results, defaults to true
@@ -414,7 +418,7 @@ class FastCrossing:
     def within(self, *, center: numpy.ndarray[numpy.float64[2, 1]], width: float, height: float, heading: float = 0.0, segment_wise: bool = True, sort: bool = True) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a rotated rectangle.
-        
+
         :param center: Center of the rectangle
         :param width: Width of the rectangle
         :param height: Height of the rectangle
@@ -433,14 +437,14 @@ class FlatBush:
     def __init__(self, reserve: int) -> None:
         """
         Initialize a FlatBush index with a reserved capacity.
-        
+
         :param reserve: Number of items to reserve space for
         """
     @typing.overload
     def add(self, minX: float, minY: float, maxX: float, maxY: float, *, label0: int = -1, label1: int = -1) -> int:
         """
         Add a bounding box to the index.
-        
+
         :param minX: Minimum X coordinate of the bounding box
         :param minY: Minimum Y coordinate of the bounding box
         :param maxX: Maximum X coordinate of the bounding box
@@ -453,7 +457,7 @@ class FlatBush:
     def add(self, polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous], *, label0: int = -1) -> int:
         """
         Add a polyline to the index.
-        
+
         :param polyline: Polyline coordinates
         :param label0: Label for the polyline (optional)
         :return: Index of the added item
@@ -462,7 +466,7 @@ class FlatBush:
     def add(self, box: numpy.ndarray[numpy.float64[4, 1]], *, label0: int = -1, label1: int = -1) -> int:
         """
         Add a bounding box to the index using a vector.
-        
+
         :param box: Vector of [minX, minY, maxX, maxY]
         :param label0: First label (optional)
         :param label1: Second label (optional)
@@ -471,14 +475,14 @@ class FlatBush:
     def box(self, index: int) -> numpy.ndarray[numpy.float64[4, 1]]:
         """
         Get the bounding box for a specific index.
-        
+
         :param index: Index of the item
         :return: Bounding box of the item
         """
     def boxes(self) -> numpy.ndarray[numpy.float64[m, 4], numpy.ndarray.flags.c_contiguous]:
         """
         Get all bounding boxes in the index.
-        
+
         :return: Reference to the vector of bounding boxes
         """
     def finish(self) -> None:
@@ -488,27 +492,27 @@ class FlatBush:
     def label(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get the label for a specific index.
-        
+
         :param index: Index of the item
         :return: Label of the item
         """
     def labels(self) -> numpy.ndarray[numpy.int32[m, 2], numpy.ndarray.flags.c_contiguous]:
         """
         Get all labels in the index.
-        
+
         :return: Reference to the vector of labels
         """
     def reserve(self, arg0: int) -> None:
         """
         Reserve space for a number of items.
-        
+
         :param n: Number of items to reserve space for
         """
     @typing.overload
     def search(self, minX: float, minY: float, maxX: float, maxY: float) -> list[int]:
         """
         Search for items within a bounding box.
-        
+
         :param minX: Minimum X coordinate of the search box
         :param minY: Minimum Y coordinate of the search box
         :param maxX: Maximum X coordinate of the search box
@@ -519,7 +523,7 @@ class FlatBush:
     def search(self, bbox: numpy.ndarray[numpy.float64[4, 1]]) -> list[int]:
         """
         Search for items within a bounding box using a vector.
-        
+
         :param bbox: Vector of [minX, minY, maxX, maxY]
         :return: Vector of indices of items within the search box
         """
@@ -527,7 +531,7 @@ class FlatBush:
     def search(self, min: numpy.ndarray[numpy.float64[2, 1]], max: numpy.ndarray[numpy.float64[2, 1]]) -> list[int]:
         """
         Search for items within a bounding box using min and max vectors.
-        
+
         :param min: Vector of [minX, minY]
         :param max: Vector of [maxX, maxY]
         :return: Vector of indices of items within the search box
@@ -535,7 +539,7 @@ class FlatBush:
     def size(self) -> int:
         """
         Get the number of items in the index.
-        
+
         :return: Number of items in the index
         """
 class KdQuiver(Quiver):
@@ -651,54 +655,54 @@ class KdTree:
     def __init__(self, leafsize: int = 10) -> None:
         """
         Initialize KdTree with specified leaf size.
-        
+
         :param leafsize: Maximum number of points in leaf node, defaults to 10
         """
     @typing.overload
     def __init__(self, points: numpy.ndarray[numpy.float64[m, 3]]) -> None:
         """
         Initialize KdTree with 3D points.
-        
+
         :param points: 3D points to initialize the tree
         """
     @typing.overload
     def __init__(self, points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous]) -> None:
         """
         Initialize KdTree with 2D points.
-        
+
         :param points: 2D points to initialize the tree
         """
     @typing.overload
     def add(self, points: numpy.ndarray[numpy.float64[m, 3]]) -> None:
         """
         Add 3D points to the KdTree.
-        
+
         :param points: 3D points to add
         """
     @typing.overload
     def add(self, points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous]) -> None:
         """
         Add 2D points to the KdTree.
-        
+
         :param points: 2D points to add
         """
     def build_index(self, force_rebuild: bool = False) -> None:
         """
         Build the KdTree index.
-        
+
         :param force_rebuild: Force rebuilding the index even if already built, defaults to false
         """
     def leafsize(self) -> int:
         """
         Get the current leaf size of the KdTree.
-        
+
         :return: Current leaf size
         """
     @typing.overload
     def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, return_squared_l2: bool = False) -> tuple[int, float]:
         """
         Find the nearest point to the given position.
-        
+
         :param position: Query position
         :param return_squared_l2: If true, return squared L2 distance, defaults to false
         :return: Tuple of (index, distance)
@@ -707,7 +711,7 @@ class KdTree:
     def nearest(self, index: int, *, return_squared_l2: bool = False) -> tuple[int, float]:
         """
         Find the nearest point to the point at the given index.
-        
+
         :param index: Index of the query point
         :param return_squared_l2: If true, return squared L2 distance, defaults to false
         :return: Tuple of (index, distance)
@@ -716,7 +720,7 @@ class KdTree:
     def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, k: int, sort: bool = True, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to the given position.
-        
+
         :param position: Query position
         :param k: Number of nearest neighbors to find
         :param sort: If true, sort results by distance, defaults to true
@@ -727,7 +731,7 @@ class KdTree:
     def nearest(self, position: numpy.ndarray[numpy.float64[3, 1]], *, radius: float, sort: bool = True, return_squared_l2: bool = False) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find all points within a given radius of the query position.
-        
+
         :param position: Query position
         :param radius: Search radius
         :param sort: If true, sort results by distance, defaults to true
@@ -737,7 +741,7 @@ class KdTree:
     def points(self) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
         """
         Get the points in the KdTree.
-        
+
         :return: Reference to the points in the tree
         """
     def reset(self) -> None:
@@ -751,7 +755,7 @@ class KdTree:
     def set_leafsize(self, value: int) -> None:
         """
         Set the leaf size of the KdTree.
-        
+
         :param value: New leaf size value
         """
 class LineSegment:
