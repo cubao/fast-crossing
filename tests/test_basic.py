@@ -5,9 +5,18 @@ import time
 import numpy as np
 import pytest
 
-from fast_crossing import (Arrow, FastCrossing, FlatBush, KdQuiver, KdTree,
-                           Quiver, densify_polyline, point_in_polygon,
-                           polyline_in_polygon, tf)
+from fast_crossing import (
+    Arrow,
+    FastCrossing,
+    FlatBush,
+    KdQuiver,
+    KdTree,
+    Quiver,
+    densify_polyline,
+    point_in_polygon,
+    polyline_in_polygon,
+    tf,
+)
 
 
 def test_fast_crossing():
