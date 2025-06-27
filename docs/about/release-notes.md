@@ -12,7 +12,7 @@ pip install -U fast-crossing
 
 ## Version 0.1.1 (2025-06-27)
 
-*   Use sckit-build-core
+*   Use sckit-build-core, ditch python 3.7
 
 ## Version 0.1.0 (2024-10-03)
 
