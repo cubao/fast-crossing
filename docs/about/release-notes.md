@@ -10,6 +10,10 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.1.1 (2025-06-27)
+
+*   Use sckit-build-core
+
 ## Version 0.1.0 (2024-10-03)
 
 *   Add typing stubs

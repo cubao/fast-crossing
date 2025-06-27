@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fast_crossing"
-version = "0.1.0"
+version = "0.1.1"
 description="fast crossing"
 readme = "README.md"
 authors = [
