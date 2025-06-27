@@ -5,8 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fast_crossing"
-version = "0.1.0"
-url = "https://fast-crossing.readthedocs.io"
+version = "0.1.1"
 description="fast crossing"
 readme = "README.md"
 authors = [
@@ -17,13 +16,17 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
+
+
+[project.urls]
+Homepage = "https://fast-crossing.readthedocs.io"
 
 [project.optional-dependencies]
 test = ["pytest", "scipy"]
