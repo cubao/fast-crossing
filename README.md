@@ -67,8 +67,8 @@ def test_fast_crossing():
     # build index
     fc.finish()
 
-    # num_poylines
-    assert 2 == fc.num_poylines()
+    # num_polylines
+    assert 2 == fc.num_polylines()
     rulers = fc.polyline_rulers()
     assert len(rulers) == 2
     ruler0 = fc.polyline_ruler(0)
