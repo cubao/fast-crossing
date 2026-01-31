@@ -61,6 +61,7 @@ pytest:
 restub:
 	pybind11-stubgen fast_crossing._core -o stubs
 	cp -rf stubs/fast_crossing/_core src/fast_crossing
+	pre-commit run --files src/fast_crossing/_core
 
 # conda create -y -n py38 python=3.8
 # conda create -y -n py39 python=3.9
