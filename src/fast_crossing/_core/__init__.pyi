@@ -490,7 +490,7 @@ class FastCrossing:
         :param filter: Optional filter parameters
         :return: Nearest points information
         """
-    def num_poylines(self) -> int:
+    def num_polylines(self) -> int:
         """
         Get the number of polylines in the FastCrossing object.
 

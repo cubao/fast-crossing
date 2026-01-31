@@ -305,7 +305,7 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
             "Check if the coordinates are in WGS84 format.\n\n"
             ":return: True if coordinates are in WGS84 format, False otherwise")
 
-        .def("num_poylines", &FastCrossing::num_poylines,
+        .def("num_polylines", &FastCrossing::num_polylines,
              "Get the number of polylines in the FastCrossing object.\n\n"
              ":return: Number of polylines")
 

@@ -1,11 +1,11 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "pybind11"]
+requires = ["scikit-build-core>=0.3.3", "pybind11", "cubao-headers>=0.0.8"]
 build-backend = "scikit_build_core.build"
 
 
 [project]
 name = "fast_crossing"
-version = "0.1.1"
+version = "0.1.2"
 description="fast crossing"
 readme = "README.md"
 authors = [

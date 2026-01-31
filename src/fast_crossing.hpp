@@ -592,7 +592,7 @@ struct FastCrossing
     }
 
     bool is_wgs84() const { return is_wgs84_; }
-    int num_poylines() const
+    int num_polylines() const
     {
         return quiver_ ? quiver_->polylines().size() : 0;
     }
