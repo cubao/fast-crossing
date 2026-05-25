@@ -308,6 +308,7 @@ def _test_cKDTree_query(KDTree):
 
 
 def test_scipy_cKDTree():
+    pytest.importorskip("scipy")
     from scipy.spatial import cKDTree
 
     _test_cKDTree_query(cKDTree)

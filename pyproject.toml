@@ -29,7 +29,7 @@ classifiers = [
 Homepage = "https://fast-crossing.readthedocs.io"
 
 [project.optional-dependencies]
-test = ["pytest", "scipy"]
+test = ["pytest", "scipy<1.14; python_version < '3.13'"]
 
 
 [tool.scikit-build]
