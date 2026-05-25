@@ -44,18 +44,64 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-14]
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: true
 
-    - uses: pypa/cibuildwheel@v3.3.1
+    - name: Cache cibuildwheel
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/pip
+          ~/.cache/pip
+          ~/AppData/Local/pip/Cache
+          ~/Library/Caches/cibuildwheel
+          ~/.cache/cibuildwheel
+          ~/AppData/Local/pypa/cibuildwheel/Cache
+        key: cibw-${{ matrix.os }}-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          cibw-${{ matrix.os }}-
+
+    - uses: astral-sh/setup-uv@v7
+
+    - name: Pre-cache virtualenv for cibuildwheel
+      shell: bash
+      run: |
+        # cibuildwheel downloads virtualenv.pyz from GitHub which can hit 429 rate limits.
+        # Pre-download with GITHUB_TOKEN auth (5000 req/hr vs 60 unauthenticated).
+        # Versions must match cibuildwheel v2.22 virtualenv.toml.
+        case "$RUNNER_OS" in
+          Windows) CACHE_DIR="$(cygpath "$USERPROFILE/AppData/Local/pypa/cibuildwheel/Cache")" ;;
+          macOS)   CACHE_DIR="$HOME/Library/Caches/cibuildwheel" ;;
+          *)       CACHE_DIR="$HOME/.cache/cibuildwheel" ;;
+        esac
+        mkdir -p "$CACHE_DIR"
+        for VERSION in 20.27.1 20.21.1; do
+          FILE="$CACHE_DIR/virtualenv-${VERSION}.pyz"
+          if [ ! -f "$FILE" ]; then
+            echo "Downloading virtualenv-${VERSION}.pyz..."
+            curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              "https://raw.githubusercontent.com/pypa/get-virtualenv/${VERSION}/public/virtualenv.pyz" \
+              -o "$FILE"
+          else
+            echo "virtualenv-${VERSION}.pyz already cached"
+          fi
+        done
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - uses: pypa/cibuildwheel@v2.22
       env:
         CIBW_ARCHS_MACOS: universal2
-        CIBW_ARCHS_WINDOWS: auto ARM64
-        CIBW_SKIP: "pp* *musllinux* *_i686 cp314t-win*"
-        CIBW_TEST_SKIP: "*macosx* *win* *aarch64 cp31* pp* *musllinux*"
-        CIBW_BEFORE_BUILD: "pip install --prefer-binary numpy pytest"
+        CIBW_ARCHS_WINDOWS: AMD64 ARM64
+        CIBW_SKIP: "pp* *musllinux* *_i686"
+        CIBW_TEST_SKIP: "*macosx* *win* *aarch64"
+        # Use uv to avoid transient GitHub rate limits during build
+        CIBW_BUILD_FRONTEND: "build[uv]"
 
     - name: Verify clean directory
       run: git diff --exit-code

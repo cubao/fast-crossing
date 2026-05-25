@@ -1,7 +1,5 @@
 from __future__ import annotations
-import collections.abc
 import numpy
-import numpy.typing
 import typing
 from . import tf
 
@@ -28,36 +26,33 @@ __all__: list[str] = [
 class Arrow:
     @staticmethod
     def _angle(
-        vec: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        vec: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        ref: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        ref: numpy.ndarray[numpy.float64[3, 1]],
     ) -> float:
         """
         Calculate angle between two vectors
         """
     @staticmethod
     @typing.overload
-    def _heading(
-        heading: typing.SupportsFloat,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def _heading(heading: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Convert heading to unit vector
         """
     @staticmethod
     @typing.overload
-    def _heading(east: typing.SupportsFloat, north: typing.SupportsFloat) -> float:
+    def _heading(east: float, north: float) -> float:
         """
         Convert east and north components to heading
         """
     @staticmethod
     def _unit_vector(
-        vector: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        with_eps: bool = True,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        vector: numpy.ndarray[numpy.float64[3, 1]], with_eps: bool = True
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Normalize a vector to unit length
         """
-    def Frenet(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 3]"]:
+    def Frenet(self) -> numpy.ndarray[numpy.float64[3, 3]]:
         """
         Get the Frenet frame of the Arrow
         """
@@ -71,18 +66,15 @@ class Arrow:
         Default constructor for Arrow
         """
     @typing.overload
-    def __init__(
-        self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    ) -> None:
+    def __init__(self, position: numpy.ndarray[numpy.float64[3, 1]]) -> None:
         """
         Constructor for Arrow with position
         """
     @typing.overload
     def __init__(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        direction: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
+        direction: numpy.ndarray[numpy.float64[3, 1]],
     ) -> None:
         """
         Constructor for Arrow with position and direction
@@ -93,22 +85,16 @@ class Arrow:
         Create a copy of the Arrow
         """
     @typing.overload
-    def direction(
-        self,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def direction(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the direction of the Arrow
         """
     @typing.overload
-    def direction(
-        self, arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
-    ) -> Arrow:
+    def direction(self, arg0: numpy.ndarray[numpy.float64[3, 1]]) -> Arrow:
         """
         Set the direction of the Arrow
         """
-    def forward(
-        self,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def forward(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the forward direction of the Arrow
         """
@@ -122,37 +108,33 @@ class Arrow:
         Get the heading of the Arrow
         """
     @typing.overload
-    def heading(self, new_value: typing.SupportsFloat) -> Arrow:
+    def heading(self, new_value: float) -> Arrow:
         """
         Set the heading of the Arrow
         """
     @typing.overload
-    def label(self) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]:
+    def label(self) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get the label of the Arrow
         """
     @typing.overload
-    def label(
-        self, new_value: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[2, 1]"]
-    ) -> Arrow:
+    def label(self, new_value: numpy.ndarray[numpy.int32[2, 1]]) -> Arrow:
         """
         Set the label of the Arrow
         """
     @typing.overload
     def label(
         self,
-        polyline_index: typing.SupportsInt,
-        segment_index: typing.SupportsInt,
+        polyline_index: int,
+        segment_index: int,
         *,
-        t: typing.SupportsFloat | None = None,
-        range: typing.SupportsFloat | None = None,
+        t: float | None = None,
+        range: float | None = None,
     ) -> Arrow:
         """
         Set the label of the Arrow with polyline and segment indices
         """
-    def leftward(
-        self,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def leftward(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the leftward direction of the Arrow
         """
@@ -162,22 +144,17 @@ class Arrow:
         Get the polyline index of the Arrow
         """
     @typing.overload
-    def polyline_index(self, new_value: typing.SupportsInt) -> Arrow:
+    def polyline_index(self, new_value: int) -> Arrow:
         """
         Set the polyline index of the Arrow
         """
     @typing.overload
-    def position(
-        self,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def position(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the position of the Arrow
         """
     @typing.overload
-    def position(
-        self,
-        new_value: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    ) -> Arrow:
+    def position(self, new_value: numpy.ndarray[numpy.float64[3, 1]]) -> Arrow:
         """
         Set the position of the Arrow
         """
@@ -187,7 +164,7 @@ class Arrow:
         Get the range of the Arrow
         """
     @typing.overload
-    def range(self, new_value: typing.SupportsFloat) -> Arrow:
+    def range(self, new_value: float) -> Arrow:
         """
         Set the range of the Arrow
         """
@@ -201,7 +178,7 @@ class Arrow:
         Get the segment index of the Arrow
         """
     @typing.overload
-    def segment_index(self, new_value: typing.SupportsInt) -> Arrow:
+    def segment_index(self, new_value: int) -> Arrow:
         """
         Set the segment index of the Arrow
         """
@@ -211,11 +188,11 @@ class Arrow:
         Get the t parameter of the Arrow
         """
     @typing.overload
-    def t(self, new_value: typing.SupportsFloat) -> Arrow:
+    def t(self, new_value: float) -> Arrow:
         """
         Set the t parameter of the Arrow
         """
-    def upward(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def upward(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the upward direction of the Arrow
         """
@@ -229,10 +206,7 @@ class FastCrossing:
         """
     @typing.overload
     def add_polyline(
-        self,
-        polyline: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-        *,
-        index: typing.SupportsInt = -1,
+        self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, index: int = -1
     ) -> int:
         """
         Add polyline to the tree.
@@ -244,11 +218,9 @@ class FastCrossing:
     @typing.overload
     def add_polyline(
         self,
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
         *,
-        index: typing.SupportsInt = -1,
+        index: int = -1,
     ) -> int:
         """
         Add polyline to the tree (alternative format).
@@ -258,11 +230,8 @@ class FastCrossing:
         :return: The index of the added polyline
         """
     def arrow(
-        self, *, polyline_index: typing.SupportsInt, point_index: typing.SupportsInt
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-    ]:
+        self, *, polyline_index: int, point_index: int
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get an arrow (position and direction) at a specific point on a polyline.
 
@@ -279,11 +248,8 @@ class FastCrossing:
         """
     @typing.overload
     def coordinates(
-        self,
-        polyline_index: typing.SupportsInt,
-        segment_index: typing.SupportsInt,
-        ratio: typing.SupportsFloat,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        self, polyline_index: int, segment_index: int, ratio: float
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates at a specific position on a polyline.
 
@@ -294,10 +260,8 @@ class FastCrossing:
         """
     @typing.overload
     def coordinates(
-        self,
-        index: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[2, 1]"],
-        ratio: typing.SupportsFloat,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        self, index: numpy.ndarray[numpy.int32[2, 1]], ratio: float
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates at a specific position on a polyline (alternative format).
 
@@ -309,13 +273,13 @@ class FastCrossing:
     def coordinates(
         self,
         intersection: tuple[
-            typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-            typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-            typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[2, 1]"],
-            typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ],
         second: bool = True,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get coordinates of an intersection.
 
@@ -332,10 +296,10 @@ class FastCrossing:
         self,
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -343,16 +307,13 @@ class FastCrossing:
         """
     @typing.overload
     def intersections(
-        self,
-        *,
-        z_offset_range: tuple[typing.SupportsFloat, typing.SupportsFloat],
-        self_intersection: typing.SupportsInt = 2,
+        self, *, z_offset_range: tuple[float, float], self_intersection: int = 2
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -364,16 +325,16 @@ class FastCrossing:
     @typing.overload
     def intersections(
         self,
-        start: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-        to: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
+        start: numpy.ndarray[numpy.float64[2, 1]],
+        to: numpy.ndarray[numpy.float64[2, 1]],
         *,
         dedup: bool = True,
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -386,16 +347,13 @@ class FastCrossing:
         """
     @typing.overload
     def intersections(
-        self,
-        polyline: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-        *,
-        dedup: bool = True,
+        self, polyline: numpy.ndarray[numpy.float64[m, 3]], *, dedup: bool = True
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -408,17 +366,15 @@ class FastCrossing:
     @typing.overload
     def intersections(
         self,
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
         *,
         dedup: bool = True,
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -431,17 +387,17 @@ class FastCrossing:
     @typing.overload
     def intersections(
         self,
-        polyline: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
+        polyline: numpy.ndarray[numpy.float64[m, 3]],
         *,
-        z_min: typing.SupportsFloat,
-        z_max: typing.SupportsFloat,
+        z_min: float,
+        z_max: float,
         dedup: bool = True,
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -456,19 +412,17 @@ class FastCrossing:
     @typing.overload
     def intersections(
         self,
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
         *,
-        z_min: typing.SupportsFloat,
-        z_max: typing.SupportsFloat,
+        z_min: float,
+        z_max: float,
         dedup: bool = True,
     ) -> list[
         tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
-            typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.float64[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
+            numpy.ndarray[numpy.int32[2, 1]],
         ]
     ]:
         """
@@ -489,10 +443,10 @@ class FastCrossing:
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
         return_squared_l2: bool = False,
-    ) -> tuple[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"], float]:
+    ) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
         """
         Find the nearest point to a given position.
 
@@ -503,10 +457,10 @@ class FastCrossing:
     @typing.overload
     def nearest(
         self,
-        index: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[2, 1]"],
+        index: numpy.ndarray[numpy.int32[2, 1]],
         *,
         return_squared_l2: bool = False,
-    ) -> tuple[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"], float]:
+    ) -> tuple[numpy.ndarray[numpy.int32[2, 1]], float]:
         """
         Find the nearest point to a given index.
 
@@ -517,20 +471,14 @@ class FastCrossing:
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        k: typing.SupportsInt | None = None,
-        radius: typing.SupportsFloat | None = None,
+        k: int | None = None,
+        radius: float | None = None,
         sort: bool = True,
         return_squared_l2: bool = False,
-        filter: tuple[
-            typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"], ...
-        ]
-        | None = None,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 2]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-    ]:
+        filter: tuple[numpy.ndarray[numpy.float64[3, 1]], ...] | None = None,
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 2]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to a given position with optional filtering.
 
@@ -549,9 +497,7 @@ class FastCrossing:
         :return: Number of polylines
         """
     @typing.overload
-    def point_index(
-        self, index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]:
+    def point_index(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get point index for a given index.
 
@@ -560,15 +506,15 @@ class FastCrossing:
         """
     @typing.overload
     def point_index(
-        self, indexes: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"]
-    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]]:
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Get point indexes for given indexes.
 
         :param indexes: The indexes to query
         :return: The point indexes
         """
-    def polyline_ruler(self, index: typing.SupportsInt) -> ...:
+    def polyline_ruler(self, index: int) -> ...:
         """
         Get a specific polyline ruler.
 
@@ -588,9 +534,7 @@ class FastCrossing:
         :return: Quiver object
         """
     @typing.overload
-    def segment_index(
-        self, index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]:
+    def segment_index(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get segment index for a given index.
 
@@ -599,8 +543,8 @@ class FastCrossing:
         """
     @typing.overload
     def segment_index(
-        self, indexes: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"]
-    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]]:
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Get segment indexes for given indexes.
 
@@ -611,11 +555,11 @@ class FastCrossing:
     def within(
         self,
         *,
-        min: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-        max: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
+        min: numpy.ndarray[numpy.float64[2, 1]],
+        max: numpy.ndarray[numpy.float64[2, 1]],
         segment_wise: bool = True,
         sort: bool = True,
-    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]]:
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a bounding box.
 
@@ -629,12 +573,10 @@ class FastCrossing:
     def within(
         self,
         *,
-        polygon: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
         segment_wise: bool = True,
         sort: bool = True,
-    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]]:
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a polygon.
 
@@ -647,13 +589,13 @@ class FastCrossing:
     def within(
         self,
         *,
-        center: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-        width: typing.SupportsFloat,
-        height: typing.SupportsFloat,
-        heading: typing.SupportsFloat = 0.0,
+        center: numpy.ndarray[numpy.float64[2, 1]],
+        width: float,
+        height: float,
+        heading: float = 0.0,
         segment_wise: bool = True,
         sort: bool = True,
-    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]]:
+    ) -> list[numpy.ndarray[numpy.int32[2, 1]]]:
         """
         Find polylines within a rotated rectangle.
 
@@ -673,7 +615,7 @@ class FlatBush:
         Initialize an empty FlatBush index.
         """
     @typing.overload
-    def __init__(self, reserve: typing.SupportsInt) -> None:
+    def __init__(self, reserve: int) -> None:
         """
         Initialize a FlatBush index with a reserved capacity.
 
@@ -682,13 +624,13 @@ class FlatBush:
     @typing.overload
     def add(
         self,
-        minX: typing.SupportsFloat,
-        minY: typing.SupportsFloat,
-        maxX: typing.SupportsFloat,
-        maxY: typing.SupportsFloat,
+        minX: float,
+        minY: float,
+        maxX: float,
+        maxY: float,
         *,
-        label0: typing.SupportsInt = -1,
-        label1: typing.SupportsInt = -1,
+        label0: int = -1,
+        label1: int = -1,
     ) -> int:
         """
         Add a bounding box to the index.
@@ -704,11 +646,9 @@ class FlatBush:
     @typing.overload
     def add(
         self,
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
         *,
-        label0: typing.SupportsInt = -1,
+        label0: int = -1,
     ) -> int:
         """
         Add a polyline to the index.
@@ -720,10 +660,10 @@ class FlatBush:
     @typing.overload
     def add(
         self,
-        box: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[4, 1]"],
+        box: numpy.ndarray[numpy.float64[4, 1]],
         *,
-        label0: typing.SupportsInt = -1,
-        label1: typing.SupportsInt = -1,
+        label0: int = -1,
+        label1: int = -1,
     ) -> int:
         """
         Add a bounding box to the index using a vector.
@@ -733,9 +673,7 @@ class FlatBush:
         :param label1: Second label (optional)
         :return: Index of the added item
         """
-    def box(
-        self, index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[4, 1]"]:
+    def box(self, index: int) -> numpy.ndarray[numpy.float64[4, 1]]:
         """
         Get the bounding box for a specific index.
 
@@ -744,9 +682,7 @@ class FlatBush:
         """
     def boxes(
         self,
-    ) -> typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 4]", "flags.c_contiguous"
-    ]:
+    ) -> numpy.ndarray[numpy.float64[m, 4], numpy.ndarray.flags.c_contiguous]:
         """
         Get all bounding boxes in the index.
 
@@ -756,9 +692,7 @@ class FlatBush:
         """
         Finish the index construction.
         """
-    def label(
-        self, index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]:
+    def label(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get the label for a specific index.
 
@@ -767,28 +701,20 @@ class FlatBush:
         """
     def labels(
         self,
-    ) -> typing.Annotated[
-        numpy.typing.NDArray[numpy.int32], "[m, 2]", "flags.c_contiguous"
-    ]:
+    ) -> numpy.ndarray[numpy.int32[m, 2], numpy.ndarray.flags.c_contiguous]:
         """
         Get all labels in the index.
 
         :return: Reference to the vector of labels
         """
-    def reserve(self, arg0: typing.SupportsInt) -> None:
+    def reserve(self, arg0: int) -> None:
         """
         Reserve space for a number of items.
 
         :param n: Number of items to reserve space for
         """
     @typing.overload
-    def search(
-        self,
-        minX: typing.SupportsFloat,
-        minY: typing.SupportsFloat,
-        maxX: typing.SupportsFloat,
-        maxY: typing.SupportsFloat,
-    ) -> list[int]:
+    def search(self, minX: float, minY: float, maxX: float, maxY: float) -> list[int]:
         """
         Search for items within a bounding box.
 
@@ -799,9 +725,7 @@ class FlatBush:
         :return: Vector of indices of items within the search box
         """
     @typing.overload
-    def search(
-        self, bbox: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[4, 1]"]
-    ) -> list[int]:
+    def search(self, bbox: numpy.ndarray[numpy.float64[4, 1]]) -> list[int]:
         """
         Search for items within a bounding box using a vector.
 
@@ -811,8 +735,8 @@ class FlatBush:
     @typing.overload
     def search(
         self,
-        min: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-        max: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
+        min: numpy.ndarray[numpy.float64[2, 1]],
+        max: numpy.ndarray[numpy.float64[2, 1]],
     ) -> list[int]:
         """
         Search for items within a bounding box using min and max vectors.
@@ -832,11 +756,11 @@ class KdQuiver(Quiver):
     @staticmethod
     def _filter(
         *,
-        arrows: collections.abc.Sequence[Arrow],
+        arrows: list[Arrow],
         arrow: Arrow,
         params: Quiver.FilterParams,
         is_wgs84: bool = False,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+    ) -> numpy.ndarray[numpy.int32[m, 1]]:
         """
         Filter arrows based on the given parameters
         """
@@ -846,72 +770,51 @@ class KdQuiver(Quiver):
         Default constructor for KdQuiver
         """
     @typing.overload
-    def __init__(
-        self,
-        anchor_lla: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    ) -> None:
+    def __init__(self, anchor_lla: numpy.ndarray[numpy.float64[3, 1]]) -> None:
         """
         Constructor for KdQuiver with anchor LLA coordinates
         """
     @typing.overload
-    def add(
-        self,
-        polyline: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-        index: typing.SupportsInt = -1,
-    ) -> int:
+    def add(self, polyline: numpy.ndarray[numpy.float64[m, 3]], index: int = -1) -> int:
         """
         Add a polyline to the KdQuiver
         """
     @typing.overload
     def add(
         self,
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
-        index: typing.SupportsInt = -1,
+        polyline: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+        index: int = -1,
     ) -> int:
         """
         Add a 2D polyline to the KdQuiver
         """
     @typing.overload
-    def arrow(self, point_index: typing.SupportsInt) -> Arrow:
+    def arrow(self, point_index: int) -> Arrow:
         """
         Get the arrow at the given point index
         """
     @typing.overload
-    def arrow(
-        self, polyline_index: typing.SupportsInt, segment_index: typing.SupportsInt
-    ) -> Arrow:
+    def arrow(self, polyline_index: int, segment_index: int) -> Arrow:
         """
         Get the arrow at the given polyline and segment indices
         """
     @typing.overload
-    def arrow(
-        self,
-        polyline_index: typing.SupportsInt,
-        segment_index: typing.SupportsInt,
-        *,
-        t: typing.SupportsFloat,
-    ) -> Arrow:
+    def arrow(self, polyline_index: int, segment_index: int, *, t: float) -> Arrow:
         """
         Get the arrow at the given polyline, segment indices, and t parameter
         """
     @typing.overload
-    def arrow(
-        self, polyline_index: typing.SupportsInt, *, range: typing.SupportsFloat
-    ) -> Arrow:
+    def arrow(self, polyline_index: int, *, range: float) -> Arrow:
         """
         Get the arrow at the given polyline index and range
         """
-    def arrows(
-        self, indexes: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"]
-    ) -> list[Arrow]:
+    def arrows(self, indexes: numpy.ndarray[numpy.int32[m, 1]]) -> list[Arrow]:
         """
         Get arrows for the given indexes
         """
     def directions(
-        self, indexes: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"]
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Get directions for the given indexes
         """
@@ -919,10 +822,10 @@ class KdQuiver(Quiver):
     def filter(
         self,
         *,
-        hits: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"],
+        hits: numpy.ndarray[numpy.int32[m, 1]],
         arrow: Arrow,
         params: Quiver.FilterParams,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+    ) -> numpy.ndarray[numpy.int32[m, 1]]:
         """
         Filter hits based on the given parameters
         """
@@ -930,35 +833,28 @@ class KdQuiver(Quiver):
     def filter(
         self,
         *,
-        hits: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"],
-        norms: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"],
+        hits: numpy.ndarray[numpy.int32[m, 1]],
+        norms: numpy.ndarray[numpy.float64[m, 1]],
         arrow: Arrow,
         params: Quiver.FilterParams,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-    ]:
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Filter hits and norms based on the given parameters
         """
     @typing.overload
-    def index(
-        self, point_index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[2, 1]"]:
+    def index(self, point_index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
         """
         Get the index for the given point index
         """
     @typing.overload
-    def index(
-        self, polyline_index: typing.SupportsInt, segment_index: typing.SupportsInt
-    ) -> int:
+    def index(self, polyline_index: int, segment_index: int) -> int:
         """
         Get the index for the given polyline and segment indices
         """
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
         return_squared_l2: bool = False,
     ) -> tuple[int, float]:
@@ -967,7 +863,7 @@ class KdQuiver(Quiver):
         """
     @typing.overload
     def nearest(
-        self, index: typing.SupportsInt, *, return_squared_l2: bool = False
+        self, index: int, *, return_squared_l2: bool = False
     ) -> tuple[int, float]:
         """
         Find the nearest point to the point at the given index
@@ -975,46 +871,38 @@ class KdQuiver(Quiver):
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        k: typing.SupportsInt,
+        k: int,
         sort: bool = True,
         return_squared_l2: bool = False,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-    ]:
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to the given position
         """
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        radius: typing.SupportsFloat,
+        radius: float,
         sort: bool = True,
         return_squared_l2: bool = False,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-    ]:
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find all points within a given radius of the query position
         """
     @typing.overload
     def positions(
         self,
-    ) -> typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-    ]:
+    ) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
         """
         Get all positions in the KdQuiver
         """
     @typing.overload
     def positions(
-        self, indexes: typing.Annotated[numpy.typing.ArrayLike, numpy.int32, "[m, 1]"]
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+        self, indexes: numpy.ndarray[numpy.int32[m, 1]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Get positions for the given indexes
         """
@@ -1025,16 +913,14 @@ class KdQuiver(Quiver):
 
 class KdTree:
     @typing.overload
-    def __init__(self, leafsize: typing.SupportsInt = 10) -> None:
+    def __init__(self, leafsize: int = 10) -> None:
         """
         Initialize KdTree with specified leaf size.
 
         :param leafsize: Maximum number of points in leaf node, defaults to 10
         """
     @typing.overload
-    def __init__(
-        self, points: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"]
-    ) -> None:
+    def __init__(self, points: numpy.ndarray[numpy.float64[m, 3]]) -> None:
         """
         Initialize KdTree with 3D points.
 
@@ -1043,9 +929,7 @@ class KdTree:
     @typing.overload
     def __init__(
         self,
-        points: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     ) -> None:
         """
         Initialize KdTree with 2D points.
@@ -1053,9 +937,7 @@ class KdTree:
         :param points: 2D points to initialize the tree
         """
     @typing.overload
-    def add(
-        self, points: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"]
-    ) -> None:
+    def add(self, points: numpy.ndarray[numpy.float64[m, 3]]) -> None:
         """
         Add 3D points to the KdTree.
 
@@ -1064,9 +946,7 @@ class KdTree:
     @typing.overload
     def add(
         self,
-        points: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-        ],
+        points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     ) -> None:
         """
         Add 2D points to the KdTree.
@@ -1088,7 +968,7 @@ class KdTree:
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
         return_squared_l2: bool = False,
     ) -> tuple[int, float]:
@@ -1101,7 +981,7 @@ class KdTree:
         """
     @typing.overload
     def nearest(
-        self, index: typing.SupportsInt, *, return_squared_l2: bool = False
+        self, index: int, *, return_squared_l2: bool = False
     ) -> tuple[int, float]:
         """
         Find the nearest point to the point at the given index.
@@ -1113,15 +993,12 @@ class KdTree:
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        k: typing.SupportsInt,
+        k: int,
         sort: bool = True,
         return_squared_l2: bool = False,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-    ]:
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find k nearest points to the given position.
 
@@ -1134,15 +1011,12 @@ class KdTree:
     @typing.overload
     def nearest(
         self,
-        position: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        position: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        radius: typing.SupportsFloat,
+        radius: float,
         sort: bool = True,
         return_squared_l2: bool = False,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-    ]:
+    ) -> tuple[numpy.ndarray[numpy.int32[m, 1]], numpy.ndarray[numpy.float64[m, 1]]]:
         """
         Find all points within a given radius of the query position.
 
@@ -1154,9 +1028,7 @@ class KdTree:
         """
     def points(
         self,
-    ) -> typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-    ]:
+    ) -> numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous]:
         """
         Get the points in the KdTree.
 
@@ -1170,7 +1042,7 @@ class KdTree:
         """
         Reset the index of the KdTree.
         """
-    def set_leafsize(self, value: typing.SupportsInt) -> None:
+    def set_leafsize(self, value: int) -> None:
         """
         Set the leaf size of the KdTree.
 
@@ -1180,50 +1052,38 @@ class KdTree:
 class LineSegment:
     def __init__(
         self,
-        A: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        B: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        A: numpy.ndarray[numpy.float64[3, 1]],
+        B: numpy.ndarray[numpy.float64[3, 1]],
     ) -> None:
         """
         Initialize a LineSegment with two 3D points.
         """
-    def distance(
-        self, P: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
-    ) -> float:
+    def distance(self, P: numpy.ndarray[numpy.float64[3, 1]]) -> float:
         """
         Calculate the distance from a point to the line segment.
         """
-    def distance2(
-        self, P: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
-    ) -> float:
+    def distance2(self, P: numpy.ndarray[numpy.float64[3, 1]]) -> float:
         """
         Calculate the squared distance from a point to the line segment.
         """
     def intersects(
         self, other: LineSegment
-    ) -> (
-        tuple[
-            typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-            float,
-            float,
-            float,
-        ]
-        | None
-    ):
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], float, float, float] | None:
         """
         Check if this line segment intersects with another.
         """
     @property
-    def A(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def A(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the start point of the line segment.
         """
     @property
-    def AB(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def AB(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the vector from A to B.
         """
     @property
-    def B(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def B(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the end point of the line segment.
         """
@@ -1241,31 +1101,27 @@ class LineSegment:
 class PolylineRuler:
     @staticmethod
     def _along(
-        line: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
-        dist: typing.SupportsFloat,
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        dist: float,
         *,
         is_wgs84: bool = False,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Find a point at a specified distance along a polyline.
         """
     @staticmethod
     def _dirs(
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
+        polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
         *,
         is_wgs84: bool = False,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Calculate direction vectors for each segment of a polyline.
         """
     @staticmethod
     def _distance(
-        a: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        b: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        a: numpy.ndarray[numpy.float64[3, 1]],
+        b: numpy.ndarray[numpy.float64[3, 1]],
         *,
         is_wgs84: bool = False,
     ) -> float:
@@ -1274,19 +1130,17 @@ class PolylineRuler:
         """
     @staticmethod
     def _interpolate(
-        A: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        B: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        A: numpy.ndarray[numpy.float64[3, 1]],
+        B: numpy.ndarray[numpy.float64[3, 1]],
         *,
-        t: typing.SupportsFloat,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        t: float,
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Interpolate between two points.
         """
     @staticmethod
     def _lineDistance(
-        line: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
         *,
         is_wgs84: bool = False,
     ) -> float:
@@ -1295,49 +1149,41 @@ class PolylineRuler:
         """
     @staticmethod
     def _lineSlice(
-        start: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        stop: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        line: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
+        start: numpy.ndarray[numpy.float64[3, 1]],
+        stop: numpy.ndarray[numpy.float64[3, 1]],
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
         *,
         is_wgs84: bool = False,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of a polyline between two points.
         """
     @staticmethod
     def _lineSliceAlong(
-        start: typing.SupportsFloat,
-        stop: typing.SupportsFloat,
-        line: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
+        start: float,
+        stop: float,
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
         *,
         is_wgs84: bool = False,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of a polyline between two distances along it.
         """
     @staticmethod
     def _pointOnLine(
-        line: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
-        P: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        line: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
+        P: numpy.ndarray[numpy.float64[3, 1]],
         *,
         is_wgs84: bool = False,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"], int, float
-    ]:
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], int, float]:
         """
         Find the closest point on a polyline to a given point.
         """
     @staticmethod
     def _pointToSegmentDistance(
-        P: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        A: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        B: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        P: numpy.ndarray[numpy.float64[3, 1]],
+        A: numpy.ndarray[numpy.float64[3, 1]],
+        B: numpy.ndarray[numpy.float64[3, 1]],
         *,
         is_wgs84: bool = False,
     ) -> float:
@@ -1346,19 +1192,17 @@ class PolylineRuler:
         """
     @staticmethod
     def _ranges(
-        polyline: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
+        polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
         *,
         is_wgs84: bool = False,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
+    ) -> numpy.ndarray[numpy.float64[m, 1]]:
         """
         Calculate cumulative distances along a polyline.
         """
     @staticmethod
     def _squareDistance(
-        a: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        b: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        a: numpy.ndarray[numpy.float64[3, 1]],
+        b: numpy.ndarray[numpy.float64[3, 1]],
         *,
         is_wgs84: bool = False,
     ) -> float:
@@ -1371,112 +1215,85 @@ class PolylineRuler:
         """
     def __init__(
         self,
-        coords: typing.Annotated[
-            numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-        ],
+        coords: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
         *,
         is_wgs84: bool = False,
     ) -> None:
         """
         Initialize a PolylineRuler with coordinates and coordinate system.
         """
-    def along(
-        self, dist: typing.SupportsFloat
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def along(self, dist: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Find a point at a specified distance along the polyline.
         """
     @typing.overload
     def arrow(
-        self, *, index: typing.SupportsInt, t: typing.SupportsFloat
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-    ]:
+        self, *, index: int, t: float
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get the arrow (point and direction) at a specific segment index and interpolation factor.
         """
     @typing.overload
     def arrow(
-        self, range: typing.SupportsFloat, *, smooth_joint: bool = True
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-    ]:
+        self, range: float, *, smooth_joint: bool = True
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Get the arrow (point and direction) at a specific cumulative distance.
         """
     @typing.overload
     def arrows(
-        self,
-        ranges: typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-        *,
-        smooth_joint: bool = True,
+        self, ranges: numpy.ndarray[numpy.float64[m, 1]], *, smooth_joint: bool = True
     ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"],
+        numpy.ndarray[numpy.float64[m, 1]],
+        numpy.ndarray[numpy.float64[m, 3]],
+        numpy.ndarray[numpy.float64[m, 3]],
     ]:
         """
         Get arrows (points and directions) at multiple cumulative distances.
         """
     @typing.overload
     def arrows(
-        self,
-        step: typing.SupportsFloat,
-        *,
-        with_last: bool = True,
-        smooth_joint: bool = True,
+        self, step: float, *, with_last: bool = True, smooth_joint: bool = True
     ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"],
+        numpy.ndarray[numpy.float64[m, 1]],
+        numpy.ndarray[numpy.float64[m, 3]],
+        numpy.ndarray[numpy.float64[m, 3]],
     ]:
         """
         Get arrows (points and directions) at regular intervals along the polyline.
         """
     @typing.overload
-    def at(
-        self, *, range: typing.SupportsFloat
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def at(self, *, range: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the point on the polyline at a specific cumulative distance.
         """
     @typing.overload
-    def at(
-        self, *, segment_index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def at(self, *, segment_index: int) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the point on the polyline at a specific segment index.
         """
     @typing.overload
-    def at(
-        self, *, segment_index: typing.SupportsInt, t: typing.SupportsFloat
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def at(self, *, segment_index: int, t: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the point on the polyline at a specific segment index and interpolation factor.
         """
     @typing.overload
-    def dir(
-        self, *, point_index: typing.SupportsInt
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def dir(self, *, point_index: int) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the direction vector at a specific point index.
         """
     @typing.overload
     def dir(
-        self, *, range: typing.SupportsFloat, smooth_joint: bool = True
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        self, *, range: float, smooth_joint: bool = True
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the direction vector at a specific cumulative distance.
         """
-    def dirs(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+    def dirs(self) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Get direction vectors for each segment of the polyline.
         """
-    def extended_along(
-        self, range: typing.SupportsFloat
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def extended_along(self, range: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the extended cumulative distance along the polyline.
         """
@@ -1484,7 +1301,7 @@ class PolylineRuler:
         """
         Check if the coordinate system is WGS84.
         """
-    def k(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def k(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the scale factor for distance calculations.
         """
@@ -1498,73 +1315,59 @@ class PolylineRuler:
         """
     def lineSlice(
         self,
-        start: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-        stop: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+        start: numpy.ndarray[numpy.float64[3, 1]],
+        stop: numpy.ndarray[numpy.float64[3, 1]],
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of the polyline between two points.
         """
     def lineSliceAlong(
-        self, start: typing.SupportsFloat, stop: typing.SupportsFloat
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+        self, start: float, stop: float
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Extract a portion of the polyline between two distances along it.
         """
     def local_frame(
-        self, range: typing.SupportsFloat, *, smooth_joint: bool = True
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[4, 4]"]:
+        self, range: float, *, smooth_joint: bool = True
+    ) -> numpy.ndarray[numpy.float64[4, 4]]:
         """
         Get the local coordinate frame at a specific cumulative distance.
         """
     def pointOnLine(
-        self, P: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"], int, float
-    ]:
+        self, P: numpy.ndarray[numpy.float64[3, 1]]
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], int, float]:
         """
         Find the closest point on the polyline to a given point.
         """
-    def polyline(
-        self,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+    def polyline(self) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Get the polyline coordinates.
         """
     @typing.overload
-    def range(self, segment_index: typing.SupportsInt) -> float:
+    def range(self, segment_index: int) -> float:
         """
         Get the cumulative distance at a specific segment index.
         """
     @typing.overload
-    def range(
-        self, *, segment_index: typing.SupportsInt, t: typing.SupportsFloat
-    ) -> float:
+    def range(self, *, segment_index: int, t: float) -> float:
         """
         Get the cumulative distance at a specific segment index and interpolation factor.
         """
-    def ranges(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"]:
+    def ranges(self) -> numpy.ndarray[numpy.float64[m, 1]]:
         """
         Get cumulative distances along the polyline.
         """
     def scanline(
-        self,
-        range: typing.SupportsFloat,
-        *,
-        min: typing.SupportsFloat,
-        max: typing.SupportsFloat,
-        smooth_joint: bool = True,
-    ) -> tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-    ]:
+        self, range: float, *, min: float, max: float, smooth_joint: bool = True
+    ) -> tuple[numpy.ndarray[numpy.float64[3, 1]], numpy.ndarray[numpy.float64[3, 1]]]:
         """
         Generate a scanline perpendicular to the polyline at a specific cumulative distance.
         """
-    def segment_index(self, range: typing.SupportsFloat) -> int:
+    def segment_index(self, range: float) -> int:
         """
         Get the segment index for a given cumulative distance.
         """
-    def segment_index_t(self, range: typing.SupportsFloat) -> tuple[int, float]:
+    def segment_index_t(self, range: float) -> tuple[int, float]:
         """
         Get the segment index and interpolation factor for a given cumulative distance.
         """
@@ -1576,17 +1379,13 @@ class Quiver:
             Default constructor for FilterParams
             """
         @typing.overload
-        def angle_slots(
-            self,
-        ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"] | None:
+        def angle_slots(self) -> numpy.ndarray[numpy.float64[m, 1]] | None:
             """
             Get the angle slots of the FilterParams
             """
         @typing.overload
         def angle_slots(
-            self,
-            arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"]
-            | None,
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
         ) -> Quiver.FilterParams:
             """
             Set the angle slots of the FilterParams
@@ -1596,58 +1395,44 @@ class Quiver:
             Check if the FilterParams is trivial
             """
         @typing.overload
-        def x_slots(
-            self,
-        ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"] | None:
+        def x_slots(self) -> numpy.ndarray[numpy.float64[m, 1]] | None:
             """
             Get the x slots of the FilterParams
             """
         @typing.overload
         def x_slots(
-            self,
-            arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"]
-            | None,
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
         ) -> Quiver.FilterParams:
             """
             Set the x slots of the FilterParams
             """
         @typing.overload
-        def y_slots(
-            self,
-        ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"] | None:
+        def y_slots(self) -> numpy.ndarray[numpy.float64[m, 1]] | None:
             """
             Get the y slots of the FilterParams
             """
         @typing.overload
         def y_slots(
-            self,
-            arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"]
-            | None,
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
         ) -> Quiver.FilterParams:
             """
             Set the y slots of the FilterParams
             """
         @typing.overload
-        def z_slots(
-            self,
-        ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 1]"] | None:
+        def z_slots(self) -> numpy.ndarray[numpy.float64[m, 1]] | None:
             """
             Get the z slots of the FilterParams
             """
         @typing.overload
         def z_slots(
-            self,
-            arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 1]"]
-            | None,
+            self, arg0: numpy.ndarray[numpy.float64[m, 1]] | None
         ) -> Quiver.FilterParams:
             """
             Set the z slots of the FilterParams
             """
 
     @staticmethod
-    def _k(
-        arg0: typing.SupportsFloat,
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def _k(arg0: float) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the constant k
         """
@@ -1657,36 +1442,33 @@ class Quiver:
         Default constructor for Quiver
         """
     @typing.overload
-    def __init__(
-        self,
-        anchor_lla: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    ) -> None:
+    def __init__(self, anchor_lla: numpy.ndarray[numpy.float64[3, 1]]) -> None:
         """
         Constructor for Quiver with anchor LLA coordinates
         """
-    def anchor(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def anchor(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the anchor point of the Quiver
         """
     @typing.overload
     def enu2lla(
-        self, coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        self, coords: numpy.ndarray[numpy.float64[3, 1]]
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Convert ENU coordinates to LLA
         """
     @typing.overload
     def enu2lla(
-        self, coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"]
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+        self, coords: numpy.ndarray[numpy.float64[m, 3]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Convert multiple ENU coordinates to LLA
         """
-    def forwards(self, arrow: Arrow, delta_x: typing.SupportsFloat) -> Arrow:
+    def forwards(self, arrow: Arrow, delta_x: float) -> Arrow:
         """
         Move the Arrow forward by delta_x
         """
-    def inv_k(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def inv_k(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the inverse k value of the Quiver
         """
@@ -1694,32 +1476,32 @@ class Quiver:
         """
         Check if the Quiver is using WGS84 coordinates
         """
-    def k(self) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+    def k(self) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Get the k value of the Quiver
         """
-    def leftwards(self, arrow: Arrow, delta_y: typing.SupportsFloat) -> Arrow:
+    def leftwards(self, arrow: Arrow, delta_y: float) -> Arrow:
         """
         Move the Arrow leftward by delta_y
         """
     @typing.overload
     def lla2enu(
-        self, coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]:
+        self, coords: numpy.ndarray[numpy.float64[3, 1]]
+    ) -> numpy.ndarray[numpy.float64[3, 1]]:
         """
         Convert LLA coordinates to ENU
         """
     @typing.overload
     def lla2enu(
-        self, coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"]
-    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+        self, coords: numpy.ndarray[numpy.float64[m, 3]]
+    ) -> numpy.ndarray[numpy.float64[m, 3]]:
         """
         Convert multiple LLA coordinates to ENU
         """
     def towards(
         self,
         arrow: Arrow,
-        delta_frenet: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        delta_frenet: numpy.ndarray[numpy.float64[3, 1]],
         *,
         update_direction: bool = True,
     ) -> Arrow:
@@ -1729,186 +1511,155 @@ class Quiver:
     def update(
         self,
         arrow: Arrow,
-        delta_enu: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
+        delta_enu: numpy.ndarray[numpy.float64[3, 1]],
         *,
         update_direction: bool = True,
     ) -> Arrow:
         """
         Update the Arrow's position and optionally direction
         """
-    def upwards(self, arrow: Arrow, delta_z: typing.SupportsFloat) -> Arrow:
+    def upwards(self, arrow: Arrow, delta_z: float) -> Arrow:
         """
         Move the Arrow upward by delta_z
         """
 
 def densify_polyline(
-    polyline: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 3]", "flags.c_contiguous"
-    ],
+    polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
     *,
-    max_gap: typing.SupportsFloat,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+    max_gap: float,
+) -> numpy.ndarray[numpy.float64[m, 3]]:
     """
     densify polyline, interpolate to satisfy max_gap
     """
 
 @typing.overload
 def douglas_simplify(
-    coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-    epsilon: typing.SupportsFloat,
+    coords: numpy.ndarray[numpy.float64[m, 3]],
+    epsilon: float,
     *,
     is_wgs84: bool = False,
     recursive: bool = True,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"]:
+) -> numpy.ndarray[numpy.float64[m, 3]]:
     """
     Simplify a polyline using the Douglas-Peucker algorithm.
     """
 
 @typing.overload
 def douglas_simplify(
-    coords: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
-    epsilon: typing.SupportsFloat,
+    coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    epsilon: float,
     *,
     is_wgs84: bool = False,
     recursive: bool = True,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 2]"]:
+) -> numpy.ndarray[numpy.float64[m, 2]]:
     """
     Simplify a 2D polyline using the Douglas-Peucker algorithm.
     """
 
 @typing.overload
 def douglas_simplify_indexes(
-    coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-    epsilon: typing.SupportsFloat,
+    coords: numpy.ndarray[numpy.float64[m, 3]],
+    epsilon: float,
     *,
     is_wgs84: bool = False,
     recursive: bool = True,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get indexes of points to keep when simplifying a polyline using the Douglas-Peucker algorithm.
     """
 
 @typing.overload
 def douglas_simplify_indexes(
-    coords: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
-    epsilon: typing.SupportsFloat,
+    coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    epsilon: float,
     *,
     is_wgs84: bool = False,
     recursive: bool = True,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get indexes of points to keep when simplifying a 2D polyline using the Douglas-Peucker algorithm.
     """
 
 @typing.overload
 def douglas_simplify_mask(
-    coords: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-    epsilon: typing.SupportsFloat,
+    coords: numpy.ndarray[numpy.float64[m, 3]],
+    epsilon: float,
     *,
     is_wgs84: bool = False,
     recursive: bool = True,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get a mask of points to keep when simplifying a polyline using the Douglas-Peucker algorithm.
     """
 
 @typing.overload
 def douglas_simplify_mask(
-    coords: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
-    epsilon: typing.SupportsFloat,
+    coords: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    epsilon: float,
     *,
     is_wgs84: bool = False,
     recursive: bool = True,
-) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     Get a mask of points to keep when simplifying a 2D polyline using the Douglas-Peucker algorithm.
     """
 
 @typing.overload
 def intersect_segments(
-    a1: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-    a2: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-    b1: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-    b2: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-) -> (
-    tuple[typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"], float, float]
-    | None
-):
+    a1: numpy.ndarray[numpy.float64[2, 1]],
+    a2: numpy.ndarray[numpy.float64[2, 1]],
+    b1: numpy.ndarray[numpy.float64[2, 1]],
+    b2: numpy.ndarray[numpy.float64[2, 1]],
+) -> tuple[numpy.ndarray[numpy.float64[2, 1]], float, float] | None:
     """
     Intersect two 2D line segments.
     """
 
 @typing.overload
 def intersect_segments(
-    a1: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    a2: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    b1: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-    b2: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"],
-) -> (
-    tuple[
-        typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"],
-        float,
-        float,
-        float,
-    ]
-    | None
-):
+    a1: numpy.ndarray[numpy.float64[3, 1]],
+    a2: numpy.ndarray[numpy.float64[3, 1]],
+    b1: numpy.ndarray[numpy.float64[3, 1]],
+    b2: numpy.ndarray[numpy.float64[3, 1]],
+) -> tuple[numpy.ndarray[numpy.float64[3, 1]], float, float, float] | None:
     """
     Intersect two 3D line segments.
     """
 
 def point_in_polygon(
     *,
-    points: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
-    polygon: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
-) -> typing.Annotated[numpy.typing.NDArray[numpy.int32], "[m, 1]"]:
+    points: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+) -> numpy.ndarray[numpy.int32[m, 1]]:
     """
     point-in-polygon test, returns 0-1 mask
     """
 
 @typing.overload
 def polyline_in_polygon(
-    polyline: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-    polygon: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
+    polyline: numpy.ndarray[numpy.float64[m, 3]],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     *,
     fc: FastCrossing,
 ) -> dict[
-    tuple[int, float, float, int, float, float],
-    typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"],
+    tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]
 ]: ...
 @typing.overload
 def polyline_in_polygon(
-    polyline: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[m, 3]"],
-    polygon: typing.Annotated[
-        numpy.typing.NDArray[numpy.float64], "[m, 2]", "flags.c_contiguous"
-    ],
+    polyline: numpy.ndarray[numpy.float64[m, 3]],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     *,
     is_wgs84: bool = False,
 ) -> dict[
-    tuple[int, float, float, int, float, float],
-    typing.Annotated[numpy.typing.NDArray[numpy.float64], "[m, 3]"],
+    tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]
 ]: ...
 def snap_onto_2d(
-    P: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-    A: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-    B: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"],
-) -> tuple[
-    typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"], float, float
-]:
+    P: numpy.ndarray[numpy.float64[2, 1]],
+    A: numpy.ndarray[numpy.float64[2, 1]],
+    B: numpy.ndarray[numpy.float64[2, 1]],
+) -> tuple[numpy.ndarray[numpy.float64[2, 1]], float, float]:
     """
     Snap P onto line segment AB
     """
 
-__version__: str = "0.1.3"
+__version__: str = "0.1.4"
