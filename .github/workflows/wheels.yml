@@ -99,7 +99,7 @@ jobs:
         CIBW_ARCHS_MACOS: universal2
         CIBW_ARCHS_WINDOWS: AMD64 ARM64
         CIBW_SKIP: "pp* *musllinux* *_i686"
-        CIBW_TEST_SKIP: "*macosx* *win* *aarch64"
+        CIBW_TEST_SKIP: "*"
         # Use uv to avoid transient GitHub rate limits during build
         CIBW_BUILD_FRONTEND: "build[uv]"
 
