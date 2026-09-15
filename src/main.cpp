@@ -82,23 +82,23 @@ PYBIND11_MODULE(_core, m)
           py::overload_cast<const cubao::FastCrossing &,
                             const Eigen::Ref<const cubao::RowVectorsNx2> &,
                             const cubao::FastCrossing &>(&cubao::crop),
-          "obstacle_fc"_a, "polygon"_a, py::kw_only(), "polygon_fc"_a,
-          "Batch crop: find chunks of all polylines in obstacle_fc inside "
+          "polylines_fc"_a, "polygon"_a, py::kw_only(), "polygon_fc"_a,
+          "Batch crop: find chunks of all polylines in polylines_fc inside "
           "polygon. Returns dict: polyline_index -> PolylineChunks");
     m.def(
         "crop",
         py::overload_cast<const cubao::FastCrossing &,
                           const Eigen::Ref<const cubao::RowVectorsNx2> &, bool>(
             &cubao::crop),
-        "obstacle_fc"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
-        "Batch crop: find chunks of all polylines in obstacle_fc inside "
+        "polylines_fc"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
+        "Batch crop: find chunks of all polylines in polylines_fc inside "
         "polygon (auto-builds polygon FC). Returns dict: polyline_index -> "
         "PolylineChunks");
     m.def("crop_labels",
           py::overload_cast<const cubao::FastCrossing &,
                             const Eigen::Ref<const cubao::RowVectorsNx2> &,
                             const cubao::FastCrossing &>(&cubao::crop_labels),
-          "obstacle_fc"_a, "polygon"_a, py::kw_only(), "polygon_fc"_a,
+          "polylines_fc"_a, "polygon"_a, py::kw_only(), "polygon_fc"_a,
           "Batch crop (labels only): like crop but skips coordinate "
           "extraction. Returns dict: polyline_index -> list of labels");
     m.def(
@@ -106,7 +106,7 @@ PYBIND11_MODULE(_core, m)
         py::overload_cast<const cubao::FastCrossing &,
                           const Eigen::Ref<const cubao::RowVectorsNx2> &, bool>(
             &cubao::crop_labels),
-        "obstacle_fc"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
+        "polylines_fc"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
         "Batch crop (labels only): like crop but skips coordinate "
         "extraction (auto-builds polygon FC). Returns dict: polyline_index "
         "-> list of labels");

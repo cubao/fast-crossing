@@ -1528,7 +1528,7 @@ class Quiver:
 
 @typing.overload
 def crop(
-    obstacle_fc: FastCrossing,
+    polylines_fc: FastCrossing,
     polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     *,
     polygon_fc: FastCrossing,
@@ -1539,12 +1539,12 @@ def crop(
     ],
 ]:
     """
-    Batch crop: find chunks of all polylines in obstacle_fc inside polygon. Returns dict: polyline_index -> PolylineChunks
+    Batch crop: find chunks of all polylines in polylines_fc inside polygon. Returns dict: polyline_index -> PolylineChunks
     """
 
 @typing.overload
 def crop(
-    obstacle_fc: FastCrossing,
+    polylines_fc: FastCrossing,
     polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     *,
     is_wgs84: bool = False,
@@ -1555,12 +1555,12 @@ def crop(
     ],
 ]:
     """
-    Batch crop: find chunks of all polylines in obstacle_fc inside polygon (auto-builds polygon FC). Returns dict: polyline_index -> PolylineChunks
+    Batch crop: find chunks of all polylines in polylines_fc inside polygon (auto-builds polygon FC). Returns dict: polyline_index -> PolylineChunks
     """
 
 @typing.overload
 def crop_labels(
-    obstacle_fc: FastCrossing,
+    polylines_fc: FastCrossing,
     polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     *,
     polygon_fc: FastCrossing,
@@ -1571,7 +1571,7 @@ def crop_labels(
 
 @typing.overload
 def crop_labels(
-    obstacle_fc: FastCrossing,
+    polylines_fc: FastCrossing,
     polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
     *,
     is_wgs84: bool = False,

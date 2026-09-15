@@ -155,17 +155,17 @@ polyline_chunks_in_polygon(const RowVectors &polyline, //
     return polyline_chunks_in_polygon(polyline, polygon, fc);
 }
 
-// Batch crop: for all polylines in `obstacle_fc`, find chunks inside `polygon`.
+// Batch crop: for all polylines in `polylines_fc`, find chunks inside `polygon`.
 // Returns map: polyline_index -> PolylineChunks (with coordinates)
 inline std::map<int, PolylineChunks>
-crop(const FastCrossing &obstacle_fc,
+crop(const FastCrossing &polylines_fc,
      const Eigen::Ref<const RowVectorsNx2> &polygon,
      const FastCrossing &polygon_fc)
 {
     // Use bbox of polygon to pre-filter candidate polylines
     Eigen::Vector2d pt0 = polygon.colwise().minCoeff();
     Eigen::Vector2d pt1 = polygon.colwise().maxCoeff();
-    auto hits = obstacle_fc.within(pt0, pt1, /*segment_wise=*/true,
+    auto hits = polylines_fc.within(pt0, pt1, /*segment_wise=*/true,
                                    /*sort=*/false);
     // collect unique polyline indices
     std::set<int> poly_indices;
@@ -174,7 +174,7 @@ crop(const FastCrossing &obstacle_fc,
     }
     std::map<int, PolylineChunks> ret;
     for (int pid : poly_indices) {
-        const PolylineRuler *ruler = obstacle_fc.polyline_ruler(pid);
+        const PolylineRuler *ruler = polylines_fc.polyline_ruler(pid);
         if (!ruler) {
             continue;
         }
@@ -188,24 +188,24 @@ crop(const FastCrossing &obstacle_fc,
 }
 
 inline std::map<int, PolylineChunks>
-crop(const FastCrossing &obstacle_fc,
+crop(const FastCrossing &polylines_fc,
      const Eigen::Ref<const RowVectorsNx2> &polygon, bool is_wgs84 = false)
 {
     auto polygon_fc = FastCrossing(is_wgs84);
     polygon_fc.add_polyline(polygon);
     polygon_fc.finish();
-    return crop(obstacle_fc, polygon, polygon_fc);
+    return crop(polylines_fc, polygon, polygon_fc);
 }
 
 // Batch crop (labels only): same as crop but skips coordinate extraction
 inline std::map<int, PolylineChunkLabels>
-crop_labels(const FastCrossing &obstacle_fc,
+crop_labels(const FastCrossing &polylines_fc,
             const Eigen::Ref<const RowVectorsNx2> &polygon,
             const FastCrossing &polygon_fc)
 {
     Eigen::Vector2d pt0 = polygon.colwise().minCoeff();
     Eigen::Vector2d pt1 = polygon.colwise().maxCoeff();
-    auto hits = obstacle_fc.within(pt0, pt1, /*segment_wise=*/true,
+    auto hits = polylines_fc.within(pt0, pt1, /*segment_wise=*/true,
                                    /*sort=*/false);
     std::set<int> poly_indices;
     for (auto &idx : hits) {
@@ -213,7 +213,7 @@ crop_labels(const FastCrossing &obstacle_fc,
     }
     std::map<int, PolylineChunkLabels> ret;
     for (int pid : poly_indices) {
-        const PolylineRuler *ruler = obstacle_fc.polyline_ruler(pid);
+        const PolylineRuler *ruler = polylines_fc.polyline_ruler(pid);
         if (!ruler) {
             continue;
         }
@@ -227,14 +227,14 @@ crop_labels(const FastCrossing &obstacle_fc,
 }
 
 inline std::map<int, PolylineChunkLabels>
-crop_labels(const FastCrossing &obstacle_fc,
+crop_labels(const FastCrossing &polylines_fc,
             const Eigen::Ref<const RowVectorsNx2> &polygon,
             bool is_wgs84 = false)
 {
     auto polygon_fc = FastCrossing(is_wgs84);
     polygon_fc.add_polyline(polygon);
     polygon_fc.finish();
-    return crop_labels(obstacle_fc, polygon, polygon_fc);
+    return crop_labels(polylines_fc, polygon, polygon_fc);
 }
 
 } // namespace cubao
