@@ -155,8 +155,8 @@ polyline_chunks_in_polygon(const RowVectors &polyline, //
     return polyline_chunks_in_polygon(polyline, polygon, fc);
 }
 
-// Batch crop: for all polylines in `polylines_fc`, find chunks inside `polygon`.
-// Returns map: polyline_index -> PolylineChunks (with coordinates)
+// Batch crop: for all polylines in `polylines_fc`, find chunks inside
+// `polygon`. Returns map: polyline_index -> PolylineChunks (with coordinates)
 inline std::map<int, PolylineChunks>
 crop(const FastCrossing &polylines_fc,
      const Eigen::Ref<const RowVectorsNx2> &polygon,
@@ -166,7 +166,7 @@ crop(const FastCrossing &polylines_fc,
     Eigen::Vector2d pt0 = polygon.colwise().minCoeff();
     Eigen::Vector2d pt1 = polygon.colwise().maxCoeff();
     auto hits = polylines_fc.within(pt0, pt1, /*segment_wise=*/true,
-                                   /*sort=*/false);
+                                    /*sort=*/false);
     // collect unique polyline indices
     std::set<int> poly_indices;
     for (auto &idx : hits) {
@@ -206,7 +206,7 @@ crop_labels(const FastCrossing &polylines_fc,
     Eigen::Vector2d pt0 = polygon.colwise().minCoeff();
     Eigen::Vector2d pt1 = polygon.colwise().maxCoeff();
     auto hits = polylines_fc.within(pt0, pt1, /*segment_wise=*/true,
-                                   /*sort=*/false);
+                                    /*sort=*/false);
     std::set<int> poly_indices;
     for (auto &idx : hits) {
         poly_indices.insert(idx[0]);
