@@ -64,6 +64,52 @@ PYBIND11_MODULE(_core, m)
                             const Eigen::Ref<const cubao::RowVectorsNx2> &,
                             bool>(&cubao::polyline_in_polygon), //
           "polyline"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false);
+    m.def("polyline_chunks_in_polygon",
+          py::overload_cast<const cubao::RowVectors &,
+                            const Eigen::Ref<const cubao::RowVectorsNx2> &,
+                            const cubao::FastCrossing &>(
+              &cubao::polyline_chunks_in_polygon),
+          "polyline"_a, "polygon"_a, py::kw_only(), "fc"_a,
+          "Like polyline_in_polygon but returns labels only (no coordinates)");
+    m.def(
+        "polyline_chunks_in_polygon",
+        py::overload_cast<const cubao::RowVectors &,
+                          const Eigen::Ref<const cubao::RowVectorsNx2> &, bool>(
+            &cubao::polyline_chunks_in_polygon),
+        "polyline"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
+        "Like polyline_in_polygon but returns labels only (no coordinates)");
+    m.def("crop",
+          py::overload_cast<const cubao::FastCrossing &,
+                            const Eigen::Ref<const cubao::RowVectorsNx2> &,
+                            const cubao::FastCrossing &>(&cubao::crop),
+          "polylines_fc"_a, "polygon"_a, py::kw_only(), "polygon_fc"_a,
+          "Batch crop: find chunks of all polylines in polylines_fc inside "
+          "polygon. Returns dict: polyline_index -> PolylineChunks");
+    m.def(
+        "crop",
+        py::overload_cast<const cubao::FastCrossing &,
+                          const Eigen::Ref<const cubao::RowVectorsNx2> &, bool>(
+            &cubao::crop),
+        "polylines_fc"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
+        "Batch crop: find chunks of all polylines in polylines_fc inside "
+        "polygon (auto-builds polygon FC). Returns dict: polyline_index -> "
+        "PolylineChunks");
+    m.def("crop_labels",
+          py::overload_cast<const cubao::FastCrossing &,
+                            const Eigen::Ref<const cubao::RowVectorsNx2> &,
+                            const cubao::FastCrossing &>(&cubao::crop_labels),
+          "polylines_fc"_a, "polygon"_a, py::kw_only(), "polygon_fc"_a,
+          "Batch crop (labels only): like crop but skips coordinate "
+          "extraction. Returns dict: polyline_index -> list of labels");
+    m.def(
+        "crop_labels",
+        py::overload_cast<const cubao::FastCrossing &,
+                          const Eigen::Ref<const cubao::RowVectorsNx2> &, bool>(
+            &cubao::crop_labels),
+        "polylines_fc"_a, "polygon"_a, py::kw_only(), "is_wgs84"_a = false,
+        "Batch crop (labels only): like crop but skips coordinate "
+        "extraction (auto-builds polygon FC). Returns dict: polyline_index "
+        "-> list of labels");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

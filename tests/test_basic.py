@@ -15,8 +15,11 @@ from fast_crossing import (
     KdTree,
     PolylineRuler,
     Quiver,
+    crop,
+    crop_labels,
     densify_polyline,
     point_in_polygon,
+    polyline_chunks_in_polygon,
     polyline_in_polygon,
     tf,
 )
@@ -859,6 +862,112 @@ def test_polyline_in_polygon():
     assert len(chunks) == 0
 
     # TODO, test touches
+
+
+def test_polyline_chunks_in_polygon():
+    """
+    polyline_chunks_in_polygon should return the same chunk boundaries (labels)
+    as polyline_in_polygon but without the coordinate data.
+    """
+    polygon_ABCD = np.array(
+        [
+            [0.0, 0.0],
+            [0.0, -10.0],
+            [20.0, -10.0],
+            [20.0, 0.0],
+            [0.0, 0.0],  # closed
+        ]
+    )
+    polyline_12345 = np.array(
+        [
+            [-2.0, -9.0, 0.0],
+            [3.0, 7.0, 1.0],
+            [3.0, -7.0, 2.0],
+            [8.0, 7.0, 3.0],
+            [8.0, -7.0, 4.0],
+        ]
+    )
+    # polyline_in_polygon returns chunks with coordinates
+    chunks = polyline_in_polygon(polyline_12345, polygon_ABCD)
+    assert len(chunks) == 3
+
+    # polyline_chunks_in_polygon returns labels only, no coordinates
+    labels_nfc = polyline_chunks_in_polygon(polyline_12345, polygon_ABCD)
+    assert len(labels_nfc) == 3
+
+    # with pre-built FC
+    fc = FastCrossing()
+    fc.add_polyline(polygon_ABCD)
+    fc.finish()
+    labels_fc = polyline_chunks_in_polygon(polyline_12345, polygon_ABCD, fc=fc)
+    assert len(labels_fc) == 3
+
+    # labels should match chunks keys
+    chunk_keys = list(chunks.keys())
+    for i, label in enumerate(labels_nfc):
+        assert label == chunk_keys[i], f"{label} != {chunk_keys[i]}"
+    for i, label in enumerate(labels_fc):
+        assert label == chunk_keys[i], f"{label} != {chunk_keys[i]}"
+
+    # confirm range values match expected
+    expected_ranges = [2.72883, 14.4676666, 7.01783]
+    for i, (_, _, r1, _, _, r2) in enumerate(labels_nfc):
+        np.testing.assert_allclose(r2 - r1, expected_ranges[i], atol=1e-4)
+
+
+def test_crop():
+    """crop() batches polyline_in_polygon across all polylines in an FC."""
+    polygon = np.array(
+        [
+            [0.0, 0.0],
+            [0.0, -10.0],
+            [20.0, -10.0],
+            [20.0, 0.0],
+            [0.0, 0.0],  # closed
+        ]
+    )
+    # build obstacle FC with 3 polylines, 2 intersect the polygon
+    obs_fc = FastCrossing()
+    obs_fc.add_polyline(  # polyline 0: fully inside
+        np.array([[1.0, -1.0, 0], [5.0, -5.0, 0], [10.0, -1.0, 0]])
+    )
+    obs_fc.add_polyline(  # polyline 1: crosses the polygon boundary
+        np.array([[-5.0, -5.0, 0], [5.0, -5.0, 0], [25.0, -5.0, 0]])
+    )
+    obs_fc.add_polyline(  # polyline 2: fully outside
+        np.array([[-5.0, -5.0, 0], [-3.0, -5.0, 0]])
+    )
+    obs_fc.finish()
+
+    # test crop with auto-build polygon FC
+    result = crop(obs_fc, polygon, is_wgs84=False)
+    assert 0 in result  # polyline 0 fully inside
+    assert 1 in result  # polyline 1 crosses polygon
+    assert 2 not in result  # polyline 2 fully outside
+
+    # polyline 0 is fully inside: single chunk spanning whole polyline
+    assert len(result[0]) == 1
+    # polyline 1 crosses: 1 chunk (the inside portion)
+    assert len(result[1]) == 1
+    # check the inside portion of polyline 1
+    (_, _, r1, _, _, r2) = next(iter(result[1].keys()))
+    np.testing.assert_allclose(r1, 5.0, atol=1e-6)  # starts at x=0 boundary
+    np.testing.assert_allclose(r2, 25.0, atol=1e-6)  # ends at x=20 boundary
+
+    # test crop with pre-built polygon FC
+    poly_fc = FastCrossing()
+    poly_fc.add_polyline(polygon)
+    poly_fc.finish()
+    result2 = crop(obs_fc, polygon, polygon_fc=poly_fc)
+    assert result.keys() == result2.keys()
+    for pid in result:
+        assert list(result[pid].keys()) == list(result2[pid].keys())
+
+    # test crop_labels - should match same boundaries
+    result_l = crop_labels(obs_fc, polygon, is_wgs84=False)
+    assert result_l.keys() == result.keys()
+    for pid in result:
+        assert list(result_l[pid]) == list(result[pid].keys())
 
 
 def pytest_main(dir: str, *, test_file: str = None):

@@ -12,12 +12,15 @@ __all__: list[str] = [
     "LineSegment",
     "PolylineRuler",
     "Quiver",
+    "crop",
+    "crop_labels",
     "densify_polyline",
     "douglas_simplify",
     "douglas_simplify_indexes",
     "douglas_simplify_mask",
     "intersect_segments",
     "point_in_polygon",
+    "polyline_chunks_in_polygon",
     "polyline_in_polygon",
     "snap_onto_2d",
     "tf",
@@ -1523,6 +1526,60 @@ class Quiver:
         Move the Arrow upward by delta_z
         """
 
+@typing.overload
+def crop(
+    polylines_fc: FastCrossing,
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    polygon_fc: FastCrossing,
+) -> dict[
+    int,
+    dict[
+        tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]
+    ],
+]:
+    """
+    Batch crop: find chunks of all polylines in polylines_fc inside polygon. Returns dict: polyline_index -> PolylineChunks
+    """
+
+@typing.overload
+def crop(
+    polylines_fc: FastCrossing,
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    is_wgs84: bool = False,
+) -> dict[
+    int,
+    dict[
+        tuple[int, float, float, int, float, float], numpy.ndarray[numpy.float64[m, 3]]
+    ],
+]:
+    """
+    Batch crop: find chunks of all polylines in polylines_fc inside polygon (auto-builds polygon FC). Returns dict: polyline_index -> PolylineChunks
+    """
+
+@typing.overload
+def crop_labels(
+    polylines_fc: FastCrossing,
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    polygon_fc: FastCrossing,
+) -> dict[int, list[tuple[int, float, float, int, float, float]]]:
+    """
+    Batch crop (labels only): like crop but skips coordinate extraction. Returns dict: polyline_index -> list of labels
+    """
+
+@typing.overload
+def crop_labels(
+    polylines_fc: FastCrossing,
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    is_wgs84: bool = False,
+) -> dict[int, list[tuple[int, float, float, int, float, float]]]:
+    """
+    Batch crop (labels only): like crop but skips coordinate extraction (auto-builds polygon FC). Returns dict: polyline_index -> list of labels
+    """
+
 def densify_polyline(
     polyline: numpy.ndarray[numpy.float64[m, 3], numpy.ndarray.flags.c_contiguous],
     *,
@@ -1636,6 +1693,28 @@ def point_in_polygon(
     """
 
 @typing.overload
+def polyline_chunks_in_polygon(
+    polyline: numpy.ndarray[numpy.float64[m, 3]],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    fc: FastCrossing,
+) -> list[tuple[int, float, float, int, float, float]]:
+    """
+    Like polyline_in_polygon but returns labels only (no coordinates)
+    """
+
+@typing.overload
+def polyline_chunks_in_polygon(
+    polyline: numpy.ndarray[numpy.float64[m, 3]],
+    polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
+    *,
+    is_wgs84: bool = False,
+) -> list[tuple[int, float, float, int, float, float]]:
+    """
+    Like polyline_in_polygon but returns labels only (no coordinates)
+    """
+
+@typing.overload
 def polyline_in_polygon(
     polyline: numpy.ndarray[numpy.float64[m, 3]],
     polygon: numpy.ndarray[numpy.float64[m, 2], numpy.ndarray.flags.c_contiguous],
@@ -1662,4 +1741,4 @@ def snap_onto_2d(
     Snap P onto line segment AB
     """
 
-__version__: str = "0.1.4"
+__version__: str = "0.1.5"
