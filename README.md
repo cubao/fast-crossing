@@ -31,6 +31,48 @@ pip install git+https://github.com/cubao/fast-crossing.git
 
 (you can build wheels for later reuse by ` pip wheel git+https://github.com/cubao/fast-crossing.git`)
 
+### in the browser (pyodide / wasm)
+
+A pyodide wheel is built by the `Wheel on pyodide` job in
+[`.github/workflows/wheels.yml`](.github/workflows/wheels.yml) and published to PyPI
+together with the other wheels. Inside pyodide:
+
+```js
+const pyodide = await loadPyodide();
+await pyodide.loadPackage(["numpy", "micropip"]);
+const micropip = pyodide.pyimport("micropip");
+await micropip.install("fast-crossing"); // or a local wheel: "./fast_crossing-...wasm32.whl"
+const fc = pyodide.pyimport("fast_crossing");
+const { FastCrossing } = fc;
+```
+
+To build and test locally:
+
+```bash
+make pyodide_install                         # pip install pyodide-build
+make pyodide_wheel                           # -> dist/*wasm32.whl
+make pyodide_web                             # builds, writes tests/pyodide/wheels.json, serves :8123
+# open http://localhost:8123/tests/pyodide/index.html
+```
+
+Each wheel is ABI-tagged for one pyodide runtime (`pyemscripten_2024_0_wasm32` …)
+and the page's pyodide version has to match that tag. CI builds one wheel per
+supported pyodide version (CPython 3.13/3.14/3.15 at the moment); locally
+`pyodide build` picks the xbuildenv whose CPython matches your host
+interpreter, so a Python 3.12 host gets pyodide 0.27.x (ABI 2024_0). Use
+`pyodide xbuildenv install <version> --force` to target another version —
+`gen_wheels_json.py` then writes that version into `wheels.json`, and
+`?pyodide_version=` overrides it in the browser.
+
+[`tests/pyodide/index.html`](tests/pyodide/index.html) loads pyodide (by default from
+the jsdelivr CDN), installs the wheel from `dist/` and runs
+[`tests/test_basic.py`](tests/test_basic.py) in the browser. If the CDN is slow,
+mirror the runtime once and the page will pick it up automatically:
+
+```bash
+python tests/pyodide/fetch_pyodide_dist.py --version 0.27.8
+```
+
 ## Related
 
 Inspired by [anvaka/isect: Segments intersection detection library](https://github.com/anvaka/isect).
