@@ -55,6 +55,15 @@ make pyodide_web                             # builds, writes tests/pyodide/whee
 # open http://localhost:8123/tests/pyodide/index.html
 ```
 
+Each wheel is ABI-tagged for one pyodide runtime (`pyemscripten_2024_0_wasm32` …)
+and the page's pyodide version has to match that tag. CI builds one wheel per
+supported pyodide version (CPython 3.13/3.14/3.15 at the moment); locally
+`pyodide build` picks the xbuildenv whose CPython matches your host
+interpreter, so a Python 3.12 host gets pyodide 0.27.x (ABI 2024_0). Use
+`pyodide xbuildenv install <version> --force` to target another version —
+`gen_wheels_json.py` then writes that version into `wheels.json`, and
+`?pyodide_version=` overrides it in the browser.
+
 [`tests/pyodide/index.html`](tests/pyodide/index.html) loads pyodide (by default from
 the jsdelivr CDN), installs the wheel from `dist/` and runs
 [`tests/test_basic.py`](tests/test_basic.py) in the browser. If the CDN is slow,
