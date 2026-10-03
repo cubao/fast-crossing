@@ -11,3 +11,5 @@ wheelhouse
 site
 stubs
 .cache
+tests/pyodide/wheels.json
+tests/pyodide/pyodide-dist/
