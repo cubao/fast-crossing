@@ -10,7 +10,7 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
-## Version 0.1.6 (2026-10-28)
+## Version 0.1.7 (2026-10-28)
 
 *   Add batch query APIs, so N points can be queried against one index in a
     single C++ loop:
@@ -29,6 +29,13 @@ pip install -U fast-crossing
     always the pre-truncation count.
 *   Add `benchmarks/benchmark_batch_query.py` (394 polylines / 4160 segments /
     1562 queries), reporting per-call overhead separately from query cost.
+
+## Version 0.1.6 (2026-10-03)
+
+*   Build a pyodide (emscripten/wasm32) wheel so `import fast_crossing` works
+    inside a browser, and publish it to PyPI together with the native wheels.
+*   Add `tests/pyodide/index.html`, which loads pyodide, installs the wheel and
+    runs `tests/test_basic.py` in the browser.
 
 ## Version 0.1.1 (2025-06-27)
 

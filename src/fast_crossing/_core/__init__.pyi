@@ -1905,4 +1905,4 @@ def snap_onto_2d(
     Snap P onto line segment AB
     """
 
-__version__: str = "0.1.6"
+__version__: str = "0.1.7"
