@@ -10,6 +10,10 @@
 #include "quiver.hpp"
 #include "polyline_ruler.hpp"
 
+#include <algorithm>
+#include <optional>
+#include <tuple>
+
 namespace cubao
 {
 inline bool is_in_range(double v, const Eigen::VectorXd &intervals)
@@ -95,6 +99,50 @@ struct KdQuiver : Quiver
                               radius,                                   //
                               sort,                                     //
                               return_squared_l2);
+    }
+
+    // Batch nearest, single C++ loop over queries.
+    //
+    // Returns (counts, polyline_index, point_index, dists):
+    //   counts         : (N,)   real hit count per query (before truncation)
+    //   polyline_index : (N, H) -1 where unused
+    //   point_index    : (N, H) -1 where unused
+    //   dists          : (N, H) inf where unused
+    // H = min(k, #points) in `k` mode, or `max_hits` / the widest hit count in
+    // `radius` mode. Slots [0, counts[i]) are sorted by distance.
+    //
+    // The nearest *point* is used (same as the single point `nearest`), not the
+    // nearest *segment*: keep that in mind when a `k > 1` result feeds a
+    // segment-wise algorithm (two neighbouring points of one polyline can both
+    // appear). For a segment-wise candidate search use
+    // `FastCrossing::intersections_batch`.
+    std::tuple<Eigen::VectorXi, Eigen::MatrixXi, Eigen::MatrixXi,
+               Eigen::MatrixXd>
+    nearest_batch(const RowVectors &queries, std::optional<int> k,
+                  std::optional<double> radius, std::optional<int> max_hits,
+                  bool return_squared_l2 = false) const
+    {
+        Eigen::VectorXi counts;
+        Eigen::MatrixXi indexes;
+        Eigen::MatrixXd dists;
+        std::tie(counts, indexes, dists) =
+            tree().nearest_batch(is_wgs84_ ? lla2enu(queries) : queries, k,
+                                 radius, max_hits, return_squared_l2);
+        const int N = indexes.rows();
+        const int H = indexes.cols();
+        Eigen::MatrixXi polyline_index = Eigen::MatrixXi::Constant(N, H, -1);
+        Eigen::MatrixXi point_index = Eigen::MatrixXi::Constant(N, H, -1);
+        for (int i = 0; i < N; ++i) {
+            // `counts[i]` may exceed H when `max_hits` truncated a radius
+            // query, so the matrix width - not the count - bounds the loop.
+            const int n = std::min(H, counts[i]);
+            for (int j = 0; j < n; ++j) {
+                auto label = index(indexes(i, j));
+                polyline_index(i, j) = label[0];
+                point_index(i, j) = label[1];
+            }
+        }
+        return {counts, polyline_index, point_index, dists};
     }
 
     Eigen::Map<const RowVectors> positions() const { return tree().points(); }

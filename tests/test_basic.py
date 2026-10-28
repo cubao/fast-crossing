@@ -15,6 +15,7 @@ from fast_crossing import (
     KdTree,
     PolylineRuler,
     Quiver,
+    ScanlineHitFilterOptions,
     crop,
     crop_labels,
     densify_polyline,
@@ -1058,6 +1059,374 @@ def test_flatbush():
             [0, 0],
         )
     ) == [0, 5, 6, 11]
+
+
+def __batch_test_index():
+    """A small "LD corridor": parallel polylines plus a few crossing ones.
+
+    Scale is deliberately small (index semantics, not speed): 12 polylines,
+    ~500 segments. `benchmarks/benchmark_batch_query.py` uses the real scale
+    (394 polylines / 4160 segments) instead.
+    """
+    polylines = []
+    for i in range(10):
+        x = np.arange(0.0, 60.0, 1.5)
+        y = -5.0 + i * 1.1 + 0.3 * np.sin(x / 7.0 + i)
+        polylines.append(np.c_[x, y, np.zeros_like(x)])
+    for j in range(4):
+        x = 15.0 * j + 3.0
+        polylines.append(np.array([[x, -9.0, 0.0], [x, 9.0, 0.0]], dtype=np.float64))
+    fc = FastCrossing()
+    for i, polyline in enumerate(polylines):
+        fc.add_polyline(np.ascontiguousarray(polyline), index=i)
+    fc.finish()
+    return fc, polylines
+
+
+def __hit_options(**kwargs) -> ScanlineHitFilterOptions:
+    from fast_crossing import ScanlineHitFilterOptions
+
+    options = ScanlineHitFilterOptions()
+    options.accept_opposite = True
+    options.min_dot = 0.9
+    options.max_height_offset = 0.0
+    for key, value in kwargs.items():
+        setattr(options, key, value)
+    return options
+
+
+def __queries(num: int = 300, seed: int = 11):
+    rng = np.random.default_rng(seed)
+    llas = np.c_[
+        rng.uniform(0.0, 50.0, num),
+        rng.uniform(-8.0, 8.0, num),
+        np.zeros(num),
+    ]
+    heading = rng.uniform(-0.25, 0.25, num)
+    dirs = np.c_[np.cos(heading), np.sin(heading), np.zeros(num)]
+    return llas, dirs
+
+
+def test_nearest_batch():
+    fc, _ = __batch_test_index()
+    llas, _ = __queries()
+
+    # k mode: element-wise equal to the per-point loop
+    for k in (1, 2, 5):
+        expected = [np.atleast_2d(fc.nearest(p, k=k)[0]) for p in llas]
+        expected_dist = [np.atleast_1d(fc.nearest(p, k=k)[1]) for p in llas]
+        counts, pid, pidx, dists = fc.nearest_batch(llas, k=k)
+        assert dists.shape == (len(llas), k)
+        assert np.all(counts == [len(e) for e in expected])
+        for i, (label, dist) in enumerate(zip(expected, expected_dist)):
+            n = counts[i]
+            assert np.array_equal(np.c_[pid[i, :n], pidx[i, :n]], label)
+            np.testing.assert_allclose(dists[i, :n], dist, atol=1e-12)
+            # padding
+            assert np.all(pid[i, n:] == -1) and np.all(pidx[i, n:] == -1)
+            assert np.all(np.isinf(dists[i, n:]))
+
+    # radius mode: same story, plus `max_hits` truncation
+    for radius in (1.5, 3.0):
+        expected = [np.atleast_2d(fc.nearest(p, radius=radius)[0]) for p in llas]
+        expected_dist = [np.atleast_1d(fc.nearest(p, radius=radius)[1]) for p in llas]
+        counts, pid, pidx, dists = fc.nearest_batch(llas, radius=radius)
+        assert np.all(counts == [len(e) for e in expected])
+        for i, (label, dist) in enumerate(zip(expected, expected_dist)):
+            n = counts[i]
+            assert np.array_equal(np.c_[pid[i, :n], pidx[i, :n]], label)
+            np.testing.assert_allclose(dists[i, :n], dist, atol=1e-12)
+
+    full = fc.nearest_batch(llas, radius=3.0)
+    counts, pid, pidx, dists = fc.nearest_batch(llas, radius=3.0, max_hits=2)
+    assert dists.shape == (len(llas), 2)
+    # counts is the pre-truncation count
+    assert np.array_equal(counts, full[0])
+    truncated = counts > 2
+    assert truncated.any()
+    np.testing.assert_allclose(dists[truncated], full[3][truncated][:, :2])
+    assert np.array_equal(pid[truncated], full[1][truncated][:, :2])
+
+    # return_squared_l2
+    _, _, _, d2 = fc.nearest_batch(llas, radius=3.0, return_squared_l2=True)
+    _, _, _, d1 = fc.nearest_batch(llas, radius=3.0)
+    finite = np.isfinite(d1)
+    np.testing.assert_allclose(d2[finite], d1[finite] ** 2, atol=1e-12)
+    assert np.all(np.isinf(d2[~finite]))
+
+    # k and radius are mutually exclusive; k must be positive
+    with pytest.raises(ValueError, match="k / radius"):
+        fc.nearest_batch(llas, k=1, radius=2.0)
+    with pytest.raises(ValueError, match="k should be positive"):
+        fc.nearest_batch(llas, k=0)
+
+    # empty index: predictable shapes, everything misses
+    empty = FastCrossing()
+    counts, pid, pidx, dists = empty.nearest_batch(llas, k=2)
+    assert counts.shape == (len(llas),) and np.all(counts == 0)
+    assert pid.shape == pidx.shape == dists.shape == (len(llas), 2)
+    assert np.all(pid == -1) and np.all(np.isinf(dists))
+
+
+def test_intersections_batch():
+    fc, _ = __batch_test_index()
+    llas, dirs = __queries()
+
+    for min_, max_ in ((-1.2, 1.2), (-5.0, 5.0), (-10.0, 10.0)):
+        options = __hit_options()
+        expected = [
+            fc.scanline_hits(p, d, min=min_, max=max_, options=options)
+            for p, d in zip(llas, dirs)
+        ]
+        counts, lateral, pid, seg_idx, t, dot, lla, direction = fc.intersections_batch(
+            llas, dirs, min=min_, max=max_, options=options
+        )
+        width = lateral.shape[1]
+        assert width == max(len(h) for h in expected)
+        assert lla.shape == direction.shape == (len(llas) * width, 3)
+        lla3 = lla.reshape(len(llas), width, 3)
+        dir3 = direction.reshape(len(llas), width, 3)
+        assert np.all(counts == [len(h) for h in expected])
+        for i, hits in enumerate(expected):
+            n = counts[i]
+            for j, hit in enumerate(hits):
+                assert pid[i, j] == hit.polyline_index
+                assert seg_idx[i, j] == hit.segment_index
+                np.testing.assert_allclose(lateral[i, j], hit.lateral_offset)
+                np.testing.assert_allclose(t[i, j], hit.t)
+                np.testing.assert_allclose(dot[i, j], hit.dot)
+                np.testing.assert_allclose(lla3[i, j], hit.lla, atol=1e-12)
+                np.testing.assert_allclose(dir3[i, j], hit.dir, atol=1e-12)
+            # unused slots
+            assert np.all(pid[i, n:] == -1) and np.all(seg_idx[i, n:] == -1)
+            assert np.all(np.isinf(lateral[i, n:]))
+            assert np.all(np.isnan(t[i, n:])) and np.all(np.isnan(dot[i, n:]))
+            assert np.all(np.isnan(lla3[i, n:]))
+
+    # |lateral| ascending, and the first hit is the `min(abs(lateral))` one
+    options = __hit_options()
+    counts, lateral, pid, *_ = fc.intersections_batch(
+        llas, dirs, min=-10.0, max=10.0, options=options
+    )
+    for i in range(len(llas)):
+        n = counts[i]
+        assert np.all(np.diff(np.abs(lateral[i, :n])) >= 0)
+        hits = fc.scanline_hits(llas[i], dirs[i], min=-10.0, max=10.0, options=options)
+        best = min(hits, key=lambda h: abs(h.lateral_offset))
+        assert pid[i, 0] == best.polyline_index
+
+    # only_nearest: at most one hit, and it is the closest-lateral one
+    only = __hit_options(only_nearest=True)
+    counts, lateral, pid, *_ = fc.intersections_batch(
+        llas, dirs, min=-10.0, max=10.0, options=only
+    )
+    assert np.all(counts <= 1)
+    assert np.sum(counts) > 0
+
+    # max_hits truncation: counts stays the pre-truncation value, slots keep
+    # the smallest |lateral| first
+    full = fc.intersections_batch(llas, dirs, min=-10.0, max=10.0, options=options)
+    for max_hits in (1, 2, 3):
+        counts, lateral, pid, seg_idx, t, dot, lla, direction = fc.intersections_batch(
+            llas,
+            dirs,
+            min=-10.0,
+            max=10.0,
+            options=options,
+            max_hits=max_hits,
+        )
+        assert lateral.shape == (len(llas), max_hits)
+        assert lla.shape == (len(llas) * max_hits, 3)
+        assert np.array_equal(counts, full[0])
+        truncated = counts > max_hits
+        assert truncated.any()
+        np.testing.assert_allclose(lateral[truncated], full[1][truncated][:, :max_hits])
+        assert np.array_equal(pid[truncated], full[2][truncated][:, :max_hits])
+
+    # NaN dir row == "no direction": no direction filtering for that row
+    nan_dirs = dirs.copy()
+    nan_dirs[::7] = np.nan
+    counts, lateral, pid, *_ = fc.intersections_batch(
+        llas, nan_dirs, min=-3.0, max=3.0, options=options, max_hits=16
+    )
+    for i in range(0, len(llas), 7):
+        reference = fc.scanline_hits(
+            llas[i],
+            np.array([np.nan, np.nan, 0.0]),
+            min=-3.0,
+            max=3.0,
+            options=options,
+        )
+        assert counts[i] == len(reference)
+        for j, hit in enumerate(reference):
+            assert pid[i, j] == hit.polyline_index
+            np.testing.assert_allclose(lateral[i, j], hit.lateral_offset)
+
+    # miss semantics with an empty index
+    empty = FastCrossing()
+    out = empty.intersections_batch(llas, dirs, min=-5.0, max=5.0, max_hits=4)
+    counts, lateral, pid, seg_idx, t, dot, lla, direction = out
+    assert np.all(counts == 0)
+    assert lateral.shape == (len(llas), 4)
+    assert np.all(np.isinf(lateral)) and np.all(pid == -1) and np.all(seg_idx == -1)
+    assert np.all(np.isnan(t)) and np.all(np.isnan(dot))
+    assert lla.shape == direction.shape == (len(llas) * 4, 3)
+    assert np.all(np.isnan(lla))
+    # without max_hits an empty batch has zero width
+    counts, lateral, *_ = empty.intersections_batch(llas, dirs)
+    assert np.all(counts == 0) and lateral.shape == (len(llas), 0)
+
+    # argument validation
+    with pytest.raises(ValueError, match="#llas != #dirs"):
+        fc.intersections_batch(llas, dirs[:-1])
+    with pytest.raises(ValueError, match="min should be <= max"):
+        fc.intersections_batch(llas, dirs, min=5.0, max=-5.0)
+    with pytest.raises(ValueError, match="max_hits"):
+        fc.intersections_batch(llas, dirs, max_hits=-1)
+
+
+def test_hit_filter_options_semantics():
+    """`accept_opposite` + `min_dot`: same/opposite accepted, perpendicular not.
+
+    Geometry: query at the origin pointing along (1, 1)/sqrt(2), so the scanline
+    runs along (-1, 1)/sqrt(2) (the leftward normal) and lateral offsets are
+    measured along it.
+    """
+    r2 = 2.0**0.5
+    dir_ = np.array([1.0 / r2, 1.0 / r2, 0.0])
+    left = np.array([-1.0 / r2, 1.0 / r2, 0.0])
+    lla = np.array([0.0, 0.0, 0.0])
+
+    # a point `lateral` meters to the left of the query point
+    def at(lateral: float, z: float = 0.0) -> np.ndarray:
+        return (left * lateral + np.array([0.0, 0.0, z])).tolist()
+
+    fc = FastCrossing()
+    fc.add_polyline(np.array([at(0.0, 0.0), at(0.0, 0.0)], dtype=float))
+    # ^ placeholder, replaced below
+
+    fc = FastCrossing()
+    # A: along +query direction (dot = +1)
+    a = np.array([-10.0 / r2, -10.0 / r2, 0.0])
+    b = np.array([10.0 / r2, 10.0 / r2, 0.0])
+    fc.add_polyline(np.array([a, b]), index=0)
+    # B: same geometry, digitized the other way round (dot = -1)
+    fc.add_polyline(np.array([b, a]), index=1)
+    # C: 60 degrees off the query direction (dot = 0.5), crossing the scanline
+    # 3 meters to the left of the query point. Below min_dot=0.9, so it must be
+    # filtered out by the direction gate and kept when the gate is disabled.
+    # (A segment exactly perpendicular to the scanline is collinear with it, so
+    # the "dot == 0 crossing" case does not exist outside that degenerate
+    # overlap.)
+    c = np.array(at(3.0))
+    d3 = np.cos(np.pi / 3.0) * dir_ + np.sin(np.pi / 3.0) * left
+    off = d3 * 5.0
+    fc.add_polyline(np.array([np.array(c) - off, np.array(c) + off]), index=2)
+    fc.finish()
+
+    def hits(**kwargs):
+        return fc.scanline_hits(
+            lla, dir_, min=-5.0, max=5.0, options=__hit_options(**kwargs)
+        )
+
+    # accept_opposite=True, min_dot=0.9: dot = +1 / -1 pass, dot = 0.5 fails
+    assert sorted(h.polyline_index for h in hits(min_dot=0.9)) == [0, 1]
+    assert {h.polyline_index: round(h.dot, 6) for h in hits(min_dot=0.9)} == {
+        0: 1.0,
+        1: -1.0,
+    }
+
+    # same direction only: the reversed polyline is dropped
+    assert [h.polyline_index for h in hits(min_dot=0.9, accept_opposite=False)] == [0]
+
+    # accept_opposite=False + negative min_dot disables the direction gate
+    assert sorted(
+        h.polyline_index for h in hits(min_dot=-1.0, accept_opposite=False)
+    ) == [0, 1, 2]
+    # accept_opposite=True + min_dot <= 0 disables it as well
+    assert sorted(h.polyline_index for h in hits(min_dot=0.0)) == [0, 1, 2]
+
+    # lateral sign: left of the query direction is positive
+    by_id = {h.polyline_index: h.lateral_offset for h in hits(min_dot=0.0)}
+    assert by_id[0] == pytest.approx(0.0, abs=1e-9)
+    assert by_id[1] == pytest.approx(0.0, abs=1e-9)
+    assert by_id[2] == pytest.approx(3.0)
+
+    # max_height_offset
+    fc_z = FastCrossing()
+    fc_z.add_polyline(np.array([a, b]), index=0)
+    fc_z.add_polyline(np.array([a, b]) + np.array([0.0, 0.0, 5.0]), index=1)
+    fc_z.finish()
+    z_hits = fc_z.scanline_hits(
+        lla, dir_, min=-5.0, max=5.0, options=__hit_options(max_height_offset=1.0)
+    )
+    assert [h.polyline_index for h in z_hits] == [0]
+    z_hits = fc_z.scanline_hits(
+        lla, dir_, min=-5.0, max=5.0, options=__hit_options(max_height_offset=0.0)
+    )
+    assert sorted(h.polyline_index for h in z_hits) == [0, 1]
+
+    # filter_out_hits_by_gap keeps the cluster next to lateral offset 0
+    fc_g = FastCrossing()
+    for i, lateral in enumerate((-0.5, 0.5, 4.0)):
+        p = np.array(at(lateral))
+        fc_g.add_polyline(np.array([p - off, p + off]), index=i)
+    fc_g.finish()
+    g_hits = fc_g.scanline_hits(
+        lla,
+        dir_,
+        min=-5.0,
+        max=5.0,
+        options=__hit_options(min_dot=0.0, filter_out_hits_by_gap=2.0),
+    )
+    assert sorted(h.polyline_index for h in g_hits) == [0, 1]
+
+
+def test_intersections_batch_wgs84():
+    """Batch and per-point agree in WGS84 too, and offsets stay in meters."""
+    from fast_crossing import tf
+
+    anchor = np.array([121.5, 31.25, 0.0])
+    enus = []
+    for i in range(10):
+        x = np.arange(0.0, 60.0, 1.5)
+        y = -5.0 + i * 1.1 + 0.3 * np.sin(x / 7.0 + i)
+        enus.append(np.c_[x, y, np.zeros_like(x)])
+    # digitized with the opposite orientation, as LD data often is
+    enus.append(np.c_[np.arange(60.0, 0.0, -1.5), np.full(40, -6.5), np.zeros(40)])
+
+    fc = FastCrossing(is_wgs84=True)
+    for i, enu in enumerate(enus):
+        fc.add_polyline(
+            np.ascontiguousarray(tf.enu2lla(enu, anchor_lla=anchor)), index=i
+        )
+    fc.finish()
+
+    enu_llas, dirs = __queries()
+    llas = tf.enu2lla(enu_llas, anchor_lla=anchor)
+    options = __hit_options()
+    counts, lateral, pid, seg_idx, t, dot, lla, direction = fc.intersections_batch(
+        llas, dirs, min=-5.0, max=5.0, options=options
+    )
+    assert np.sum(counts) > 0
+    # finite exactly on the valid slots
+    valid = np.arange(lateral.shape[1])[None, :] < counts[:, None]
+    assert np.all(np.isfinite(lateral[valid]))
+    assert np.all(~np.isfinite(lateral[~valid]))
+    # lateral offsets are metric: the widest spacing here is ~1.1 m
+    assert np.all(np.abs(lateral[np.isfinite(lateral)]) <= 5.0 + 1e-9)
+    width = lateral.shape[1]
+    lla3 = lla.reshape(len(llas), width, 3)
+    for i in range(len(llas)):
+        reference = fc.scanline_hits(
+            llas[i], dirs[i], min=-5.0, max=5.0, options=options
+        )
+        assert counts[i] == len(reference)
+        for j, hit in enumerate(reference):
+            assert pid[i, j] == hit.polyline_index
+            assert seg_idx[i, j] == hit.segment_index
+            np.testing.assert_allclose(lateral[i, j], hit.lateral_offset)
+            np.testing.assert_allclose(lla3[i, j], hit.lla, atol=1e-12)
 
 
 if __name__ == "__main__":

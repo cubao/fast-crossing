@@ -23,6 +23,69 @@ using rvp = py::return_value_policy;
 
 CUBAO_INLINE void bind_fast_crossing(py::module &m)
 {
+    py::class_<ScanlineHitFilterOptions>(m, "ScanlineHitFilterOptions",
+                                         py::module_local())
+        .def(py::init<>(), "Parameters of the perpendicular scanline query "
+                           "(`scanline_hits` / `intersections_batch`).")
+        .def_readwrite("max_height_offset",
+                       &ScanlineHitFilterOptions::max_height_offset,
+                       "Drop hits with |z_hit - z_query| beyond this many "
+                       "meters. <= 0 disables the check. Default 3.0.")
+        .def_readwrite("min_dot", &ScanlineHitFilterOptions::min_dot,
+                       "Direction gate on dot(query_dir, segment_dir).\n\n"
+                       "With accept_opposite=False: keep hits with "
+                       "dot >= min_dot (same direction only); a negative value "
+                       "disables the check.\n"
+                       "With accept_opposite=True: keep hits with "
+                       "dot >= min_dot OR dot <= -min_dot, i.e. min_dot gates "
+                       "|dot| and both senses are accepted while perpendicular "
+                       "hits are rejected (min_dot=0.9 ~= +-25.8 deg).\n"
+                       "Default 0.5.")
+        .def_readwrite("accept_opposite",
+                       &ScanlineHitFilterOptions::accept_opposite,
+                       "Accept near-opposite directions as well as near-same "
+                       "ones (see min_dot). Default False.")
+        .def_readwrite("filter_out_hits_by_gap",
+                       &ScanlineHitFilterOptions::filter_out_hits_by_gap,
+                       "Keep only the cluster of hits reachable from lateral "
+                       "offset 0 without a gap larger than this (meters). "
+                       "<= 0 disables. Default 0.0.")
+        .def_readwrite("only_nearest", &ScanlineHitFilterOptions::only_nearest,
+                       "Keep only the hit with the smallest |lateral_offset|. "
+                       "Default False.")
+        .def("__repr__", [](const ScanlineHitFilterOptions &o) {
+            return "ScanlineHitFilterOptions(max_height_offset=" +
+                   std::to_string(o.max_height_offset) +
+                   ", min_dot=" + std::to_string(o.min_dot) +
+                   ", accept_opposite=" +
+                   (o.accept_opposite ? "True" : "False") +
+                   ", filter_out_hits_by_gap=" +
+                   std::to_string(o.filter_out_hits_by_gap) +
+                   ", only_nearest=" + (o.only_nearest ? "True" : "False") +
+                   ")";
+        });
+
+    py::class_<ScanlineHit>(m, "ScanlineHit", py::module_local())
+        .def(py::init<>(), "One segment hit by a perpendicular scanline.")
+        .def_readwrite("polyline_index", &ScanlineHit::polyline_index)
+        .def_readwrite("segment_index", &ScanlineHit::segment_index)
+        .def_readwrite("t", &ScanlineHit::t)
+        .def_readwrite("lla", &ScanlineHit::lla)
+        .def_readwrite("dir", &ScanlineHit::dir)
+        .def_readwrite("lateral_offset", &ScanlineHit::lateral_offset,
+                       "Signed lateral offset relative to the scanline, left "
+                       "positive.")
+        .def_readwrite("vertical_offset", &ScanlineHit::vertical_offset)
+        .def_readwrite("dot", &ScanlineHit::dot)
+        .def("__repr__", [](const ScanlineHit &h) {
+            return "ScanlineHit(polyline_index=" +
+                   std::to_string(h.polyline_index) +
+                   ", segment_index=" + std::to_string(h.segment_index) +
+                   ", t=" + std::to_string(h.t) +
+                   ", lateral_offset=" + std::to_string(h.lateral_offset) +
+                   ", dot=" + std::to_string(h.dot) + ")";
+        });
+
     py::class_<FastCrossing>(m, "FastCrossing", py::module_local())
         .def(py::init<bool>(), py::kw_only(), "is_wgs84"_a = false,
              "Initialize FastCrossing object.\n\n"
@@ -257,6 +320,98 @@ CUBAO_INLINE void bind_fast_crossing(py::module &m)
              "defaults to false\n"
              ":param filter: Optional filter parameters\n"
              ":return: Nearest points information")
+
+        // scanline (perpendicular lateral candidate) query
+        .def(
+            "scanline_hits",
+            py::overload_cast<const Eigen::Vector3d &, const Eigen::Vector3d &,
+                              double, double, const ScanlineHitFilterOptions &>(
+                &FastCrossing::scanline_hits, py::const_),
+            "lla"_a, "dir"_a, py::kw_only(), "min"_a = -5.0, "max"_a = 5.0,
+            "options"_a = ScanlineHitFilterOptions(),
+            "Perpendicular scanline search for a single query point.\n\n"
+            "Places a scanline perpendicular to `dir` through `lla`, searches "
+            "lateral offsets in [min, max] and returns every crossing segment "
+            "filtered by `options`, sorted by |lateral_offset|. Same code path "
+            "as `intersections_batch`, one point at a time: use it to "
+            "cross-check a batch result or when you need per-point control.\n\n"
+            ":param lla: query point, (x, y, z), ENU or WGS84 (see is_wgs84)\n"
+            ":param dir: query direction (unit vector). A NaN component "
+            "disables direction filtering for this query.\n"
+            ":param min: lateral offset of the scanline start (meters, left "
+            "is positive)\n"
+            ":param max: lateral offset of the scanline end (meters)\n"
+            ":param options: hit filter options\n"
+            ":return: list of ScanlineHit")
+
+        // batch: nearest
+        .def(
+            "nearest_batch", &FastCrossing::nearest_batch, "positions"_a,
+            py::kw_only(), "k"_a = std::nullopt, "radius"_a = std::nullopt,
+            "max_hits"_a = std::nullopt, "return_squared_l2"_a = false,
+            "Batch point-to-polyline nearest search.\n\n"
+            "One C++ loop over all queries, reusing the same KD-tree index and "
+            "scratch buffers instead of N pybind crosses.\n\n"
+            ":param positions: (N, 3) query points, ENU or WGS84\n"
+            ":param k: max neighbours per query. Mutually exclusive with "
+            "radius; if neither is given, k=1 (nearest point).\n"
+            ":param radius: search radius in meters. When given (and k is "
+            "None), every point within the radius is returned.\n"
+            ":param max_hits: cap on hits per query in radius mode; truncation "
+            "keeps the nearest first.\n"
+            ":param return_squared_l2: return squared distances\n"
+            ":return: (counts, polyline_index, point_index, dists)\n"
+            "  counts:         (N,) int32, real hit count per query (before "
+            "truncation), so counts[i] <= H\n"
+            "  polyline_index: (N, H) int32, -1 for unused slots\n"
+            "  point_index:    (N, H) int32, -1 for unused slots\n"
+            "  dists:          (N, H) float64, inf for unused slots\n"
+            "  H = min(k, #indexed points) in k mode, or max_hits / the widest "
+            "hit count in radius mode.\n"
+            "Hits are sorted by distance; the nearest *point* is returned (not "
+            "the nearest segment), exactly like the single point `nearest`.\n"
+            "Miss semantics: label -1, distance inf.")
+
+        // batch: scanline / lateral candidates
+        .def(
+            "intersections_batch", &FastCrossing::intersections_batch, "llas"_a,
+            "dirs"_a, py::kw_only(), "min"_a = -5.0, "max"_a = 5.0,
+            "options"_a = ScanlineHitFilterOptions(),
+            "max_hits"_a = std::nullopt,
+            "Batch perpendicular scanline search (lateral candidates).\n\n"
+            "Same semantics as calling `scanline_hits` once per query, but "
+            "with a single C++ loop and flat, preallocated numpy buffers "
+            "(no list-of-lists).\n\n"
+            ":param llas: (N, 3) query points, ENU or WGS84\n"
+            ":param dirs: (N, 3) query directions. A row with a NaN means "
+            "\"no direction\": a north-south scanline is used and direction "
+            "filters are skipped for that query.\n"
+            ":param min: lateral offset start (meters, left positive)\n"
+            ":param max: lateral offset end (meters)\n"
+            ":param options: hit filter options, see "
+            "ScanlineHitFilterOptions\n"
+            ":param max_hits: optional cap on hits per query. Truncation keeps "
+            "the smallest |lateral| first (ties broken by "
+            "(polyline_index, segment_index)).\n"
+            ":return: (counts, lateral, polyline_id, seg_idx, t, dot, lla, "
+            "dir)\n"
+            "  counts:      (N,) int32   real hit count, BEFORE truncation, so "
+            "counts[i] > max_hits means query i was truncated\n"
+            "  lateral:     (N, H) float64 signed lateral offset, NaN-free. "
+            "inf for unused slots; |lateral| ascending inside each row\n"
+            "  polyline_id: (N, H) int32   -1 for unused slots\n"
+            "  seg_idx:     (N, H) int32   segment index inside that polyline, "
+            "-1 unused\n"
+            "  t:           (N, H) float64 parameter on that segment, NaN "
+            "unused\n"
+            "  dot:         (N, H) float64 dot(query dir, segment dir), NaN "
+            "unused\n"
+            "  lla:         (N*H, 3) float64 hit points, NaN unused (reshape "
+            "to (N, H, 3))\n"
+            "  dir:         (N*H, 3) float64 hit segment directions, NaN "
+            "unused\n"
+            "  H = max_hits, or the widest hit count in the batch when "
+            "max_hits is not given. With an empty index H == 0.")
 
         // coordinates
         .def("coordinates",

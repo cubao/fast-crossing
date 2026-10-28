@@ -12,6 +12,8 @@ __all__: list[str] = [
     "LineSegment",
     "PolylineRuler",
     "Quiver",
+    "ScanlineHit",
+    "ScanlineHitFilterOptions",
     "crop",
     "crop_labels",
     "densify_polyline",
@@ -437,6 +439,47 @@ class FastCrossing:
         :param dedup: Whether to remove duplicates, defaults to true
         :return: Sorted intersections by t ratio
         """
+    def intersections_batch(
+        self,
+        llas: numpy.ndarray[numpy.float64[m, 3]],
+        dirs: numpy.ndarray[numpy.float64[m, 3]],
+        *,
+        min: float = -5.0,
+        max: float = 5.0,
+        options: ScanlineHitFilterOptions = ...,
+        max_hits: int | None = None,
+    ) -> tuple[
+        numpy.ndarray[numpy.int32[m, 1]],
+        numpy.ndarray[numpy.float64[m, n]],
+        numpy.ndarray[numpy.int32[m, n]],
+        numpy.ndarray[numpy.int32[m, n]],
+        numpy.ndarray[numpy.float64[m, n]],
+        numpy.ndarray[numpy.float64[m, n]],
+        numpy.ndarray[numpy.float64[m, n]],
+        numpy.ndarray[numpy.float64[m, n]],
+    ]:
+        """
+        Batch perpendicular scanline search (lateral candidates).
+
+        Same semantics as calling `scanline_hits` once per query, but with a single C++ loop and flat, preallocated numpy buffers (no list-of-lists).
+
+        :param llas: (N, 3) query points, ENU or WGS84
+        :param dirs: (N, 3) query directions. A row with a NaN means "no direction": a north-south scanline is used and direction filters are skipped for that query.
+        :param min: lateral offset start (meters, left positive)
+        :param max: lateral offset end (meters)
+        :param options: hit filter options, see ScanlineHitFilterOptions
+        :param max_hits: optional cap on hits per query. Truncation keeps the smallest |lateral| first (ties broken by (polyline_index, segment_index)).
+        :return: (counts, lateral, polyline_id, seg_idx, t, dot, lla, dir)
+          counts:      (N,) int32   real hit count, BEFORE truncation, so counts[i] > max_hits means query i was truncated
+          lateral:     (N, H) float64 signed lateral offset, NaN-free. inf for unused slots; |lateral| ascending inside each row
+          polyline_id: (N, H) int32   -1 for unused slots
+          seg_idx:     (N, H) int32   segment index inside that polyline, -1 unused
+          t:           (N, H) float64 parameter on that segment, NaN unused
+          dot:         (N, H) float64 dot(query dir, segment dir), NaN unused
+          lla:         (N*H, 3) float64 hit points, NaN unused (reshape to (N, H, 3))
+          dir:         (N*H, 3) float64 hit segment directions, NaN unused
+          H = max_hits, or the widest hit count in the batch when max_hits is not given. With an empty index H == 0.
+        """
     def is_wgs84(self) -> bool:
         """
         Check if the coordinates are in WGS84 format.
@@ -493,6 +536,39 @@ class FastCrossing:
         :param filter: Optional filter parameters
         :return: Nearest points information
         """
+    def nearest_batch(
+        self,
+        positions: numpy.ndarray[numpy.float64[m, 3]],
+        *,
+        k: int | None = None,
+        radius: float | None = None,
+        max_hits: int | None = None,
+        return_squared_l2: bool = False,
+    ) -> tuple[
+        numpy.ndarray[numpy.int32[m, 1]],
+        numpy.ndarray[numpy.int32[m, n]],
+        numpy.ndarray[numpy.int32[m, n]],
+        numpy.ndarray[numpy.float64[m, n]],
+    ]:
+        """
+        Batch point-to-polyline nearest search.
+
+        One C++ loop over all queries, reusing the same KD-tree index and scratch buffers instead of N pybind crosses.
+
+        :param positions: (N, 3) query points, ENU or WGS84
+        :param k: max neighbours per query. Mutually exclusive with radius; if neither is given, k=1 (nearest point).
+        :param radius: search radius in meters. When given (and k is None), every point within the radius is returned.
+        :param max_hits: cap on hits per query in radius mode; truncation keeps the nearest first.
+        :param return_squared_l2: return squared distances
+        :return: (counts, polyline_index, point_index, dists)
+          counts:         (N,) int32, real hit count per query (before truncation), so counts[i] <= H
+          polyline_index: (N, H) int32, -1 for unused slots
+          point_index:    (N, H) int32, -1 for unused slots
+          dists:          (N, H) float64, inf for unused slots
+          H = min(k, #indexed points) in k mode, or max_hits / the widest hit count in radius mode.
+        Hits are sorted by distance; the nearest *point* is returned (not the nearest segment), exactly like the single point `nearest`.
+        Miss semantics: label -1, distance inf.
+        """
     def num_polylines(self) -> int:
         """
         Get the number of polylines in the FastCrossing object.
@@ -535,6 +611,27 @@ class FastCrossing:
         Export the internal Quiver object.
 
         :return: Quiver object
+        """
+    def scanline_hits(
+        self,
+        lla: numpy.ndarray[numpy.float64[3, 1]],
+        dir: numpy.ndarray[numpy.float64[3, 1]],
+        *,
+        min: float = -5.0,
+        max: float = 5.0,
+        options: ScanlineHitFilterOptions = ...,
+    ) -> list[ScanlineHit]:
+        """
+        Perpendicular scanline search for a single query point.
+
+        Places a scanline perpendicular to `dir` through `lla`, searches lateral offsets in [min, max] and returns every crossing segment filtered by `options`, sorted by |lateral_offset|. Same code path as `intersections_batch`, one point at a time: use it to cross-check a batch result or when you need per-point control.
+
+        :param lla: query point, (x, y, z), ENU or WGS84 (see is_wgs84)
+        :param dir: query direction (unit vector). A NaN component disables direction filtering for this query.
+        :param min: lateral offset of the scanline start (meters, left is positive)
+        :param max: lateral offset of the scanline end (meters)
+        :param options: hit filter options
+        :return: list of ScanlineHit
         """
     @typing.overload
     def segment_index(self, index: int) -> numpy.ndarray[numpy.int32[2, 1]]:
@@ -1526,6 +1623,73 @@ class Quiver:
         Move the Arrow upward by delta_z
         """
 
+class ScanlineHit:
+    dir: numpy.ndarray[numpy.float64[3, 1]]
+    dot: float
+    lla: numpy.ndarray[numpy.float64[3, 1]]
+    polyline_index: int
+    segment_index: int
+    t: float
+    vertical_offset: float
+    def __init__(self) -> None:
+        """
+        One segment hit by a perpendicular scanline.
+        """
+    def __repr__(self) -> str: ...
+    @property
+    def lateral_offset(self) -> float:
+        """
+        Signed lateral offset relative to the scanline, left positive.
+        """
+    @lateral_offset.setter
+    def lateral_offset(self, arg0: float) -> None: ...
+
+class ScanlineHitFilterOptions:
+    def __init__(self) -> None:
+        """
+        Parameters of the perpendicular scanline query (`scanline_hits` / `intersections_batch`).
+        """
+    def __repr__(self) -> str: ...
+    @property
+    def accept_opposite(self) -> bool:
+        """
+        Accept near-opposite directions as well as near-same ones (see min_dot). Default False.
+        """
+    @accept_opposite.setter
+    def accept_opposite(self, arg0: bool) -> None: ...
+    @property
+    def filter_out_hits_by_gap(self) -> float:
+        """
+        Keep only the cluster of hits reachable from lateral offset 0 without a gap larger than this (meters). <= 0 disables. Default 0.0.
+        """
+    @filter_out_hits_by_gap.setter
+    def filter_out_hits_by_gap(self, arg0: float) -> None: ...
+    @property
+    def max_height_offset(self) -> float:
+        """
+        Drop hits with |z_hit - z_query| beyond this many meters. <= 0 disables the check. Default 3.0.
+        """
+    @max_height_offset.setter
+    def max_height_offset(self, arg0: float) -> None: ...
+    @property
+    def min_dot(self) -> float:
+        """
+        Direction gate on dot(query_dir, segment_dir).
+
+        With accept_opposite=False: keep hits with dot >= min_dot (same direction only); a negative value disables the check.
+        With accept_opposite=True: keep hits with dot >= min_dot OR dot <= -min_dot, i.e. min_dot gates |dot| and both senses are accepted while perpendicular hits are rejected (min_dot=0.9 ~= +-25.8 deg).
+        Default 0.5.
+        """
+    @min_dot.setter
+    def min_dot(self, arg0: float) -> None: ...
+    @property
+    def only_nearest(self) -> bool:
+        """
+        Keep only the hit with the smallest |lateral_offset|. Default False.
+        """
+    @only_nearest.setter
+    def only_nearest(self, arg0: bool) -> None: ...
+
 @typing.overload
 def crop(
     polylines_fc: FastCrossing,
@@ -1741,4 +1905,4 @@ def snap_onto_2d(
     Snap P onto line segment AB
     """
 
-__version__: str = "0.1.5"
+__version__: str = "0.1.6"

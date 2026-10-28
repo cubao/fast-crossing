@@ -10,6 +10,26 @@ To upgrade `fast-crossing` to the latest version, use pip:
 pip install -U fast-crossing
 ```
 
+## Version 0.1.6 (2026-10-28)
+
+*   Add batch query APIs, so N points can be queried against one index in a
+    single C++ loop:
+    *   `FastCrossing.nearest_batch` - `(counts, polyline_index, point_index, dists)`,
+        `k` or `radius` mode, optional `max_hits`.
+    *   `FastCrossing.intersections_batch` - perpendicular scanline / lateral
+        candidate search for a batch of `(point, direction)` pairs, returns flat
+        preallocated buffers (`counts/lateral/polyline_id/seg_idx/t/dot/lla/dir`).
+    *   `FastCrossing.scanline_hits` - single-point version of the above (same
+        filters, same ordering).
+    *   `ScanlineHitFilterOptions` / `ScanlineHit` - `max_height_offset`,
+        `min_dot` + `accept_opposite` (same/opposite accepted, perpendicular
+        rejected), `filter_out_hits_by_gap`, `only_nearest`.
+*   Batch semantics are fixed and tested: miss = `-1` / `inf` / `NaN`,
+    `max_hits` truncation keeps the smallest `|lateral|` first, `counts` is
+    always the pre-truncation count.
+*   Add `benchmarks/benchmark_batch_query.py` (394 polylines / 4160 segments /
+    1562 queries), reporting per-call overhead separately from query cost.
+
 ## Version 0.1.1 (2025-06-27)
 
 *   Use sckit-build-core, ditch python 3.7
