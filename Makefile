@@ -131,6 +131,13 @@ benchmark_point_in_polygon:
 		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__points.npy \
 		dist/point_in_polygon/random_num_$(NUM_POINTS)__bbox_800.00x600.00__radius_250.00__polygon.npy \
 		dist/mask_cubao.npy
+NUM_QUERIES = 1562
+benchmark_batch_query:
+	python3 benchmarks/benchmark_batch_query.py run \
+		--num_queries=$(NUM_QUERIES) \
+		--num_polylines=394 --num_segments=4160
+.PHONY: benchmark_batch_query
+
 .PHONY: benchmark_point_in_polygon
 
 SYNC_OUTPUT_DIR ?= headers/include/cubao

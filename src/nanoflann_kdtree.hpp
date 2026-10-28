@@ -8,7 +8,12 @@
 
 #include <nanoflann.hpp>
 #include <Eigen/Core>
+#include <cmath>
+#include <limits>
 #include <memory>
+#include <optional>
+#include <stdexcept>
+#include <tuple>
 #include <vector>
 
 namespace cubao
@@ -167,6 +172,117 @@ struct KdTree : PointCloud
         return std::make_pair(indexes, return_squared_l2
                                            ? distances
                                            : distances.cwiseSqrt().eval());
+    }
+
+    // Batch version of nearest(position, k) / nearest(position, radius).
+    //
+    // `queries` is (N, 3) (only the first 3 columns are used, so (N, 2) input
+    // can be passed through `to_Nx3`).
+    //
+    // Exactly one of `k` / `radius` should be given:
+    //   k       : width is min(k, #points), one pass, every query gets the
+    //             same number of slots.
+    //   radius  : width is `max_hits`, or - when `max_hits` is null - the
+    //             widest hit count of the batch. Two passes (gather, then
+    //             fill), because the width is only known after the first pass.
+    //
+    // Returns
+    //   counts   : (N,)   real number of hits per query (before truncation)
+    //   indexes  : (N, H) row `i` holds counts[i] valid point indexes, -1 pad
+    //   distances: (N, H) matching distances, inf pad
+    //
+    // Results are always sorted by distance: a fixed-width output with
+    // truncation is only well defined when the order is. The traversal state
+    // (one KdTreeIndex, one scratch buffer) is reused across queries.
+    std::tuple<Eigen::VectorXi, Eigen::MatrixXi, Eigen::MatrixXd>
+    nearest_batch(const RowVectors &queries, std::optional<int> k,
+                  std::optional<double> radius, std::optional<int> max_hits,
+                  bool return_squared_l2 = false) const
+    {
+        if (k.has_value() == radius.has_value()) {
+            throw std::invalid_argument(
+                "specify exactly one of k / radius for nearest_batch");
+        }
+        if (k && *k <= 0) {
+            throw std::invalid_argument("k should be positive");
+        }
+        if (radius && *radius < 0) {
+            throw std::invalid_argument("radius should be non-negative");
+        }
+        if (max_hits && *max_hits < 0) {
+            throw std::invalid_argument("max_hits should be non-negative");
+        }
+
+        const int N = queries.rows();
+        const int M = static_cast<int>(pts.size());
+        const double inf = std::numeric_limits<double>::infinity();
+
+        Eigen::VectorXi counts = Eigen::VectorXi::Zero(N);
+        if (N == 0 || M == 0) {
+            const int H = max_hits ? *max_hits : (k ? std::min(*k, M) : 0);
+            return {counts, Eigen::MatrixXi::Constant(N, H, -1),
+                    Eigen::MatrixXd::Constant(N, H, inf)};
+        }
+
+        if (k) {
+            const int H = std::min(*k, M);
+            Eigen::MatrixXi indexes = Eigen::MatrixXi::Constant(N, H, -1);
+            Eigen::MatrixXd distances = Eigen::MatrixXd::Constant(N, H, inf);
+            if (H == 0) {
+                return {counts, indexes, distances};
+            }
+            std::vector<int> scratch_indexes(H);
+            std::vector<double> scratch_dists(H);
+            auto params = nanoflann::SearchParams();
+            params.sorted = true;
+            for (int i = 0; i < N; ++i) {
+                Eigen::Vector3d q = queries.row(i);
+                auto resultSet = nanoflann::KNNResultSet<double, int, int>(H);
+                resultSet.init(&scratch_indexes[0], &scratch_dists[0]);
+                index().findNeighbors(resultSet, q.data(), params);
+                const int n = static_cast<int>(resultSet.size());
+                counts[i] = n;
+                for (int j = 0; j < n; ++j) {
+                    indexes(i, j) = scratch_indexes[j];
+                    distances(i, j) = return_squared_l2
+                                          ? scratch_dists[j]
+                                          : std::sqrt(scratch_dists[j]);
+                }
+            }
+            return {counts, indexes, distances};
+        }
+
+        // radius mode: first pass gathers, second pass fills
+        std::vector<std::vector<std::pair<int, double>>> found(N);
+        int width = max_hits ? *max_hits : 0;
+        auto params = nanoflann::SearchParams();
+        params.sorted = true;
+        const double r2 = (*radius) * (*radius);
+        for (int i = 0; i < N; ++i) {
+            Eigen::Vector3d q = queries.row(i);
+            auto &hits = found[i];
+            if (*radius <= 0.0) {
+                continue;
+            }
+            index().radiusSearch(q.data(), r2, hits, params);
+            if (!max_hits) {
+                width = std::max(width, static_cast<int>(hits.size()));
+            }
+        }
+        const int H = width;
+        Eigen::MatrixXi indexes = Eigen::MatrixXi::Constant(N, H, -1);
+        Eigen::MatrixXd distances = Eigen::MatrixXd::Constant(N, H, inf);
+        for (int i = 0; i < N; ++i) {
+            const auto &hits = found[i];
+            counts[i] = static_cast<int>(hits.size());
+            const int n = std::min(H, static_cast<int>(hits.size()));
+            for (int j = 0; j < n; ++j) {
+                indexes(i, j) = hits[j].first;
+                distances(i, j) = return_squared_l2 ? hits[j].second
+                                                    : std::sqrt(hits[j].second);
+            }
+        }
+        return {counts, indexes, distances};
     }
 
     //

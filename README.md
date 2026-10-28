@@ -79,6 +79,76 @@ Inspired by [anvaka/isect: Segments intersection detection library](https://gith
 
 <!--intro-end-->
 
+## Batch queries
+
+Per-point Python loops are dominated by per-call overhead (pybind return-value
+construction, result vectors, Eigen temporaries), not by the index lookup. When
+you have N points to query against one index, use the batch entry points:
+
+```python
+import numpy as np
+from fast_crossing import FastCrossing, ScanlineHitFilterOptions
+
+fc = FastCrossing()
+for i, polyline in enumerate(polylines):          # (M, 3) or (M, 2), ENU
+    fc.add_polyline(polyline, index=i)
+fc.finish()
+
+# 1) batch nearest (point based, like the single-point `nearest`)
+counts, poly_idx, pt_idx, dists = fc.nearest_batch(points_xyz, k=3)
+#    counts: (N,)   real hit count per query
+#    poly_idx/pt_idx: (N, k)  -1 where unused
+#    dists: (N, k)   inf where unused
+
+# ...or with a radius instead of k
+counts, poly_idx, pt_idx, dists = fc.nearest_batch(points_xyz, radius=2.0, max_hits=8)
+
+# 2) batch lateral candidates: "which polylines cross a scanline through
+#    each point, perpendicular to that point's heading"
+options = ScanlineHitFilterOptions()
+options.accept_opposite = True   # accept near-same AND near-opposite direction
+options.min_dot = 0.9            # ... but reject perpendicular hits (|dot| < 0.9)
+options.max_height_offset = 0.0  # ignore z
+
+(counts, lateral, poly_idx, seg_idx, t, dot, hit_lla, hit_dir) = (
+    fc.intersections_batch(llas, dirs, min=-5.0, max=5.0, options=options, max_hits=1)
+)
+#    counts:  (N,)     real hit count *before* truncation, so
+#                      counts[i] > max_hits means "truncated"
+#    lateral: (N, H)   signed lateral offset (left positive), |lateral| ascending
+#    poly_idx/seg_idx: (N, H)  -1 where unused
+#    t, dot:  (N, H)   NaN where unused
+#    hit_lla, hit_dir: (N*H, 3)  reshape to (N, H, 3)
+```
+
+Conventions shared by both batch APIs:
+
+- **miss** → indexes `-1`, distances `inf` (`nearest_batch`); also `lateral=inf`,
+  `t=dot=NaN`, `lla=NaN` (`intersections_batch`);
+- **truncation** (`max_hits`) keeps the `max_hits` smallest `|lateral|` hits;
+  `counts` always reports the untruncated count so the caller can detect it;
+- the index width is `max_hits` when given (never 0), otherwise the widest hit
+  count of the batch, so shapes are predictable;
+- passing a `NaN` row in `dirs` means "no direction for this query": a
+  north-south scanline is used and the direction gates are skipped.
+
+`scanline_hits(lla, dir, min=..., max=..., options=...)` is the single-point
+version of `intersections_batch` (same filters, same ordering), for per-point
+control or for cross-checking a batch result.
+
+### What batching does *not* fix
+
+Batching removes per-call overhead; it does **not** remove repeated work. If a
+solver re-queries the *same* points for every iteration, most of the time is
+spent re-doing identical queries — cache them on the caller side. See
+[`benchmarks/benchmark_batch_query.py`](benchmarks/benchmark_batch_query.py)
+(394 polylines / 4160 segments / 1562 queries) for measured numbers with an
+explicit per-call-overhead row:
+
+```bash
+python benchmarks/benchmark_batch_query.py run
+```
+
 ## Usage & Tests
 
 See [`tests/test_basic.py`](tests/test_basic.py):
